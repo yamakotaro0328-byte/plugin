@@ -16,32 +16,36 @@ essentials-import:
 
 # 料金設定
 costs:
-  # /home 1回あたりの料金
-  home: 100.0
   # /sethome の初回料金。以降 sethome-increment ずつ加算されていく
   sethome-base: 1000.0
   sethome-increment: 1000.0
-  # /spawn 1回あたりの料金
-  spawn: 100.0
-  # /tp, /tpa の1ブロックあたりの料金
-  tp-per-block: 1.0
-  tpa-per-block: 1.0
-  # /tp, /tpa で対象プレイヤーが別ワールドにいる場合の固定料金
-  cross-world-flat-cost: 500.0
+  # /home, /spawn, /tpa, /tphere のテレポート料金:
+  # 料金 = max(distance-min-fee, ceil(3次元の直線距離 ÷ distance-blocks-per-yen))
+  # (デフォルト: 100ブロックにつき1円、最低100円)
+  distance-min-fee: 100.0
+  distance-blocks-per-yen: 100.0
 
-# 支払い確認 (チャットクリック / 統合版用 /accept コマンド) のタイムアウト秒数
+# 支払い確認 (チャットクリック / 同じコマンドの再実行 / /accept, /ok コマンド) のタイムアウト秒数
 confirmation-timeout-seconds: 30
 
-# /tpa リクエスト自体 (相手の承諾待ち) のタイムアウト秒数
+# /tpa, /tphere リクエスト自体 (相手の承諾待ち) のタイムアウト秒数
 tpa-request-timeout-seconds: 60
 
-# ワープ実行前の詠唱時間。支払いはこの待機が完了してから行われる。
-# 移動やダメージでキャンセルされた場合は課金されない (戦闘中の逃げテレポ対策)。
-warmup:
-  enabled: true
-  seconds: 3
-  cancel-on-move: true
-  cancel-on-damage: true
+# /home, /spawn, /tpa, /tphere でテレポートする前の安全確認・詠唱時間。
+# 支払いはこの待機が完了してから行われるため、キャンセルされた場合は課金されない。
+teleport-safety:
+  # 開始地点から動かずに待つ秒数
+  countdown-seconds: 5
+  # 「動いた」と判定するまでの許容範囲 (ブロック)。視点移動だけでは反応しない。
+  movement-tolerance: 0.2
+  # この半径 (ブロック) 以内に敵対Mobがいるとテレポートできない/キャンセルされる
+  hostile-mob-radius: 10.0
+  # 直近にプレイヤー同士の戦闘があってからこの秒数はテレポートできない
+  pvp-cooldown-seconds: 15
+
+# プレイヤーごとに設定できるホームの上限数
+homes:
+  max-per-player: 3
 
 # 残高の保存先。yaml (デフォルト、追加設定不要) か mysql を選べる。
 # 複数サーバーで残高を共有したい場合は mysql を使う。

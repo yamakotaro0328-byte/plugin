@@ -5,15 +5,16 @@ import com.yamakotaro.ecotp.commands.BalanceCommand;
 import com.yamakotaro.ecotp.commands.BaltopCommand;
 import com.yamakotaro.ecotp.commands.EcoAdminCommand;
 import com.yamakotaro.ecotp.commands.HomeCommand;
+import com.yamakotaro.ecotp.commands.HomesCommand;
 import com.yamakotaro.ecotp.commands.MenuCommand;
 import com.yamakotaro.ecotp.commands.PayCommand;
 import com.yamakotaro.ecotp.commands.SetHomeCommand;
 import com.yamakotaro.ecotp.commands.SetSpawnCommand;
 import com.yamakotaro.ecotp.commands.SpawnCommand;
-import com.yamakotaro.ecotp.commands.TpCommand;
 import com.yamakotaro.ecotp.commands.TpaAcceptCommand;
 import com.yamakotaro.ecotp.commands.TpaCommand;
 import com.yamakotaro.ecotp.commands.TpaDenyCommand;
+import com.yamakotaro.ecotp.commands.TphereCommand;
 import com.yamakotaro.ecotp.gui.GuiListener;
 import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
@@ -30,7 +31,8 @@ public class EcoTpPlugin extends JavaPlugin {
     private HomeManager homeManager;
     private SpawnManager spawnManager;
     private TpaManager tpaManager;
-    private WarmupManager warmupManager;
+    private CombatTracker combatTracker;
+    private TeleportSafetyManager teleportSafetyManager;
     private ChatInputManager chatInputManager;
 
     @Override
@@ -47,15 +49,17 @@ public class EcoTpPlugin extends JavaPlugin {
         this.homeManager = new HomeManager(this);
         this.spawnManager = new SpawnManager(this);
         this.tpaManager = new TpaManager(this);
-        this.warmupManager = new WarmupManager(this);
+        this.combatTracker = new CombatTracker(this);
+        this.teleportSafetyManager = new TeleportSafetyManager(this, combatTracker);
         this.chatInputManager = new ChatInputManager(this);
 
         getCommand("home").setExecutor(new HomeCommand(this));
         getCommand("sethome").setExecutor(new SetHomeCommand(this));
+        getCommand("homes").setExecutor(new HomesCommand(this));
         getCommand("spawn").setExecutor(new SpawnCommand(this));
         getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
-        getCommand("tp").setExecutor(new TpCommand(this));
         getCommand("tpa").setExecutor(new TpaCommand(this));
+        getCommand("tphere").setExecutor(new TphereCommand(this));
         getCommand("tpaccept").setExecutor(new TpaAcceptCommand(this));
         getCommand("tpdeny").setExecutor(new TpaDenyCommand(this));
         getCommand("accept").setExecutor(new AcceptCommand(this));
@@ -67,7 +71,8 @@ public class EcoTpPlugin extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
         getServer().getPluginManager().registerEvents(new EconomyJoinListener(this), this);
-        getServer().getPluginManager().registerEvents(warmupManager, this);
+        getServer().getPluginManager().registerEvents(combatTracker, this);
+        getServer().getPluginManager().registerEvents(teleportSafetyManager, this);
         getServer().getPluginManager().registerEvents(chatInputManager, this);
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
 
@@ -142,8 +147,12 @@ public class EcoTpPlugin extends JavaPlugin {
         return tpaManager;
     }
 
-    public WarmupManager getWarmupManager() {
-        return warmupManager;
+    public CombatTracker getCombatTracker() {
+        return combatTracker;
+    }
+
+    public TeleportSafetyManager getTeleportSafetyManager() {
+        return teleportSafetyManager;
     }
 
     public ChatInputManager getChatInputManager() {

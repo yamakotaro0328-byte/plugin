@@ -43,6 +43,11 @@ public class PayCommand implements CommandExecutor {
             return true;
         }
 
+        String actionKey = "pay:" + target.getName() + ":" + args[1];
+        if (plugin.getConfirmationManager().tryConfirmIfSameAction(player, actionKey)) {
+            return true;
+        }
+
         double amount;
         try {
             amount = Double.parseDouble(args[1]);
@@ -63,7 +68,7 @@ public class PayCommand implements CommandExecutor {
 
         String targetName = target.getName();
         String description = plugin.getMessages().get("pay.description", "player", targetName);
-        plugin.getConfirmationManager().request(player, amount, description, () -> {
+        plugin.getConfirmationManager().request(player, actionKey, amount, description, () -> {
             Player currentTarget = Bukkit.getPlayerExact(targetName);
             if (currentTarget == null || !currentTarget.isOnline()) {
                 player.sendMessage(plugin.msg("general.player-went-offline", "player", targetName));

@@ -18,7 +18,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 public class PlayerSelectHolder implements InventoryHolder {
 
     public enum Purpose {
-        TPA, PAY
+        TPA, TPHERE, PAY
     }
 
     private final Inventory inventory;

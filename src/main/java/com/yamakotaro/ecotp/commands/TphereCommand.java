@@ -1,10 +1,8 @@
 package com.yamakotaro.ecotp.commands;
 
-import com.yamakotaro.ecotp.ChatUtil;
 import com.yamakotaro.ecotp.CostUtil;
 import com.yamakotaro.ecotp.EcoTpPlugin;
 import com.yamakotaro.ecotp.TpaManager;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -12,13 +10,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * /tpa <プレイヤー名> : 自分が相手のもとへ移動するリクエストを送る。支払いは自分 (移動する側)。
+ * /tphere <プレイヤー名> : 相手を自分のもとへ呼ぶリクエストを送る。着払いのため、
+ * 支払いは呼ばれた相手 (実際に移動する側)。呼び出す側 (自分) は支払わないため
+ * 料金の事前承諾は不要 — 相手の承諾 (支払いへの同意を兼ねる) だけで進む。
  */
-public class TpaCommand implements CommandExecutor {
+public class TphereCommand implements CommandExecutor {
 
     private final EcoTpPlugin plugin;
 
-    public TpaCommand(EcoTpPlugin plugin) {
+    public TphereCommand(EcoTpPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -28,12 +28,12 @@ public class TpaCommand implements CommandExecutor {
             sender.sendMessage(plugin.getMessages().get("general.players-only"));
             return true;
         }
-        if (!player.hasPermission("ecotp.tpa")) {
+        if (!player.hasPermission("ecotp.tphere")) {
             player.sendMessage(plugin.msg("general.no-permission"));
             return true;
         }
         if (args.length < 1) {
-            player.sendMessage(plugin.msg("tpa.usage"));
+            player.sendMessage(plugin.msg("tphere.usage"));
             return true;
         }
 
@@ -47,34 +47,13 @@ public class TpaCommand implements CommandExecutor {
             return true;
         }
 
-        String targetName = target.getName();
-        String actionKey = "tpa:" + targetName;
-        if (plugin.getConfirmationManager().tryConfirmIfSameAction(player, actionKey)) {
-            return true;
-        }
-
         double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
         double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 100.0);
         double estimatedCost = plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), target.getLocation())
                 ? CostUtil.distanceCost(player.getLocation(), target.getLocation(), minFee, blocksPerYen)
                 : minFee;
 
-        Economy economy = plugin.getEconomy();
-        if (!economy.has(player, estimatedCost)) {
-            player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(estimatedCost)));
-            return true;
-        }
-
-        String description = plugin.getMessages().get("tpa.description", "player", targetName);
-        // ここではお金は引き落とさない。相手が承諾し、詠唱が完了した時点で初めて課金する。
-        plugin.getConfirmationManager().request(player, actionKey, estimatedCost, description, () -> {
-            Player currentTarget = Bukkit.getPlayerExact(targetName);
-            if (currentTarget == null || !currentTarget.isOnline()) {
-                player.sendMessage(plugin.msg("general.player-went-offline", "player", targetName));
-                return;
-            }
-            plugin.getTpaManager().sendRequest(TpaManager.Type.TPA, player, currentTarget, estimatedCost);
-        });
+        plugin.getTpaManager().sendRequest(TpaManager.Type.TPHERE, player, target, estimatedCost);
         return true;
     }
 }

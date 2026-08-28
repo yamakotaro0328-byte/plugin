@@ -1,5 +1,5 @@
 # EcoTP メッセージ設定ファイル
-# {placeholder} の部分は実行時に値へ置き換わります。& でカラーコードが使えます。
+# {placeholder} の部分は実行時に値へ置き換わります。& でカラーコードが使えます (&a, &c, &l など)。
 # ここを書き換えるだけで、コードを触らずに文言や通貨単位を変更できます。
 
 currency:
@@ -7,7 +7,7 @@ currency:
   plural: "円"
 
 general:
-  players-only: "プレイヤーのみ実行できます。"
+  players-only: "&cプレイヤーのみ実行できます。"
   no-permission: "&cこのコマンドを使う権限がありません。"
   insufficient-funds: "&c所持金が不足しています。(必要: {cost})"
   player-offline: "&cそのプレイヤーはオンラインではありません。"
@@ -16,29 +16,40 @@ general:
 
 confirm:
   accept-button: "[承諾する]"
-  accept-hover: "クリックして承諾する"
+  accept-hover: "クリックして承諾する (同じコマンドの再実行や /accept, /ok でも承諾できます)"
   cancel-button: "[キャンセル]"
   cancel-hover: "クリックしてキャンセル"
-  bedrock-hint: "&7※統合版の方は &f/accept &7と入力すると承諾できます (キャンセルは &f/accept cancel&7)"
+  bedrock-hint: "&7※統合版の方は &f/accept &7または &f/ok &7と入力すると承諾できます (キャンセルは &f/accept cancel&7)"
   none-pending: "&c確認待ちの操作はありません。"
   none-to-cancel: "&cキャンセルできる操作はありません。"
   cancelled: "&e操作をキャンセルしました。"
   timed-out: "&c確認がタイムアウトしました。"
 
-warmup:
+teleport-safety:
   countdown: "&e{description} まで &f{seconds}秒 &e...動いたりダメージを受けるとキャンセルされます"
   cancelled-move: "&c移動したためキャンセルされました。"
   cancelled-damage: "&cダメージを受けたためキャンセルされました。"
+  cancelled-mob: "&c近くに敵対Mobが現れたためキャンセルされました。"
+  cancelled-pvp: "&c戦闘を検知したためキャンセルされました。"
+  hostile-mob-nearby: "&c近くに敵対Mobがいるため実行できません。"
+  pvp-cooldown: "&c最近戦闘をしたため実行できません。しばらくしてから再度お試しください。"
+  wrong-dimension: "&cテレポート先と異なるディメンションにいるため実行できません。"
 
 home:
-  not-set: "&cホームが設定されていません。/sethome で設定してください。"
+  not-set: "&cホーム「{name}」は設定されていません。/sethome {name} で設定してください。"
   world-missing: "&cホームのワールドが見つかりません。"
-  teleporting: "ホームへワープします"
-  success: "&aホームにテレポートしました。({cost} 支払いました)"
+  teleporting: "ホーム「{name}」へワープします"
+  success: "&aホーム「{name}」へテレポートしました。({cost} 支払いました)"
 
 sethome:
-  description: "現在地をホームに設定します"
-  success: "&aホームを設定しました。({cost} 支払いました)"
+  description: "現在地をホーム「{name}」に設定します"
+  success: "&aホーム「{name}」を設定しました。({cost} 支払いました)"
+  invalid-name: "&cホーム名は英数字・日本語のみ、16文字以内で指定してください。"
+  limit-reached: "&cホームの上限 ({max}個) に達しています。既存のホームを上書きしてください。"
+
+homes:
+  empty: "&cまだホームが設定されていません。/sethome で設定できます。"
+  list: "&aあなたのホーム: &f{names}"
 
 spawn:
   teleporting: "スポーン地点へワープします"
@@ -47,14 +58,10 @@ spawn:
 setspawn:
   success: "&aスポーン地点を現在地に設定しました。"
 
-tp:
-  usage: "&c使い方: /tp <プレイヤー名>"
-  description: "{player} へワープします"
-  success: "&a{player} へテレポートしました。({cost} 支払いました)"
-
 tpa:
   usage: "&c使い方: /tpa <プレイヤー名>"
   description: "{player} にテレポートリクエストを送ります"
+  travel-description: "{player} へワープします"
   sent: "&a{player} にテレポートリクエストを送信しました。相手の承諾をお待ちください。"
   incoming: "&e{player} &fさんからテレポートリクエストが届きました。(相手が {cost} を支払います)"
   incoming-accept-hover: "クリックして承諾する"
@@ -71,6 +78,11 @@ tpa:
   insufficient-funds-requester: "&c所持金が不足しているため {player} へテレポートできませんでした。(必要: {cost})"
   timeout-target: "&cテレポートリクエストがタイムアウトしました。"
   timeout-requester: "&c{player} へのテレポートリクエストがタイムアウトしました。"
+
+tphere:
+  usage: "&c使い方: /tphere <プレイヤー名>"
+  sent: "&a{player} を呼び出しました。相手の承諾をお待ちください。(料金は相手が支払います)"
+  incoming: "&e{player} &fさんがあなたをそちらへ呼んでいます。(承諾すると {cost} を支払って移動します)"
 
 balance:
   self: "&aあなたの所持金: &f{balance}"
@@ -107,6 +119,7 @@ menu:
   sethome: "&bホームを設定"
   spawn: "&aスポーンへワープ"
   tpa: "&dテレポートリクエスト"
+  tphere: "&5相手を呼び出す (着払い)"
   balance: "&6所持金確認"
   pay: "&e送金"
   baltop: "&b所持金ランキング"

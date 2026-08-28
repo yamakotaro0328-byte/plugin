@@ -2,6 +2,7 @@ package com.yamakotaro.ecotp;
 
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -10,11 +11,17 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * /tpa のリクエスト (相手の承諾待ち) を管理する。
- * 料金の引き落としは、送信者が支払いに同意した後・相手が承諾し、詠唱時間を経てから行う
- * (相手が拒否/タイムアウトした場合、または詠唱中にキャンセルされた場合は一切課金しない)。
+ * /tpa と /tphere のリクエスト (相手の承諾待ち) を管理する。
+ * どちらも「実際に移動する側」が支払う。/tpa は要求した側 (requester) が移動して支払い、
+ * /tphere は着払いのため、呼ばれた側 (target) が移動して支払う。
+ * 料金の引き落としは、リクエストが承諾され、詠唱時間 (安全確認) を経てから行う
+ * (拒否/タイムアウト/詠唱中のキャンセルの場合は一切課金しない)。
  */
 public class TpaManager {
+
+    public enum Type {
+        TPA, TPHERE
+    }
 
     private final EcoTpPlugin plugin;
     private final Map<UUID, Request> requests = new HashMap<>();
@@ -24,18 +31,23 @@ public class TpaManager {
     }
 
     private static final class Request {
+        final Type type;
         final UUID requesterUuid;
         final String requesterName;
         final BukkitTask timeoutTask;
 
-        private Request(UUID requesterUuid, String requesterName, BukkitTask timeoutTask) {
+        private Request(Type type, UUID requesterUuid, String requesterName, BukkitTask timeoutTask) {
+            this.type = type;
             this.requesterUuid = requesterUuid;
             this.requesterName = requesterName;
             this.timeoutTask = timeoutTask;
         }
     }
 
-    public void sendRequest(Player requester, Player target, double cost) {
+    /**
+     * @param cost 相手への表示用の見積もり額。実際の請求は承諾後、詠唱完了時点の距離で再計算する。
+     */
+    public void sendRequest(Type type, Player requester, Player target, double cost) {
         UUID targetUuid = target.getUniqueId();
         cancelSilently(targetUuid);
 
@@ -51,10 +63,12 @@ public class TpaManager {
             }
         }, timeoutSeconds * 20L);
 
-        requests.put(targetUuid, new Request(requester.getUniqueId(), requester.getName(), task));
+        requests.put(targetUuid, new Request(type, requester.getUniqueId(), requester.getName(), task));
 
-        requester.sendMessage(plugin.msg("tpa.sent", "player", target.getName()));
-        ChatUtil.sendTpaRequestPrompt(target, plugin.getPrefix(), requester.getName(), cost);
+        String sentKey = type == Type.TPA ? "tpa.sent" : "tphere.sent";
+        String incomingKey = type == Type.TPA ? "tpa.incoming" : "tphere.incoming";
+        requester.sendMessage(plugin.msg(sentKey, "player", target.getName()));
+        ChatUtil.sendTpaRequestPrompt(target, plugin.getPrefix(), requester.getName(), cost, incomingKey);
     }
 
     public void acceptRequest(Player target) {
@@ -71,29 +85,38 @@ public class TpaManager {
             return;
         }
 
+        // TPA: requester が target のもとへ移動して支払う。TPHERE (着払い): target が
+        // requester のもとへ移動して支払う。どちらも「移動する側が支払う」で共通。
+        Player mover = req.type == Type.TPA ? requester : target;
+        Player destinationPlayer = req.type == Type.TPA ? target : requester;
+
         target.sendMessage(plugin.msg("tpa.accepted-target", "player", req.requesterName));
 
-        String description = plugin.getMessages().get("tp.description", "player", target.getName());
-        plugin.getWarmupManager().start(requester, description, () -> {
-            if (!requester.isOnline() || !target.isOnline()) {
+        String description = plugin.getMessages().get("tpa.travel-description", "player", destinationPlayer.getName());
+        plugin.getTeleportSafetyManager().start(mover, destinationPlayer.getLocation(), description, () -> {
+            if (!mover.isOnline() || !destinationPlayer.isOnline()) {
                 return;
             }
-            // リクエスト送信時点の cost は見積もりに過ぎない。実際にテレポートする直前の
-            // 距離で再計算してから請求する (送信後に相手が移動して料金を騙し取られるのを防ぐ)。
-            double perBlock = plugin.getConfig().getDouble("costs.tpa-per-block", 1.0);
-            double crossWorldFlatCost = plugin.getConfig().getDouble("costs.cross-world-flat-cost", 500.0);
-            double actualCost = CostUtil.distanceCost(requester.getLocation(), target.getLocation(), perBlock, crossWorldFlatCost);
+            Location destination = destinationPlayer.getLocation();
+            if (!plugin.getTeleportSafetyManager().isSameDimension(mover.getLocation(), destination)) {
+                mover.sendMessage(plugin.msg("teleport-safety.wrong-dimension"));
+                return;
+            }
+
+            double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
+            double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 100.0);
+            double actualCost = CostUtil.distanceCost(mover.getLocation(), destination, minFee, blocksPerYen);
 
             Economy economy = plugin.getEconomy();
-            if (!economy.has(requester, actualCost)) {
-                target.sendMessage(plugin.msg("tpa.insufficient-funds-target", "player", req.requesterName, "cost", ChatUtil.formatMoney(actualCost)));
-                requester.sendMessage(plugin.msg("tpa.insufficient-funds-requester", "player", target.getName(), "cost", ChatUtil.formatMoney(actualCost)));
+            if (!economy.has(mover, actualCost)) {
+                mover.sendMessage(plugin.msg("tpa.insufficient-funds-requester", "player", destinationPlayer.getName(), "cost", ChatUtil.formatMoney(actualCost)));
+                destinationPlayer.sendMessage(plugin.msg("tpa.insufficient-funds-target", "player", mover.getName(), "cost", ChatUtil.formatMoney(actualCost)));
                 return;
             }
 
-            economy.withdrawPlayer(requester, actualCost);
-            requester.teleport(target.getLocation());
-            requester.sendMessage(plugin.msg("tpa.accepted-requester", "player", target.getName(), "cost", ChatUtil.formatMoney(actualCost)));
+            economy.withdrawPlayer(mover, actualCost);
+            mover.teleport(destination);
+            mover.sendMessage(plugin.msg("tpa.accepted-requester", "player", destinationPlayer.getName(), "cost", ChatUtil.formatMoney(actualCost)));
         });
     }
 

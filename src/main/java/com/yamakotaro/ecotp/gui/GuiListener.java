@@ -50,6 +50,7 @@ public class GuiListener implements Listener {
             case MainMenuHolder.SLOT_SETHOME -> player.performCommand("sethome");
             case MainMenuHolder.SLOT_SPAWN -> player.performCommand("spawn");
             case MainMenuHolder.SLOT_TPA -> openPlayerSelect(player, PlayerSelectHolder.Purpose.TPA);
+            case MainMenuHolder.SLOT_TPHERE -> openPlayerSelect(player, PlayerSelectHolder.Purpose.TPHERE);
             case MainMenuHolder.SLOT_BALANCE -> player.performCommand("balance");
             case MainMenuHolder.SLOT_PAY -> openPlayerSelect(player, PlayerSelectHolder.Purpose.PAY);
             case MainMenuHolder.SLOT_BALTOP -> player.performCommand("baltop");
@@ -80,6 +81,10 @@ public class GuiListener implements Listener {
 
         if (holder.getPurpose() == PlayerSelectHolder.Purpose.TPA) {
             player.performCommand("tpa " + targetName);
+            return;
+        }
+        if (holder.getPurpose() == PlayerSelectHolder.Purpose.TPHERE) {
+            player.performCommand("tphere " + targetName);
             return;
         }
 

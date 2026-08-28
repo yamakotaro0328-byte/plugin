@@ -18,7 +18,8 @@ public class PlayerCleanupListener implements Listener {
         var uuid = event.getPlayer().getUniqueId();
         plugin.getConfirmationManager().cancelSilently(uuid);
         plugin.getTpaManager().cancelSilently(uuid);
-        plugin.getWarmupManager().cancelSilently(uuid);
+        plugin.getTeleportSafetyManager().cancelSilently(uuid);
         plugin.getChatInputManager().cancelSilently(uuid);
+        plugin.getCombatTracker().clear(uuid);
     }
 }

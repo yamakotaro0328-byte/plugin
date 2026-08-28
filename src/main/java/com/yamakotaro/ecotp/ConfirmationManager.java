@@ -11,6 +11,7 @@ import java.util.UUID;
  * 「チャットクリック承諾」の共通の仕組み。
  * 実際のお金のやり取り (残高チェック・引き落とし) は各コマンド側の onConfirm で行う。
  * ここでは「承諾/キャンセルの受付」と「タイムアウト」だけを管理する。
+ * 承諾は次のいずれの方法でもよい: チャットのボタン、同じコマンドの再実行、/accept (/ok)。
  */
 public class ConfirmationManager {
 
@@ -22,10 +23,12 @@ public class ConfirmationManager {
     }
 
     private static final class Pending {
+        final String actionKey;
         final Runnable onConfirm;
         final BukkitTask timeoutTask;
 
-        private Pending(Runnable onConfirm, BukkitTask timeoutTask) {
+        private Pending(String actionKey, Runnable onConfirm, BukkitTask timeoutTask) {
+            this.actionKey = actionKey;
             this.onConfirm = onConfirm;
             this.timeoutTask = timeoutTask;
         }
@@ -35,11 +38,14 @@ public class ConfirmationManager {
      * 支払いを伴う操作の確認を要求し、クリック可能なチャットメッセージを送る。
      *
      * @param player      対象プレイヤー
+     * @param actionKey   「同じコマンドの再実行で承諾」を判定するためのキー
+     *                    (例: "home:name", "tpa:targetName")。コマンドと引数が同じなら
+     *                    再実行時に自動で承諾したことになる。
      * @param cost        表示する金額 (実際の引き落としは onConfirm 内で行うこと)
      * @param description 「〇〇へテレポート」などの説明文
      * @param onConfirm   承諾されたときに実行する処理
      */
-    public void request(Player player, double cost, String description, Runnable onConfirm) {
+    public void request(Player player, String actionKey, double cost, String description, Runnable onConfirm) {
         UUID uuid = player.getUniqueId();
         cancelSilently(uuid);
 
@@ -51,12 +57,28 @@ public class ConfirmationManager {
             }
         }, timeoutSeconds * 20L);
 
-        pending.put(uuid, new Pending(onConfirm, task));
+        pending.put(uuid, new Pending(actionKey, onConfirm, task));
         ChatUtil.sendConfirmPrompt(player, plugin.getPrefix(), description, cost);
     }
 
     /**
-     * /accept で呼ばれる。保留中の操作があれば実行する。
+     * 各コマンドの先頭で呼ぶ。同じ操作 (actionKey が一致) の確認待ちが既にある場合、
+     * それを承諾したものとして実行して true を返す (呼び出し側はここで処理を終える)。
+     * 確認待ちが無い、または別の操作の確認待ちがある場合は何もせず false を返す。
+     */
+    public boolean tryConfirmIfSameAction(Player player, String actionKey) {
+        Pending p = pending.get(player.getUniqueId());
+        if (p == null || !p.actionKey.equals(actionKey)) {
+            return false;
+        }
+        pending.remove(player.getUniqueId());
+        p.timeoutTask.cancel();
+        p.onConfirm.run();
+        return true;
+    }
+
+    /**
+     * /accept (/ok) で呼ばれる。保留中の操作があれば実行する。
      */
     public void confirm(Player player) {
         Pending p = pending.remove(player.getUniqueId());

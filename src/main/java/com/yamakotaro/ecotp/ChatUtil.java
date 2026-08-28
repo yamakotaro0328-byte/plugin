@@ -63,8 +63,8 @@ public final class ChatUtil {
      * テレポートリクエスト (/tpa) の承諾/拒否を求めるクリック可能なメッセージを送る。
      * こちらは /tpaccept, /tpdeny がもともと統合版でも入力可能なコマンドなので案内文のみ添える。
      */
-    public static void sendTpaRequestPrompt(Player target, String prefix, String requesterName, double cost) {
-        target.sendMessage(messages.get("tpa.incoming", "player", requesterName, "cost", formatMoney(cost)));
+    public static void sendTpaRequestPrompt(Player target, String prefix, String requesterName, double cost, String incomingMessageKey) {
+        target.sendMessage(messages.get(incomingMessageKey, "player", requesterName, "cost", formatMoney(cost)));
 
         TextComponent acceptButton = new TextComponent(messages.get("confirm.accept-button"));
         acceptButton.setColor(net.md_5.bungee.api.ChatColor.GREEN);

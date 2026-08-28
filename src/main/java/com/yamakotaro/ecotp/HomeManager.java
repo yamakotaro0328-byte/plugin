@@ -3,17 +3,26 @@ package com.yamakotaro.ecotp;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 /**
- * プレイヤーごとの単一ホームと、/sethome を使った回数 (料金の上昇に使う) を管理する。
+ * プレイヤーごとの複数ホーム (名前付き) と、/sethome を使った回数
+ * (料金の上昇に使う。ホーム名に関わらずプレイヤー全体で共通) を管理する。
  */
 public class HomeManager {
+
+    /** ホーム名は数字・日本語 (ひらがな/カタカナ/漢字/長音符)・英字のみ、最大16文字。 */
+    public static final Pattern VALID_NAME = Pattern.compile("^[A-Za-z0-9\\u3040-\\u30FF\\u4E00-\\u9FFF]{1,16}$");
+    public static final String DEFAULT_NAME = "home";
 
     private final EcoTpPlugin plugin;
     private final File file;
@@ -25,12 +34,16 @@ public class HomeManager {
         this.data = YamlConfiguration.loadConfiguration(file);
     }
 
-    public boolean hasHome(UUID uuid) {
-        return data.contains("homes." + uuid + ".world");
+    private String homesPath(UUID uuid) {
+        return uuid + ".homes";
     }
 
-    public Location getHome(UUID uuid) {
-        String path = "homes." + uuid;
+    public boolean hasHome(UUID uuid, String name) {
+        return data.contains(homesPath(uuid) + "." + name + ".world");
+    }
+
+    public Location getHome(UUID uuid, String name) {
+        String path = homesPath(uuid) + "." + name;
         String worldName = data.getString(path + ".world");
         if (worldName == null) {
             return null;
@@ -47,20 +60,40 @@ public class HomeManager {
         return new Location(world, x, y, z, yaw, pitch);
     }
 
-    public void setHome(UUID uuid, Location location) {
-        String path = "homes." + uuid;
+    /**
+     * @return 上限に達していて新規のホームを作成できない場合 false。
+     * 既存の名前を上書きする場合は上限に関わらず常に true。
+     */
+    public boolean canSetHome(UUID uuid, String name) {
+        if (hasHome(uuid, name)) {
+            return true;
+        }
+        int max = plugin.getConfig().getInt("homes.max-per-player", 3);
+        return getHomeNames(uuid).size() < max;
+    }
+
+    public void setHome(UUID uuid, String name, Location location) {
+        String path = homesPath(uuid) + "." + name;
         data.set(path + ".world", location.getWorld().getName());
         data.set(path + ".x", location.getX());
         data.set(path + ".y", location.getY());
         data.set(path + ".z", location.getZ());
         data.set(path + ".yaw", (double) location.getYaw());
         data.set(path + ".pitch", (double) location.getPitch());
-        data.set(path + ".sethome-count", getSetHomeCount(uuid) + 1);
+        data.set(uuid + ".sethome-count", getSetHomeCount(uuid) + 1);
         save();
     }
 
+    public List<String> getHomeNames(UUID uuid) {
+        ConfigurationSection section = data.getConfigurationSection(homesPath(uuid));
+        if (section == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(section.getKeys(false));
+    }
+
     public int getSetHomeCount(UUID uuid) {
-        return data.getInt("homes." + uuid + ".sethome-count", 0);
+        return data.getInt(uuid + ".sethome-count", 0);
     }
 
     /**

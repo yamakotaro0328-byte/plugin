@@ -1,7 +1,9 @@
 package com.yamakotaro.ecotp.commands;
 
 import com.yamakotaro.ecotp.ChatUtil;
+import com.yamakotaro.ecotp.CostUtil;
 import com.yamakotaro.ecotp.EcoTpPlugin;
+import com.yamakotaro.ecotp.HomeManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -30,44 +32,67 @@ public class HomeCommand implements CommandExecutor {
             return true;
         }
 
-        UUID uuid = player.getUniqueId();
-        if (!plugin.getHomeManager().hasHome(uuid)) {
-            player.sendMessage(plugin.msg("home.not-set"));
+        String name = args.length > 0 ? args[0] : HomeManager.DEFAULT_NAME;
+        String actionKey = "home:" + name;
+        if (plugin.getConfirmationManager().tryConfirmIfSameAction(player, actionKey)) {
             return true;
         }
 
-        Location home = plugin.getHomeManager().getHome(uuid);
+        UUID uuid = player.getUniqueId();
+        if (!plugin.getHomeManager().hasHome(uuid, name)) {
+            player.sendMessage(plugin.msg("home.not-set", "name", name));
+            return true;
+        }
+
+        Location home = plugin.getHomeManager().getHome(uuid, name);
         if (home == null) {
             player.sendMessage(plugin.msg("home.world-missing"));
             return true;
         }
 
-        double cost = plugin.getConfig().getDouble("costs.home", 100.0);
+        double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
+        double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 100.0);
+        double cost = plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), home)
+                ? CostUtil.distanceCost(player.getLocation(), home, minFee, blocksPerYen)
+                : minFee;
+
         Economy economy = plugin.getEconomy();
         if (!economy.has(player, cost)) {
             player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
             return true;
         }
 
-        String description = plugin.getMessages().get("home.teleporting");
-        plugin.getConfirmationManager().request(player, cost, description, () ->
-                plugin.getWarmupManager().start(player, description, () -> {
-                    if (!player.isOnline()) {
-                        return;
-                    }
-                    if (!economy.has(player, cost)) {
-                        player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
-                        return;
-                    }
-                    Location current = plugin.getHomeManager().getHome(uuid);
-                    if (current == null) {
-                        player.sendMessage(plugin.msg("home.world-missing"));
-                        return;
-                    }
-                    economy.withdrawPlayer(player, cost);
-                    player.teleport(current);
-                    player.sendMessage(plugin.msg("home.success", "cost", ChatUtil.formatMoney(cost)));
-                }));
+        String description = plugin.getMessages().get("home.teleporting", "name", name);
+        plugin.getConfirmationManager().request(player, actionKey, cost, description, () -> {
+            Location current = plugin.getHomeManager().getHome(uuid, name);
+            if (current == null) {
+                player.sendMessage(plugin.msg("home.world-missing"));
+                return;
+            }
+            // start() が false を返す (別ディメンション/モブ/PvP) 場合は理由を通知済みなので何もしなくてよい。
+            plugin.getTeleportSafetyManager().start(player, current, description, () -> {
+                if (!player.isOnline()) {
+                    return;
+                }
+                Location finalHome = plugin.getHomeManager().getHome(uuid, name);
+                if (finalHome == null) {
+                    player.sendMessage(plugin.msg("home.world-missing"));
+                    return;
+                }
+                if (!plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), finalHome)) {
+                    player.sendMessage(plugin.msg("teleport-safety.wrong-dimension"));
+                    return;
+                }
+                double finalCost = CostUtil.distanceCost(player.getLocation(), finalHome, minFee, blocksPerYen);
+                if (!economy.has(player, finalCost)) {
+                    player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(finalCost)));
+                    return;
+                }
+                economy.withdrawPlayer(player, finalCost);
+                player.teleport(finalHome);
+                player.sendMessage(plugin.msg("home.success", "name", name, "cost", ChatUtil.formatMoney(finalCost)));
+            });
+        });
         return true;
     }
 }

@@ -18,9 +18,10 @@ public class MainMenuHolder implements InventoryHolder {
     public static final int SLOT_SETHOME = 11;
     public static final int SLOT_SPAWN = 12;
     public static final int SLOT_TPA = 13;
-    public static final int SLOT_BALANCE = 14;
-    public static final int SLOT_PAY = 15;
-    public static final int SLOT_BALTOP = 16;
+    public static final int SLOT_TPHERE = 14;
+    public static final int SLOT_BALANCE = 15;
+    public static final int SLOT_PAY = 16;
+    public static final int SLOT_BALTOP = 20;
     public static final int SLOT_CLOSE = 22;
 
     private final Inventory inventory;
@@ -31,6 +32,7 @@ public class MainMenuHolder implements InventoryHolder {
         inventory.setItem(SLOT_SETHOME, item(Material.COMPASS, plugin.getMessages().get("menu.sethome")));
         inventory.setItem(SLOT_SPAWN, item(Material.GRASS_BLOCK, plugin.getMessages().get("menu.spawn")));
         inventory.setItem(SLOT_TPA, item(Material.ENDER_PEARL, plugin.getMessages().get("menu.tpa")));
+        inventory.setItem(SLOT_TPHERE, item(Material.ENDER_EYE, plugin.getMessages().get("menu.tphere")));
         inventory.setItem(SLOT_BALANCE, item(Material.GOLD_INGOT, plugin.getMessages().get("menu.balance")));
         inventory.setItem(SLOT_PAY, item(Material.EMERALD, plugin.getMessages().get("menu.pay")));
         inventory.setItem(SLOT_BALTOP, item(Material.DIAMOND, plugin.getMessages().get("menu.baltop")));

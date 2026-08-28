@@ -7,25 +7,28 @@ softdepend: [Vault, PlaceholderAPI]
 
 commands:
   home:
-    description: 保存したホームへテレポートします (100円)
-    usage: /home
+    description: 保存したホームへテレポートします (距離制、詳細は messages.yml/config.yml 参照)
+    usage: /home [ホーム名]
   sethome:
     description: 現在地をホームとして設定します (1000円から、使うたびに1000円ずつ上昇)
-    usage: /sethome
+    usage: /sethome [ホーム名]
+  homes:
+    description: 自分のホーム一覧を表示します (無料)
+    usage: /homes
   spawn:
-    description: スポーン地点へテレポートします (100円)
+    description: スポーン地点へテレポートします
     usage: /spawn
   setspawn:
     description: スポーン地点を設定します (管理者用・無料)
     usage: /setspawn
-  tp:
-    description: 指定したプレイヤーへ即座にテレポートします (1ブロック1円)
-    usage: /tp <プレイヤー名>
   tpa:
-    description: 指定したプレイヤーへテレポートリクエストを送ります (1ブロック1円)
+    description: 指定したプレイヤーのもとへ移動するリクエストを送ります (自分が支払う)
     usage: /tpa <プレイヤー名>
+  tphere:
+    description: 指定したプレイヤーを自分のもとへ呼び出します (着払い・相手が支払う)
+    usage: /tphere <プレイヤー名>
   tpaccept:
-    description: 受け取ったテレポートリクエストを承諾します
+    description: 受け取ったテレポートリクエスト (/tpa, /tphere) を承諾します
     usage: /tpaccept
   tpdeny:
     description: 受け取ったテレポートリクエストを拒否します
@@ -33,6 +36,7 @@ commands:
   accept:
     description: 支払いの確認待ちの操作を承諾/キャンセルします (統合版対応)
     usage: /accept [cancel]
+    aliases: [ok]
   balance:
     description: 所持金を確認します
     usage: /balance [プレイヤー名]
@@ -52,33 +56,44 @@ commands:
     aliases: [ecomenu]
 
 permissions:
-  ecotp.home:
-    description: /home を使用できる
+  ecotp.player:
+    description: EcoTP の基本プレイヤー機能をすべて使用できる (home/sethome/spawn/tpa/tphere/pay/menu)
     default: true
+    children:
+      ecotp.home: true
+      ecotp.sethome: true
+      ecotp.spawn: true
+      ecotp.tpa: true
+      ecotp.tphere: true
+      ecotp.pay: true
+      ecotp.menu: true
+  ecotp.home:
+    description: /home, /homes を使用できる
+    default: false
   ecotp.sethome:
     description: /sethome を使用できる
-    default: true
+    default: false
   ecotp.spawn:
     description: /spawn を使用できる
-    default: true
+    default: false
   ecotp.setspawn:
-    description: /setspawn を使用できる
+    description: /setspawn を使用できる (管理者用)
     default: op
-  ecotp.tp:
-    description: /tp を使用できる
-    default: true
   ecotp.tpa:
     description: /tpa を使用できる
-    default: true
+    default: false
+  ecotp.tphere:
+    description: /tphere を使用できる
+    default: false
   ecotp.balance.others:
     description: 他のプレイヤーの所持金を確認できる
     default: op
   ecotp.pay:
     description: /pay を使用できる
-    default: true
+    default: false
   ecotp.admin:
     description: /eco を使用できる
     default: op
   ecotp.menu:
     description: /menu を使用できる
-    default: true
+    default: false
