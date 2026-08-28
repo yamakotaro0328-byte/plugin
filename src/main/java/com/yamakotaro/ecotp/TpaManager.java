@@ -73,18 +73,24 @@ public class TpaManager {
             return;
         }
 
+        // リクエスト送信時点の cost は見積もりに過ぎない。承諾された瞬間の実際の距離で
+        // 再計算してから請求する (送信後に相手が移動して料金を騙し取られるのを防ぐ)。
+        double perBlock = plugin.getConfig().getDouble("costs.tpa-per-block", 1.0);
+        double crossWorldFlatCost = plugin.getConfig().getDouble("costs.cross-world-flat-cost", 500.0);
+        double actualCost = CostUtil.distanceCost(requester.getLocation(), target.getLocation(), perBlock, crossWorldFlatCost);
+
         Economy economy = plugin.getEconomy();
-        if (!economy.has(requester, req.cost)) {
-            String msg = plugin.getPrefix() + "&c" + req.requesterName + " の所持金が不足しているためテレポートできませんでした。";
+        if (!economy.has(requester, actualCost)) {
+            String msg = plugin.getPrefix() + "&c" + req.requesterName + " の所持金が不足しているためテレポートできませんでした。(必要: " + ChatUtil.formatMoney(actualCost) + ")";
             target.sendMessage(ChatUtil.color(msg));
-            requester.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しているため " + target.getName() + " へテレポートできませんでした。"));
+            requester.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しているため " + target.getName() + " へテレポートできませんでした。(必要: " + ChatUtil.formatMoney(actualCost) + ")"));
             return;
         }
 
-        economy.withdrawPlayer(requester, req.cost);
+        economy.withdrawPlayer(requester, actualCost);
         requester.teleport(target.getLocation());
 
-        requester.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + target.getName() + " へテレポートしました。(" + ChatUtil.formatMoney(req.cost) + " 支払いました)"));
+        requester.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + target.getName() + " へテレポートしました。(" + ChatUtil.formatMoney(actualCost) + " 支払いました)"));
         target.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + req.requesterName + " のテレポートリクエストを承諾しました。"));
     }
 

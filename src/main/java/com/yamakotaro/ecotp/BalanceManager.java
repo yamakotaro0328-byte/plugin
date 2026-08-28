@@ -20,6 +20,7 @@ public class BalanceManager {
     private final File file;
     private final YamlConfiguration data;
     private final Map<String, UUID> nameToUuid = new HashMap<>();
+    private boolean dirty = false;
 
     public BalanceManager(EcoTpPlugin plugin) {
         this.plugin = plugin;
@@ -52,7 +53,10 @@ public class BalanceManager {
             data.set(path + ".name", name);
             nameToUuid.put(name.toLowerCase(), uuid);
         }
-        save();
+        // 取引の度にディスクへ書き込むと、ショップ等から高頻度に呼ばれたときに
+        // メインスレッドが詰まる原因になるため、変更フラグだけ立てて実際の保存は
+        // 定期タスク (と終了時) にまとめて行う。
+        dirty = true;
     }
 
     public void createAccount(UUID uuid, String name, double initialBalance) {
@@ -66,9 +70,16 @@ public class BalanceManager {
         return Optional.ofNullable(nameToUuid.get(name.toLowerCase()));
     }
 
-    public void save() {
+    /**
+     * 変更があるときだけディスクに保存する。定期タスクとプラグイン終了時に呼ばれる。
+     */
+    public void saveIfDirty() {
+        if (!dirty) {
+            return;
+        }
         try {
             data.save(file);
+            dirty = false;
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "balances.yml の保存に失敗しました", e);
         }

@@ -7,9 +7,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * 支払いの確認 (チャットクリック) を統合版 (Bedrock) でも行えるようにするコマンド。
- * /accept        -> 保留中の操作を承諾する
- * /accept cancel -> 保留中の操作をキャンセルする
+ * 承諾/キャンセルを統合版 (Bedrock) でも行えるようにする共通コマンド。
+ * 支払いの確認待ちがあればそれを、無ければ受け取っているテレポートリクエスト (/tpa) を
+ * 承諾/拒否する。/tpaccept, /tpdeny を覚えていなくても、これ一つで完結する。
+ * /accept        -> 承諾する
+ * /accept cancel -> キャンセル/拒否する
  */
 public class AcceptCommand implements CommandExecutor {
 
@@ -26,10 +28,21 @@ public class AcceptCommand implements CommandExecutor {
             return true;
         }
 
-        if (args.length > 0 && args[0].equalsIgnoreCase("cancel")) {
-            plugin.getConfirmationManager().cancel(player);
+        boolean cancel = args.length > 0 && args[0].equalsIgnoreCase("cancel");
+
+        if (plugin.getConfirmationManager().hasPending(player.getUniqueId())) {
+            if (cancel) {
+                plugin.getConfirmationManager().cancel(player);
+            } else {
+                plugin.getConfirmationManager().confirm(player);
+            }
+            return true;
+        }
+
+        if (cancel) {
+            plugin.getTpaManager().denyRequest(player);
         } else {
-            plugin.getConfirmationManager().confirm(player);
+            plugin.getTpaManager().acceptRequest(player);
         }
         return true;
     }

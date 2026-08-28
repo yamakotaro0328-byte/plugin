@@ -82,6 +82,14 @@ public class ConfirmationManager {
     }
 
     /**
+     * このプレイヤーに支払いの確認待ちの操作があるかどうか。
+     * /accept が支払い確認と /tpa の受諾のどちらを処理すべきか判断するために使う。
+     */
+    public boolean hasPending(UUID uuid) {
+        return pending.containsKey(uuid);
+    }
+
+    /**
      * プレイヤー退出時などにメッセージを出さず保留を消す。
      */
     public void cancelSilently(UUID uuid) {

@@ -72,12 +72,18 @@ public class PayCommand implements CommandExecutor {
                 player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しています。(必要: " + ChatUtil.formatMoney(amount) + ")"));
                 return;
             }
-            EconomyResponse response = economy.withdrawPlayer(player, amount);
-            if (!response.transactionSuccess()) {
-                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c送金に失敗しました: " + response.errorMessage));
+            EconomyResponse withdrawResponse = economy.withdrawPlayer(player, amount);
+            if (!withdrawResponse.transactionSuccess()) {
+                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c送金に失敗しました: " + withdrawResponse.errorMessage));
                 return;
             }
-            economy.depositPlayer(currentTarget, amount);
+            EconomyResponse depositResponse = economy.depositPlayer(currentTarget, amount);
+            if (!depositResponse.transactionSuccess()) {
+                // 入金に失敗した場合は引き落とし分を払い戻し、お金が消えないようにする。
+                economy.depositPlayer(player, amount);
+                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c送金に失敗したため取り消しました: " + depositResponse.errorMessage));
+                return;
+            }
             player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + targetName + " に " + ChatUtil.formatMoney(amount) + " を送金しました。"));
             currentTarget.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + player.getName() + " から " + ChatUtil.formatMoney(amount) + " を受け取りました。"));
         });

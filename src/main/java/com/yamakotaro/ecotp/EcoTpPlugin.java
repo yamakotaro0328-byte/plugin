@@ -21,6 +21,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class EcoTpPlugin extends JavaPlugin {
 
     private EcoTpEconomy economy;
+    private BalanceManager balanceManager;
     private ConfirmationManager confirmationManager;
     private HomeManager homeManager;
     private SpawnManager spawnManager;
@@ -30,7 +31,7 @@ public class EcoTpPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
 
-        BalanceManager balanceManager = new BalanceManager(this);
+        this.balanceManager = new BalanceManager(this);
         EssentialsImporter essentialsImporter = new EssentialsImporter(this);
         this.economy = new EcoTpEconomy(this, balanceManager, essentialsImporter);
 
@@ -61,6 +62,9 @@ public class EcoTpPlugin extends JavaPlugin {
             getLogger().info("PlaceholderAPI のプレースホルダーを登録しました。(%ecotp_balance% など)");
         }
 
+        // 取引の度にディスクへ保存すると負荷になるため、変更があったときだけ定期的にまとめて保存する。
+        getServer().getScheduler().runTaskTimer(this, () -> balanceManager.saveIfDirty(), 20L * 60, 20L * 60);
+
         getLogger().info("EcoTP が有効になりました。(独自の経済システムで動作中、Essentials は不要です)");
     }
 
@@ -71,6 +75,9 @@ public class EcoTpPlugin extends JavaPlugin {
         }
         if (spawnManager != null) {
             spawnManager.save();
+        }
+        if (balanceManager != null) {
+            balanceManager.saveIfDirty();
         }
     }
 

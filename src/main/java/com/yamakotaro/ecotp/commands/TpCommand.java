@@ -60,13 +60,16 @@ public class TpCommand implements CommandExecutor {
                 player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c" + targetName + " はオフラインになりました。"));
                 return;
             }
-            if (!economy.has(player, cost)) {
-                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しています。(必要: " + ChatUtil.formatMoney(cost) + ")"));
+            // 確認中に自分か相手が移動している可能性があるため、実際にテレポートする直前の
+            // 距離で再計算してから請求する (安い見積もりのまま遠くへ移動されるのを防ぐ)。
+            double actualCost = CostUtil.distanceCost(player.getLocation(), currentTarget.getLocation(), perBlock, crossWorldFlatCost);
+            if (!economy.has(player, actualCost)) {
+                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しています。(必要: " + ChatUtil.formatMoney(actualCost) + ")"));
                 return;
             }
-            economy.withdrawPlayer(player, cost);
+            economy.withdrawPlayer(player, actualCost);
             player.teleport(currentTarget.getLocation());
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + targetName + " へテレポートしました。(" + ChatUtil.formatMoney(cost) + " 支払いました)"));
+            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + targetName + " へテレポートしました。(" + ChatUtil.formatMoney(actualCost) + " 支払いました)"));
         });
         return true;
     }

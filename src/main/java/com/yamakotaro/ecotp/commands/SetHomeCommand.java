@@ -37,7 +37,6 @@ public class SetHomeCommand implements CommandExecutor {
             return true;
         }
 
-        var location = player.getLocation();
         plugin.getConfirmationManager().request(player, cost, "現在地をホームに設定します", () -> {
             double currentCost = plugin.getHomeManager().getNextSetHomeCost(uuid);
             if (!economy.has(player, currentCost)) {
@@ -45,7 +44,8 @@ public class SetHomeCommand implements CommandExecutor {
                 return;
             }
             economy.withdrawPlayer(player, currentCost);
-            plugin.getHomeManager().setHome(uuid, location);
+            // 承諾した瞬間の位置をホームにする (コマンド入力後に移動している可能性があるため)。
+            plugin.getHomeManager().setHome(uuid, player.getLocation());
             player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&aホームを設定しました。(" + ChatUtil.formatMoney(currentCost) + " 支払いました)"));
         });
         return true;
