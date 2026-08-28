@@ -1,0 +1,55 @@
+name: EcoTP
+version: '${project.version}'
+main: com.yamakotaro.ecotp.EcoTpPlugin
+api-version: '1.20'
+author: yamakotaro0328
+depend: [Vault]
+
+commands:
+  home:
+    description: 保存したホームへテレポートします (100円)
+    usage: /home
+  sethome:
+    description: 現在地をホームとして設定します (1000円から、使うたびに1000円ずつ上昇)
+    usage: /sethome
+  spawn:
+    description: スポーン地点へテレポートします (100円)
+    usage: /spawn
+  setspawn:
+    description: スポーン地点を設定します (管理者用・無料)
+    usage: /setspawn
+  tp:
+    description: 指定したプレイヤーへ即座にテレポートします (1ブロック1円)
+    usage: /tp <プレイヤー名>
+  tpa:
+    description: 指定したプレイヤーへテレポートリクエストを送ります (1ブロック1円)
+    usage: /tpa <プレイヤー名>
+  tpaccept:
+    description: 受け取ったテレポートリクエストを承諾します
+    usage: /tpaccept
+  tpdeny:
+    description: 受け取ったテレポートリクエストを拒否します
+    usage: /tpdeny
+  accept:
+    description: 支払いの確認待ちの操作を承諾/キャンセルします (統合版対応)
+    usage: /accept [cancel]
+
+permissions:
+  ecotp.home:
+    description: /home を使用できる
+    default: true
+  ecotp.sethome:
+    description: /sethome を使用できる
+    default: true
+  ecotp.spawn:
+    description: /spawn を使用できる
+    default: true
+  ecotp.setspawn:
+    description: /setspawn を使用できる
+    default: op
+  ecotp.tp:
+    description: /tp を使用できる
+    default: true
+  ecotp.tpa:
+    description: /tpa を使用できる
+    default: true

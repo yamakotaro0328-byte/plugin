@@ -1,0 +1,25 @@
+# EcoTP 設定ファイル
+
+# チャットに表示する接頭辞 (& でカラーコード使用可)
+prefix: "&8[&6EcoTP&8]&r "
+
+# 料金設定
+costs:
+  # /home 1回あたりの料金
+  home: 100.0
+  # /sethome の初回料金。以降 sethome-increment ずつ加算されていく
+  sethome-base: 1000.0
+  sethome-increment: 1000.0
+  # /spawn 1回あたりの料金
+  spawn: 100.0
+  # /tp, /tpa の1ブロックあたりの料金
+  tp-per-block: 1.0
+  tpa-per-block: 1.0
+  # /tp, /tpa で対象プレイヤーが別ワールドにいる場合の固定料金
+  cross-world-flat-cost: 500.0
+
+# 支払い確認 (チャットクリック / 統合版用 /accept コマンド) のタイムアウト秒数
+confirmation-timeout-seconds: 30
+
+# /tpa リクエスト自体 (相手の承諾待ち) のタイムアウト秒数
+tpa-request-timeout-seconds: 60
