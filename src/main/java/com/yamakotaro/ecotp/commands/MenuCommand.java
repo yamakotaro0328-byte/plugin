@@ -1,16 +1,17 @@
 package com.yamakotaro.ecotp.commands;
 
 import com.yamakotaro.ecotp.EcoTpPlugin;
+import com.yamakotaro.ecotp.gui.MainMenuHolder;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-public class TpaDenyCommand implements CommandExecutor {
+public class MenuCommand implements CommandExecutor {
 
     private final EcoTpPlugin plugin;
 
-    public TpaDenyCommand(EcoTpPlugin plugin) {
+    public MenuCommand(EcoTpPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -20,7 +21,11 @@ public class TpaDenyCommand implements CommandExecutor {
             sender.sendMessage(plugin.getMessages().get("general.players-only"));
             return true;
         }
-        plugin.getTpaManager().denyRequest(player);
+        if (!player.hasPermission("ecotp.menu")) {
+            player.sendMessage(plugin.msg("general.no-permission"));
+            return true;
+        }
+        player.openInventory(new MainMenuHolder(plugin).getInventory());
         return true;
     }
 }

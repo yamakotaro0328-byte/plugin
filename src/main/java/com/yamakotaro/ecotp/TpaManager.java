@@ -11,8 +11,8 @@ import java.util.UUID;
 
 /**
  * /tpa のリクエスト (相手の承諾待ち) を管理する。
- * 料金の引き落としは、送信者が支払いに同意した後・相手が承諾した時点で行う
- * (相手が拒否/タイムアウトした場合は一切課金しない)。
+ * 料金の引き落としは、送信者が支払いに同意した後・相手が承諾し、詠唱時間を経てから行う
+ * (相手が拒否/タイムアウトした場合、または詠唱中にキャンセルされた場合は一切課金しない)。
  */
 public class TpaManager {
 
@@ -26,13 +26,11 @@ public class TpaManager {
     private static final class Request {
         final UUID requesterUuid;
         final String requesterName;
-        final double cost;
         final BukkitTask timeoutTask;
 
-        private Request(UUID requesterUuid, String requesterName, double cost, BukkitTask timeoutTask) {
+        private Request(UUID requesterUuid, String requesterName, BukkitTask timeoutTask) {
             this.requesterUuid = requesterUuid;
             this.requesterName = requesterName;
-            this.cost = cost;
             this.timeoutTask = timeoutTask;
         }
     }
@@ -45,67 +43,72 @@ public class TpaManager {
         BukkitTask task = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             requests.remove(targetUuid);
             if (target.isOnline()) {
-                target.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cテレポートリクエストがタイムアウトしました。"));
+                target.sendMessage(plugin.msg("tpa.timeout-target"));
             }
             Player r = Bukkit.getPlayer(requester.getUniqueId());
             if (r != null) {
-                r.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c" + target.getName() + " へのテレポートリクエストがタイムアウトしました。"));
+                r.sendMessage(plugin.msg("tpa.timeout-requester", "player", target.getName()));
             }
         }, timeoutSeconds * 20L);
 
-        requests.put(targetUuid, new Request(requester.getUniqueId(), requester.getName(), cost, task));
+        requests.put(targetUuid, new Request(requester.getUniqueId(), requester.getName(), task));
 
-        requester.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + target.getName() + " にテレポートリクエストを送信しました。相手の承諾をお待ちください。"));
+        requester.sendMessage(plugin.msg("tpa.sent", "player", target.getName()));
         ChatUtil.sendTpaRequestPrompt(target, plugin.getPrefix(), requester.getName(), cost);
     }
 
     public void acceptRequest(Player target) {
         Request req = requests.remove(target.getUniqueId());
         if (req == null) {
-            target.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c承諾できるテレポートリクエストはありません。"));
+            target.sendMessage(plugin.msg("tpa.none-to-accept"));
             return;
         }
         req.timeoutTask.cancel();
 
         Player requester = Bukkit.getPlayer(req.requesterUuid);
         if (requester == null || !requester.isOnline()) {
-            target.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cリクエストを送った " + req.requesterName + " はオフラインになりました。"));
+            target.sendMessage(plugin.msg("tpa.requester-offline", "player", req.requesterName));
             return;
         }
 
-        // リクエスト送信時点の cost は見積もりに過ぎない。承諾された瞬間の実際の距離で
-        // 再計算してから請求する (送信後に相手が移動して料金を騙し取られるのを防ぐ)。
-        double perBlock = plugin.getConfig().getDouble("costs.tpa-per-block", 1.0);
-        double crossWorldFlatCost = plugin.getConfig().getDouble("costs.cross-world-flat-cost", 500.0);
-        double actualCost = CostUtil.distanceCost(requester.getLocation(), target.getLocation(), perBlock, crossWorldFlatCost);
+        target.sendMessage(plugin.msg("tpa.accepted-target", "player", req.requesterName));
 
-        Economy economy = plugin.getEconomy();
-        if (!economy.has(requester, actualCost)) {
-            String msg = plugin.getPrefix() + "&c" + req.requesterName + " の所持金が不足しているためテレポートできませんでした。(必要: " + ChatUtil.formatMoney(actualCost) + ")";
-            target.sendMessage(ChatUtil.color(msg));
-            requester.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しているため " + target.getName() + " へテレポートできませんでした。(必要: " + ChatUtil.formatMoney(actualCost) + ")"));
-            return;
-        }
+        String description = plugin.getMessages().get("tp.description", "player", target.getName());
+        plugin.getWarmupManager().start(requester, description, () -> {
+            if (!requester.isOnline() || !target.isOnline()) {
+                return;
+            }
+            // リクエスト送信時点の cost は見積もりに過ぎない。実際にテレポートする直前の
+            // 距離で再計算してから請求する (送信後に相手が移動して料金を騙し取られるのを防ぐ)。
+            double perBlock = plugin.getConfig().getDouble("costs.tpa-per-block", 1.0);
+            double crossWorldFlatCost = plugin.getConfig().getDouble("costs.cross-world-flat-cost", 500.0);
+            double actualCost = CostUtil.distanceCost(requester.getLocation(), target.getLocation(), perBlock, crossWorldFlatCost);
 
-        economy.withdrawPlayer(requester, actualCost);
-        requester.teleport(target.getLocation());
+            Economy economy = plugin.getEconomy();
+            if (!economy.has(requester, actualCost)) {
+                target.sendMessage(plugin.msg("tpa.insufficient-funds-target", "player", req.requesterName, "cost", ChatUtil.formatMoney(actualCost)));
+                requester.sendMessage(plugin.msg("tpa.insufficient-funds-requester", "player", target.getName(), "cost", ChatUtil.formatMoney(actualCost)));
+                return;
+            }
 
-        requester.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + target.getName() + " へテレポートしました。(" + ChatUtil.formatMoney(actualCost) + " 支払いました)"));
-        target.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + req.requesterName + " のテレポートリクエストを承諾しました。"));
+            economy.withdrawPlayer(requester, actualCost);
+            requester.teleport(target.getLocation());
+            requester.sendMessage(plugin.msg("tpa.accepted-requester", "player", target.getName(), "cost", ChatUtil.formatMoney(actualCost)));
+        });
     }
 
     public void denyRequest(Player target) {
         Request req = requests.remove(target.getUniqueId());
         if (req == null) {
-            target.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c拒否できるテレポートリクエストはありません。"));
+            target.sendMessage(plugin.msg("tpa.none-to-deny"));
             return;
         }
         req.timeoutTask.cancel();
 
-        target.sendMessage(ChatUtil.color(plugin.getPrefix() + "&eテレポートリクエストを拒否しました。"));
+        target.sendMessage(plugin.msg("tpa.denied-target"));
         Player requester = Bukkit.getPlayer(req.requesterUuid);
         if (requester != null) {
-            requester.sendMessage(ChatUtil.color(plugin.getPrefix() + "&e" + target.getName() + " にテレポートリクエストを拒否されました。"));
+            requester.sendMessage(plugin.msg("tpa.denied-requester", "player", target.getName()));
         }
     }
 

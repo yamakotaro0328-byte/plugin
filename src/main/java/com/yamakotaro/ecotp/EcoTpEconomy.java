@@ -19,10 +19,10 @@ import java.util.UUID;
 public class EcoTpEconomy implements Economy {
 
     private final EcoTpPlugin plugin;
-    private final BalanceManager balances;
+    private final BalanceStorage balances;
     private final EssentialsImporter essentialsImporter;
 
-    public EcoTpEconomy(EcoTpPlugin plugin, BalanceManager balances, EssentialsImporter essentialsImporter) {
+    public EcoTpEconomy(EcoTpPlugin plugin, BalanceStorage balances, EssentialsImporter essentialsImporter) {
         this.plugin = plugin;
         this.balances = balances;
         this.essentialsImporter = essentialsImporter;
@@ -42,6 +42,13 @@ public class EcoTpEconomy implements Economy {
         if (imported != null) {
             plugin.getLogger().info((name != null ? name : uuid) + " の所持金を Essentials から引き継ぎました (" + ChatUtil.formatMoney(initial) + ")");
         }
+    }
+
+    /**
+     * /baltop 用。所持金が多い順に上位 limit 件を返す。
+     */
+    public List<BalanceEntry> getTopBalances(int limit) {
+        return balances.getTopBalances(limit);
     }
 
     private UUID resolveUuid(String playerName) {
@@ -78,12 +85,12 @@ public class EcoTpEconomy implements Economy {
 
     @Override
     public String currencyNamePlural() {
-        return "円";
+        return plugin.getMessages().currencyPlural();
     }
 
     @Override
     public String currencyNameSingular() {
-        return "円";
+        return plugin.getMessages().currencySingular();
     }
 
     // ---- 口座の存在確認 ----

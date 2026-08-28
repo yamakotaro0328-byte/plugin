@@ -9,7 +9,17 @@ import org.bukkit.entity.Player;
 
 public final class ChatUtil {
 
+    private static Messages messages;
+
     private ChatUtil() {
+    }
+
+    /**
+     * EcoTpPlugin#onEnable から一度だけ呼ばれる。
+     * formatMoney を static のまま各コマンドから呼べるようにするための橋渡し。
+     */
+    public static void init(Messages messagesInstance) {
+        messages = messagesInstance;
     }
 
     public static String color(String s) {
@@ -17,8 +27,10 @@ public final class ChatUtil {
     }
 
     public static String formatMoney(double amount) {
-        long rounded = Math.round(amount);
-        return rounded + "円";
+        if (messages != null) {
+            return messages.formatMoney(amount);
+        }
+        return Math.round(amount) + "円";
     }
 
     /**
@@ -28,23 +40,23 @@ public final class ChatUtil {
     public static void sendConfirmPrompt(Player player, String prefix, String description, double cost) {
         player.sendMessage(color(prefix + description + " (" + formatMoney(cost) + ")"));
 
-        TextComponent acceptButton = new TextComponent("[承諾する]");
+        TextComponent acceptButton = new TextComponent(messages.get("confirm.accept-button"));
         acceptButton.setColor(net.md_5.bungee.api.ChatColor.GREEN);
         acceptButton.setBold(true);
         acceptButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/accept"));
         acceptButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder("クリックして承諾する").create()));
+                new ComponentBuilder(messages.get("confirm.accept-hover")).create()));
 
         TextComponent space = new TextComponent("  ");
 
-        TextComponent cancelButton = new TextComponent("[キャンセル]");
+        TextComponent cancelButton = new TextComponent(messages.get("confirm.cancel-button"));
         cancelButton.setColor(net.md_5.bungee.api.ChatColor.RED);
         cancelButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/accept cancel"));
         cancelButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder("クリックしてキャンセル").create()));
+                new ComponentBuilder(messages.get("confirm.cancel-hover")).create()));
 
         player.spigot().sendMessage(acceptButton, space, cancelButton);
-        player.sendMessage(color("&7※統合版の方は &f/accept &7と入力すると承諾できます (キャンセルは &f/accept cancel&7)"));
+        player.sendMessage(messages.get("confirm.bedrock-hint"));
     }
 
     /**
@@ -52,24 +64,24 @@ public final class ChatUtil {
      * こちらは /tpaccept, /tpdeny がもともと統合版でも入力可能なコマンドなので案内文のみ添える。
      */
     public static void sendTpaRequestPrompt(Player target, String prefix, String requesterName, double cost) {
-        target.sendMessage(color(prefix + "&e" + requesterName + " &fさんからテレポートリクエストが届きました。(相手が " + formatMoney(cost) + " を支払います)"));
+        target.sendMessage(messages.get("tpa.incoming", "player", requesterName, "cost", formatMoney(cost)));
 
-        TextComponent acceptButton = new TextComponent("[承諾する]");
+        TextComponent acceptButton = new TextComponent(messages.get("confirm.accept-button"));
         acceptButton.setColor(net.md_5.bungee.api.ChatColor.GREEN);
         acceptButton.setBold(true);
         acceptButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaccept"));
         acceptButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder("クリックして承諾する").create()));
+                new ComponentBuilder(messages.get("tpa.incoming-accept-hover")).create()));
 
         TextComponent space = new TextComponent("  ");
 
-        TextComponent denyButton = new TextComponent("[拒否する]");
+        TextComponent denyButton = new TextComponent(messages.get("confirm.cancel-button"));
         denyButton.setColor(net.md_5.bungee.api.ChatColor.RED);
         denyButton.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpdeny"));
         denyButton.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                new ComponentBuilder("クリックして拒否する").create()));
+                new ComponentBuilder(messages.get("tpa.incoming-deny-hover")).create()));
 
         target.spigot().sendMessage(acceptButton, space, denyButton);
-        target.sendMessage(color("&7※統合版の方は &f/tpaccept &7または &f/tpdeny &7と入力してください"));
+        target.sendMessage(messages.get("tpa.bedrock-hint"));
     }
 }

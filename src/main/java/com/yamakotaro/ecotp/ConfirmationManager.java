@@ -47,7 +47,7 @@ public class ConfirmationManager {
         BukkitTask task = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             pending.remove(uuid);
             if (player.isOnline()) {
-                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c確認がタイムアウトしました。"));
+                player.sendMessage(plugin.msg("confirm.timed-out"));
             }
         }, timeoutSeconds * 20L);
 
@@ -61,7 +61,7 @@ public class ConfirmationManager {
     public void confirm(Player player) {
         Pending p = pending.remove(player.getUniqueId());
         if (p == null) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c確認待ちの操作はありません。"));
+            player.sendMessage(plugin.msg("confirm.none-pending"));
             return;
         }
         p.timeoutTask.cancel();
@@ -74,11 +74,11 @@ public class ConfirmationManager {
     public void cancel(Player player) {
         Pending p = pending.remove(player.getUniqueId());
         if (p == null) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cキャンセルできる操作はありません。"));
+            player.sendMessage(plugin.msg("confirm.none-to-cancel"));
             return;
         }
         p.timeoutTask.cancel();
-        player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&e操作をキャンセルしました。"));
+        player.sendMessage(plugin.msg("confirm.cancelled"));
     }
 
     /**

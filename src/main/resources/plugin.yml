@@ -43,6 +43,13 @@ commands:
   eco:
     description: 所持金を操作します (管理者用)
     usage: /eco <give|take|set> <プレイヤー名> <金額>
+  baltop:
+    description: 所持金ランキングを表示します
+    usage: /baltop
+  menu:
+    description: GUIメニューを開きます (ホーム/スポーン/tpa/送金/ランキングをクリックで操作)
+    usage: /menu
+    aliases: [ecomenu]
 
 permissions:
   ecotp.home:
@@ -72,3 +79,6 @@ permissions:
   ecotp.admin:
     description: /eco を使用できる
     default: op
+  ecotp.menu:
+    description: /menu を使用できる
+    default: true

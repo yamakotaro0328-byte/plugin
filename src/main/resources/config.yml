@@ -34,3 +34,26 @@ confirmation-timeout-seconds: 30
 
 # /tpa リクエスト自体 (相手の承諾待ち) のタイムアウト秒数
 tpa-request-timeout-seconds: 60
+
+# ワープ実行前の詠唱時間。支払いはこの待機が完了してから行われる。
+# 移動やダメージでキャンセルされた場合は課金されない (戦闘中の逃げテレポ対策)。
+warmup:
+  enabled: true
+  seconds: 3
+  cancel-on-move: true
+  cancel-on-damage: true
+
+# 残高の保存先。yaml (デフォルト、追加設定不要) か mysql を選べる。
+# 複数サーバーで残高を共有したい場合は mysql を使う。
+storage:
+  type: yaml
+  mysql:
+    host: localhost
+    port: 3306
+    database: ecotp
+    username: root
+    password: ""
+    table-prefix: "ecotp_"
+
+# /baltop で表示する人数
+baltop-limit: 10

@@ -17,7 +17,7 @@ public class TpaAcceptCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("プレイヤーのみ実行できます。");
+            sender.sendMessage(plugin.getMessages().get("general.players-only"));
             return true;
         }
         plugin.getTpaManager().acceptRequest(player);

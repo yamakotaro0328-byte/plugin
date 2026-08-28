@@ -21,25 +21,25 @@ public class TpCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("プレイヤーのみ実行できます。");
+            sender.sendMessage(plugin.getMessages().get("general.players-only"));
             return true;
         }
         if (!player.hasPermission("ecotp.tp")) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cこのコマンドを使う権限がありません。"));
+            player.sendMessage(plugin.msg("general.no-permission"));
             return true;
         }
         if (args.length < 1) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c使い方: /tp <プレイヤー名>"));
+            player.sendMessage(plugin.msg("tp.usage"));
             return true;
         }
 
         Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null || !target.isOnline()) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cそのプレイヤーはオンラインではありません。"));
+            player.sendMessage(plugin.msg("general.player-offline"));
             return true;
         }
         if (target.getUniqueId().equals(player.getUniqueId())) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c自分自身にはテレポートできません。"));
+            player.sendMessage(plugin.msg("general.cannot-target-self"));
             return true;
         }
 
@@ -49,28 +49,33 @@ public class TpCommand implements CommandExecutor {
 
         Economy economy = plugin.getEconomy();
         if (!economy.has(player, cost)) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しています。(必要: " + ChatUtil.formatMoney(cost) + ")"));
+            player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
             return true;
         }
 
         String targetName = target.getName();
-        plugin.getConfirmationManager().request(player, cost, targetName + " へテレポートします", () -> {
-            Player currentTarget = Bukkit.getPlayerExact(targetName);
-            if (currentTarget == null || !currentTarget.isOnline()) {
-                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c" + targetName + " はオフラインになりました。"));
-                return;
-            }
-            // 確認中に自分か相手が移動している可能性があるため、実際にテレポートする直前の
-            // 距離で再計算してから請求する (安い見積もりのまま遠くへ移動されるのを防ぐ)。
-            double actualCost = CostUtil.distanceCost(player.getLocation(), currentTarget.getLocation(), perBlock, crossWorldFlatCost);
-            if (!economy.has(player, actualCost)) {
-                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しています。(必要: " + ChatUtil.formatMoney(actualCost) + ")"));
-                return;
-            }
-            economy.withdrawPlayer(player, actualCost);
-            player.teleport(currentTarget.getLocation());
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + targetName + " へテレポートしました。(" + ChatUtil.formatMoney(actualCost) + " 支払いました)"));
-        });
+        String description = plugin.getMessages().get("tp.description", "player", targetName);
+        plugin.getConfirmationManager().request(player, cost, description, () ->
+                plugin.getWarmupManager().start(player, description, () -> {
+                    if (!player.isOnline()) {
+                        return;
+                    }
+                    Player currentTarget = Bukkit.getPlayerExact(targetName);
+                    if (currentTarget == null || !currentTarget.isOnline()) {
+                        player.sendMessage(plugin.msg("general.player-went-offline", "player", targetName));
+                        return;
+                    }
+                    // 確認/詠唱の間に自分か相手が移動している可能性があるため、実際にテレポート
+                    // する直前の距離で再計算してから請求する (安い見積もりのまま遠くへ移動されるのを防ぐ)。
+                    double actualCost = CostUtil.distanceCost(player.getLocation(), currentTarget.getLocation(), perBlock, crossWorldFlatCost);
+                    if (!economy.has(player, actualCost)) {
+                        player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(actualCost)));
+                        return;
+                    }
+                    economy.withdrawPlayer(player, actualCost);
+                    player.teleport(currentTarget.getLocation());
+                    player.sendMessage(plugin.msg("tp.success", "player", targetName, "cost", ChatUtil.formatMoney(actualCost)));
+                }));
         return true;
     }
 }

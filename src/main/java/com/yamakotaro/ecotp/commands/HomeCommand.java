@@ -22,47 +22,52 @@ public class HomeCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("プレイヤーのみ実行できます。");
+            sender.sendMessage(plugin.getMessages().get("general.players-only"));
             return true;
         }
         if (!player.hasPermission("ecotp.home")) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cこのコマンドを使う権限がありません。"));
+            player.sendMessage(plugin.msg("general.no-permission"));
             return true;
         }
 
         UUID uuid = player.getUniqueId();
         if (!plugin.getHomeManager().hasHome(uuid)) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cホームが設定されていません。/sethome で設定してください。"));
+            player.sendMessage(plugin.msg("home.not-set"));
             return true;
         }
 
         Location home = plugin.getHomeManager().getHome(uuid);
         if (home == null) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cホームのワールドが見つかりません。"));
+            player.sendMessage(plugin.msg("home.world-missing"));
             return true;
         }
 
         double cost = plugin.getConfig().getDouble("costs.home", 100.0);
         Economy economy = plugin.getEconomy();
         if (!economy.has(player, cost)) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しています。(必要: " + ChatUtil.formatMoney(cost) + ")"));
+            player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
             return true;
         }
 
-        plugin.getConfirmationManager().request(player, cost, "ホームへテレポートします", () -> {
-            if (!economy.has(player, cost)) {
-                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しています。(必要: " + ChatUtil.formatMoney(cost) + ")"));
-                return;
-            }
-            Location current = plugin.getHomeManager().getHome(uuid);
-            if (current == null) {
-                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cホームのワールドが見つかりません。"));
-                return;
-            }
-            economy.withdrawPlayer(player, cost);
-            player.teleport(current);
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&aホームにテレポートしました。(" + ChatUtil.formatMoney(cost) + " 支払いました)"));
-        });
+        String description = plugin.getMessages().get("home.teleporting");
+        plugin.getConfirmationManager().request(player, cost, description, () ->
+                plugin.getWarmupManager().start(player, description, () -> {
+                    if (!player.isOnline()) {
+                        return;
+                    }
+                    if (!economy.has(player, cost)) {
+                        player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
+                        return;
+                    }
+                    Location current = plugin.getHomeManager().getHome(uuid);
+                    if (current == null) {
+                        player.sendMessage(plugin.msg("home.world-missing"));
+                        return;
+                    }
+                    economy.withdrawPlayer(player, cost);
+                    player.teleport(current);
+                    player.sendMessage(plugin.msg("home.success", "cost", ChatUtil.formatMoney(cost)));
+                }));
         return true;
     }
 }

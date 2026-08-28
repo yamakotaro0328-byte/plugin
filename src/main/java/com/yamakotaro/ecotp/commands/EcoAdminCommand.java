@@ -24,11 +24,11 @@ public class EcoAdminCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.hasPermission("ecotp.admin")) {
-            sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cこのコマンドを使う権限がありません。"));
+            sender.sendMessage(plugin.msg("general.no-permission"));
             return true;
         }
         if (args.length < 3) {
-            sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c使い方: /eco <give|take|set> <プレイヤー名> <金額>"));
+            sender.sendMessage(plugin.msg("eco.usage"));
             return true;
         }
 
@@ -38,11 +38,11 @@ public class EcoAdminCommand implements CommandExecutor {
         try {
             amount = Double.parseDouble(args[2]);
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c金額は数値で指定してください。"));
+            sender.sendMessage(plugin.msg("eco.invalid-amount"));
             return true;
         }
         if (amount < 0) {
-            sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c金額は0以上を指定してください。"));
+            sender.sendMessage(plugin.msg("eco.negative-amount"));
             return true;
         }
 
@@ -53,15 +53,15 @@ public class EcoAdminCommand implements CommandExecutor {
         switch (sub) {
             case "give" -> {
                 economy.depositPlayer(target, amount);
-                sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + targetName + " に " + ChatUtil.formatMoney(amount) + " 付与しました。"));
+                sender.sendMessage(plugin.msg("eco.gave", "player", targetName, "amount", ChatUtil.formatMoney(amount)));
             }
             case "take" -> {
                 EconomyResponse response = economy.withdrawPlayer(target, amount);
                 if (!response.transactionSuccess()) {
-                    sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c失敗しました: " + response.errorMessage));
+                    sender.sendMessage(plugin.msg("eco.took-failed", "error", response.errorMessage));
                     return true;
                 }
-                sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + targetName + " から " + ChatUtil.formatMoney(amount) + " 減らしました。"));
+                sender.sendMessage(plugin.msg("eco.took", "player", targetName, "amount", ChatUtil.formatMoney(amount)));
             }
             case "set" -> {
                 double current = economy.getBalance(target);
@@ -70,9 +70,9 @@ public class EcoAdminCommand implements CommandExecutor {
                 } else if (amount < current) {
                     economy.withdrawPlayer(target, current - amount);
                 }
-                sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + targetName + " の所持金を " + ChatUtil.formatMoney(amount) + " に設定しました。"));
+                sender.sendMessage(plugin.msg("eco.set", "player", targetName, "amount", ChatUtil.formatMoney(amount)));
             }
-            default -> sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c使い方: /eco <give|take|set> <プレイヤー名> <金額>"));
+            default -> sender.sendMessage(plugin.msg("eco.usage"));
         }
         return true;
     }

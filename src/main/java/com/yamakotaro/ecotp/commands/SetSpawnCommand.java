@@ -1,6 +1,5 @@
 package com.yamakotaro.ecotp.commands;
 
-import com.yamakotaro.ecotp.ChatUtil;
 import com.yamakotaro.ecotp.EcoTpPlugin;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -18,16 +17,16 @@ public class SetSpawnCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("プレイヤーのみ実行できます。");
+            sender.sendMessage(plugin.getMessages().get("general.players-only"));
             return true;
         }
         if (!player.hasPermission("ecotp.setspawn")) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cこのコマンドを使う権限がありません。"));
+            player.sendMessage(plugin.msg("general.no-permission"));
             return true;
         }
 
         plugin.getSpawnManager().setSpawn(player.getLocation());
-        player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&aスポーン地点を現在地に設定しました。"));
+        player.sendMessage(plugin.msg("setspawn.success"));
         return true;
     }
 }

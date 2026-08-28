@@ -21,11 +21,11 @@ public class SetHomeCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("プレイヤーのみ実行できます。");
+            sender.sendMessage(plugin.getMessages().get("general.players-only"));
             return true;
         }
         if (!player.hasPermission("ecotp.sethome")) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cこのコマンドを使う権限がありません。"));
+            player.sendMessage(plugin.msg("general.no-permission"));
             return true;
         }
 
@@ -33,20 +33,21 @@ public class SetHomeCommand implements CommandExecutor {
         double cost = plugin.getHomeManager().getNextSetHomeCost(uuid);
         Economy economy = plugin.getEconomy();
         if (!economy.has(player, cost)) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しています。(必要: " + ChatUtil.formatMoney(cost) + ")"));
+            player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
             return true;
         }
 
-        plugin.getConfirmationManager().request(player, cost, "現在地をホームに設定します", () -> {
+        String description = plugin.getMessages().get("sethome.description");
+        plugin.getConfirmationManager().request(player, cost, description, () -> {
             double currentCost = plugin.getHomeManager().getNextSetHomeCost(uuid);
             if (!economy.has(player, currentCost)) {
-                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しています。(必要: " + ChatUtil.formatMoney(currentCost) + ")"));
+                player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(currentCost)));
                 return;
             }
             economy.withdrawPlayer(player, currentCost);
             // 承諾した瞬間の位置をホームにする (コマンド入力後に移動している可能性があるため)。
             plugin.getHomeManager().setHome(uuid, player.getLocation());
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&aホームを設定しました。(" + ChatUtil.formatMoney(currentCost) + " 支払いました)"));
+            player.sendMessage(plugin.msg("sethome.success", "cost", ChatUtil.formatMoney(currentCost)));
         });
         return true;
     }

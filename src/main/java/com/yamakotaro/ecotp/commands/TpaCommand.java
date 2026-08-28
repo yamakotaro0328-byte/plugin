@@ -21,25 +21,25 @@ public class TpaCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("プレイヤーのみ実行できます。");
+            sender.sendMessage(plugin.getMessages().get("general.players-only"));
             return true;
         }
         if (!player.hasPermission("ecotp.tpa")) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cこのコマンドを使う権限がありません。"));
+            player.sendMessage(plugin.msg("general.no-permission"));
             return true;
         }
         if (args.length < 1) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c使い方: /tpa <プレイヤー名>"));
+            player.sendMessage(plugin.msg("tpa.usage"));
             return true;
         }
 
         Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null || !target.isOnline()) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&cそのプレイヤーはオンラインではありません。"));
+            player.sendMessage(plugin.msg("general.player-offline"));
             return true;
         }
         if (target.getUniqueId().equals(player.getUniqueId())) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c自分自身にはリクエストできません。"));
+            player.sendMessage(plugin.msg("general.cannot-target-self"));
             return true;
         }
 
@@ -49,16 +49,17 @@ public class TpaCommand implements CommandExecutor {
 
         Economy economy = plugin.getEconomy();
         if (!economy.has(player, cost)) {
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c所持金が不足しています。(必要: " + ChatUtil.formatMoney(cost) + ")"));
+            player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
             return true;
         }
 
         String targetName = target.getName();
+        String description = plugin.getMessages().get("tpa.description", "player", targetName);
         // ここではお金は引き落とさない。相手が承諾したときに初めて課金する。
-        plugin.getConfirmationManager().request(player, cost, targetName + " にテレポートリクエストを送ります", () -> {
+        plugin.getConfirmationManager().request(player, cost, description, () -> {
             Player currentTarget = Bukkit.getPlayerExact(targetName);
             if (currentTarget == null || !currentTarget.isOnline()) {
-                player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c" + targetName + " はオフラインになりました。"));
+                player.sendMessage(plugin.msg("general.player-went-offline", "player", targetName));
                 return;
             }
             plugin.getTpaManager().sendRequest(player, currentTarget, cost);

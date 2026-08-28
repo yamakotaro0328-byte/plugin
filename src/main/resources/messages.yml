@@ -1,0 +1,118 @@
+# EcoTP メッセージ設定ファイル
+# {placeholder} の部分は実行時に値へ置き換わります。& でカラーコードが使えます。
+# ここを書き換えるだけで、コードを触らずに文言や通貨単位を変更できます。
+
+currency:
+  singular: "円"
+  plural: "円"
+
+general:
+  players-only: "プレイヤーのみ実行できます。"
+  no-permission: "&cこのコマンドを使う権限がありません。"
+  insufficient-funds: "&c所持金が不足しています。(必要: {cost})"
+  player-offline: "&cそのプレイヤーはオンラインではありません。"
+  player-went-offline: "&c{player} はオフラインになりました。"
+  cannot-target-self: "&c自分自身には指定できません。"
+
+confirm:
+  accept-button: "[承諾する]"
+  accept-hover: "クリックして承諾する"
+  cancel-button: "[キャンセル]"
+  cancel-hover: "クリックしてキャンセル"
+  bedrock-hint: "&7※統合版の方は &f/accept &7と入力すると承諾できます (キャンセルは &f/accept cancel&7)"
+  none-pending: "&c確認待ちの操作はありません。"
+  none-to-cancel: "&cキャンセルできる操作はありません。"
+  cancelled: "&e操作をキャンセルしました。"
+  timed-out: "&c確認がタイムアウトしました。"
+
+warmup:
+  countdown: "&e{description} まで &f{seconds}秒 &e...動いたりダメージを受けるとキャンセルされます"
+  cancelled-move: "&c移動したためキャンセルされました。"
+  cancelled-damage: "&cダメージを受けたためキャンセルされました。"
+
+home:
+  not-set: "&cホームが設定されていません。/sethome で設定してください。"
+  world-missing: "&cホームのワールドが見つかりません。"
+  teleporting: "ホームへワープします"
+  success: "&aホームにテレポートしました。({cost} 支払いました)"
+
+sethome:
+  description: "現在地をホームに設定します"
+  success: "&aホームを設定しました。({cost} 支払いました)"
+
+spawn:
+  teleporting: "スポーン地点へワープします"
+  success: "&aスポーン地点にテレポートしました。({cost} 支払いました)"
+
+setspawn:
+  success: "&aスポーン地点を現在地に設定しました。"
+
+tp:
+  usage: "&c使い方: /tp <プレイヤー名>"
+  description: "{player} へワープします"
+  success: "&a{player} へテレポートしました。({cost} 支払いました)"
+
+tpa:
+  usage: "&c使い方: /tpa <プレイヤー名>"
+  description: "{player} にテレポートリクエストを送ります"
+  sent: "&a{player} にテレポートリクエストを送信しました。相手の承諾をお待ちください。"
+  incoming: "&e{player} &fさんからテレポートリクエストが届きました。(相手が {cost} を支払います)"
+  incoming-accept-hover: "クリックして承諾する"
+  incoming-deny-hover: "クリックして拒否する"
+  bedrock-hint: "&7※統合版の方は &f/tpaccept &7または &f/tpdeny &7と入力してください"
+  accepted-requester: "&a{player} へテレポートしました。({cost} 支払いました)"
+  accepted-target: "&a{player} のテレポートリクエストを承諾しました。"
+  denied-target: "&eテレポートリクエストを拒否しました。"
+  denied-requester: "&e{player} にテレポートリクエストを拒否されました。"
+  none-to-accept: "&c承諾できるテレポートリクエストはありません。"
+  none-to-deny: "&c拒否できるテレポートリクエストはありません。"
+  requester-offline: "&cリクエストを送った {player} はオフラインになりました。"
+  insufficient-funds-target: "&c{player} の所持金が不足しているためテレポートできませんでした。(必要: {cost})"
+  insufficient-funds-requester: "&c所持金が不足しているため {player} へテレポートできませんでした。(必要: {cost})"
+  timeout-target: "&cテレポートリクエストがタイムアウトしました。"
+  timeout-requester: "&c{player} へのテレポートリクエストがタイムアウトしました。"
+
+balance:
+  self: "&aあなたの所持金: &f{balance}"
+  other: "&a{player} の所持金: &f{balance}"
+  no-permission-others: "&c他のプレイヤーの所持金を見る権限がありません。"
+
+pay:
+  usage: "&c使い方: /pay <プレイヤー名> <金額>"
+  invalid-amount: "&c金額は数値で指定してください。"
+  amount-too-low: "&c金額は1以上を指定してください。"
+  description: "{player} に送金します"
+  sent: "&a{player} に {amount} を送金しました。"
+  received: "&a{player} から {amount} を受け取りました。"
+  failed: "&c送金に失敗しました: {error}"
+  refunded: "&c送金に失敗したため取り消しました: {error}"
+
+eco:
+  usage: "&c使い方: /eco <give|take|set> <プレイヤー名> <金額>"
+  invalid-amount: "&c金額は数値で指定してください。"
+  negative-amount: "&c金額は0以上を指定してください。"
+  gave: "&a{player} に {amount} 付与しました。"
+  took: "&a{player} から {amount} 減らしました。"
+  took-failed: "&c失敗しました: {error}"
+  set: "&a{player} の所持金を {amount} に設定しました。"
+
+baltop:
+  header: "&6==== 所持金ランキング (上位{limit}人) ===="
+  line: "&e{rank}. &f{player} &7- &a{balance}"
+  empty: "&7まだデータがありません。"
+
+menu:
+  title: "EcoTPメニュー"
+  home: "&aホームへワープ"
+  sethome: "&bホームを設定"
+  spawn: "&aスポーンへワープ"
+  tpa: "&dテレポートリクエスト"
+  balance: "&6所持金確認"
+  pay: "&e送金"
+  baltop: "&b所持金ランキング"
+  close: "&c閉じる"
+  select-player-title: "プレイヤーを選択"
+  no-players-online: "&c他にオンラインのプレイヤーがいません。"
+  chat-input-amount: "&aチャットに送金する金額を入力してください。(キャンセルするには cancel と入力)"
+  chat-input-cancelled: "&eキャンセルしました。"
+  chat-input-timeout: "&c入力がタイムアウトしました。"

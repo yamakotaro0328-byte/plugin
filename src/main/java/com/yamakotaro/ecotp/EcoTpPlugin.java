@@ -2,8 +2,10 @@ package com.yamakotaro.ecotp;
 
 import com.yamakotaro.ecotp.commands.AcceptCommand;
 import com.yamakotaro.ecotp.commands.BalanceCommand;
+import com.yamakotaro.ecotp.commands.BaltopCommand;
 import com.yamakotaro.ecotp.commands.EcoAdminCommand;
 import com.yamakotaro.ecotp.commands.HomeCommand;
+import com.yamakotaro.ecotp.commands.MenuCommand;
 import com.yamakotaro.ecotp.commands.PayCommand;
 import com.yamakotaro.ecotp.commands.SetHomeCommand;
 import com.yamakotaro.ecotp.commands.SetSpawnCommand;
@@ -12,6 +14,7 @@ import com.yamakotaro.ecotp.commands.TpCommand;
 import com.yamakotaro.ecotp.commands.TpaAcceptCommand;
 import com.yamakotaro.ecotp.commands.TpaCommand;
 import com.yamakotaro.ecotp.commands.TpaDenyCommand;
+import com.yamakotaro.ecotp.gui.GuiListener;
 import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
 import net.milkbowl.vault.economy.Economy;
@@ -20,25 +23,32 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class EcoTpPlugin extends JavaPlugin {
 
+    private Messages messages;
     private EcoTpEconomy economy;
-    private BalanceManager balanceManager;
+    private BalanceStorage balanceStorage;
     private ConfirmationManager confirmationManager;
     private HomeManager homeManager;
     private SpawnManager spawnManager;
     private TpaManager tpaManager;
+    private WarmupManager warmupManager;
+    private ChatInputManager chatInputManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        this.messages = new Messages(this);
+        ChatUtil.init(messages);
 
-        this.balanceManager = new BalanceManager(this);
+        this.balanceStorage = createBalanceStorage();
         EssentialsImporter essentialsImporter = new EssentialsImporter(this);
-        this.economy = new EcoTpEconomy(this, balanceManager, essentialsImporter);
+        this.economy = new EcoTpEconomy(this, balanceStorage, essentialsImporter);
 
         this.confirmationManager = new ConfirmationManager(this);
         this.homeManager = new HomeManager(this);
         this.spawnManager = new SpawnManager(this);
         this.tpaManager = new TpaManager(this);
+        this.warmupManager = new WarmupManager(this);
+        this.chatInputManager = new ChatInputManager(this);
 
         getCommand("home").setExecutor(new HomeCommand(this));
         getCommand("sethome").setExecutor(new SetHomeCommand(this));
@@ -52,9 +62,14 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("balance").setExecutor(new BalanceCommand(this));
         getCommand("pay").setExecutor(new PayCommand(this));
         getCommand("eco").setExecutor(new EcoAdminCommand(this));
+        getCommand("baltop").setExecutor(new BaltopCommand(this));
+        getCommand("menu").setExecutor(new MenuCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
         getServer().getPluginManager().registerEvents(new EconomyJoinListener(this), this);
+        getServer().getPluginManager().registerEvents(warmupManager, this);
+        getServer().getPluginManager().registerEvents(chatInputManager, this);
+        getServer().getPluginManager().registerEvents(new GuiListener(this), this);
 
         setupVault();
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -63,7 +78,7 @@ public class EcoTpPlugin extends JavaPlugin {
         }
 
         // 取引の度にディスクへ保存すると負荷になるため、変更があったときだけ定期的にまとめて保存する。
-        getServer().getScheduler().runTaskTimer(this, () -> balanceManager.saveIfDirty(), 20L * 60, 20L * 60);
+        getServer().getScheduler().runTaskTimer(this, () -> balanceStorage.saveIfDirty(), 20L * 60, 20L * 60);
 
         getLogger().info("EcoTP が有効になりました。(独自の経済システムで動作中、Essentials は不要です)");
     }
@@ -76,9 +91,18 @@ public class EcoTpPlugin extends JavaPlugin {
         if (spawnManager != null) {
             spawnManager.save();
         }
-        if (balanceManager != null) {
-            balanceManager.saveIfDirty();
+        if (balanceStorage != null) {
+            balanceStorage.close();
         }
+    }
+
+    private BalanceStorage createBalanceStorage() {
+        String type = getConfig().getString("storage.type", "yaml");
+        if (type.equalsIgnoreCase("mysql")) {
+            getLogger().info("MySQL に接続して残高を管理します。");
+            return new MySqlBalanceStorage(this);
+        }
+        return new YamlBalanceStorage(this);
     }
 
     /**
@@ -118,7 +142,26 @@ public class EcoTpPlugin extends JavaPlugin {
         return tpaManager;
     }
 
+    public WarmupManager getWarmupManager() {
+        return warmupManager;
+    }
+
+    public ChatInputManager getChatInputManager() {
+        return chatInputManager;
+    }
+
+    public Messages getMessages() {
+        return messages;
+    }
+
     public String getPrefix() {
         return getConfig().getString("prefix", "&8[&6EcoTP&8]&r ");
+    }
+
+    /**
+     * messages.yml の1メッセージに接頭辞を付けて色変換した文字列を返す簡易ヘルパー。
+     */
+    public String msg(String path, Object... replacements) {
+        return ChatUtil.color(getPrefix()) + messages.get(path, replacements);
     }
 }

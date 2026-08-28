@@ -54,6 +54,13 @@
             <version>2.11.6</version>
             <scope>provided</scope>
         </dependency>
+        <!-- MySQL 残高保存用。サーバー管理者が別途ドライバーを用意しなくていいよう jar に同梱する (下の shade プラグイン参照)。 -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.3.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -73,6 +80,21 @@
                 <configuration>
                     <release>17</release>
                 </configuration>
+            </plugin>
+            <!-- storage.type: mysql を使えるように、MySQL の JDBC ドライバーを jar に同梱する。
+                 (Vault や PlaceholderAPI は provided のままなので、ここには含まれない) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

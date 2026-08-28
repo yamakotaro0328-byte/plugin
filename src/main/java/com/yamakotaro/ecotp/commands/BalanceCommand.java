@@ -22,22 +22,22 @@ public class BalanceCommand implements CommandExecutor {
 
         if (args.length == 0) {
             if (!(sender instanceof Player player)) {
-                sender.sendMessage("使い方: /balance <プレイヤー名>");
+                sender.sendMessage(plugin.getMessages().get("general.players-only"));
                 return true;
             }
             double balance = economy.getBalance(player);
-            player.sendMessage(ChatUtil.color(plugin.getPrefix() + "&aあなたの所持金: &f" + ChatUtil.formatMoney(balance)));
+            player.sendMessage(plugin.msg("balance.self", "balance", ChatUtil.formatMoney(balance)));
             return true;
         }
 
         if (!sender.hasPermission("ecotp.balance.others")) {
-            sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&c他のプレイヤーの所持金を見る権限がありません。"));
+            sender.sendMessage(plugin.msg("balance.no-permission-others"));
             return true;
         }
 
         String targetName = args[0];
         double balance = economy.getBalance(targetName);
-        sender.sendMessage(ChatUtil.color(plugin.getPrefix() + "&a" + targetName + " の所持金: &f" + ChatUtil.formatMoney(balance)));
+        sender.sendMessage(plugin.msg("balance.other", "player", targetName, "balance", ChatUtil.formatMoney(balance)));
         return true;
     }
 }
