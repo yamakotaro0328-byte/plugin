@@ -4,7 +4,8 @@ Minecraft 用の**単独で動作する経済プラグイン** (Spigot / Paper)�
 Essentials など外部の経済プラグインは不要です。所持金はこのプラグイン自身が管理し、
 Home / Spawn / TPA / TPHere をお金で行う機能に加えて、`/balance`・`/pay`・`/eco`・`/baltop`・GUIメニューも内蔵しています。
 
-Vault と PlaceholderAPI は**両方とも任意**(ソフト依存)です。導入されていれば追加で連携しますが、
+**Vault は必須**です (このプラグインの経済を他プラグインに公開するために使われ、
+入っていないとEcoTP自体が起動しません)。PlaceholderAPI は任意 (ソフト依存) で、
 入っていなくてもこのプラグインの全機能は動作します。
 
 [![Build](https://github.com/yamakotaro0328-byte/plugin/actions/workflows/build.yml/badge.svg)](https://github.com/yamakotaro0328-byte/plugin/actions/workflows/build.yml)
@@ -17,7 +18,7 @@ Vault と PlaceholderAPI は**両方とも任意**(ソフト依存)です。導�
 - **Essentials からの自動移行**: プレイヤーが初めてこのプラグインに登録されるとき、
   `plugins/Essentials/userdata/<uuid>.yml` に残高が見つかればそれを初期所持金として引き継ぐ
   (Essentials プラグイン自体が入っていなくても、旧データフォルダが残っていれば移行可能)。
-- Vault が導入されていれば、この経済を `Economy` サービスとして公開し、ショップ等の
+- Vault (必須) にこの経済を `Economy` サービスとして公開し、ショップ等の
   他プラグインからも利用可能にする (`ServicePriority.Highest` で登録)。
 - PlaceholderAPI が導入されていれば `%ecotp_balance%` 等のプレースホルダーを自動登録。
 - テレポート前に安全確認・詠唱時間があり、悪用 (戦闘中の逃げテレポ等) を防止する。詠唱中は
@@ -171,11 +172,11 @@ economy:
 
 ## 導入方法
 
-1. 本プラグインをビルドし (`mvn package`)、生成された `target/ecotp-plugin-1.0.0.jar` を `plugins/` に入れる。
+1. **Vault を導入する (必須)**。入っていないとEcoTPはロードされません。
+2. 本プラグインをビルドし (`mvn package`)、生成された `target/ecotp-plugin-1.0.0.jar` を `plugins/` に入れる。
    (GitHub Actions が push のたびに自動でビルドし、Artifact として jar を公開しています)
-2. サーバーを再起動する。`plugins/EcoTP/config.yml` で料金や初期所持金、`plugins/EcoTP/messages.yml`
+3. サーバーを再起動する。`plugins/EcoTP/config.yml` で料金や初期所持金、`plugins/EcoTP/messages.yml`
    で文言・通貨単位を調整できる。
-3. (任意) Vault を導入すると、他のプラグインからもこの経済を利用できるようになる。
 4. (任意) PlaceholderAPI を導入すると、プレースホルダーが自動で使えるようになる。
 5. Essentials から乗り換える場合、`plugins/Essentials/userdata` フォルダを残したまま
    このプラグインを導入すれば、プレイヤーが最初にサーバーへ参加したタイミングで

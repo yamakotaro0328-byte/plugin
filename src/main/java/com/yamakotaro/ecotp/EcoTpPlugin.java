@@ -81,10 +81,11 @@ public class EcoTpPlugin extends JavaPlugin {
         } else {
             getLogger().info("economy.enabled is false: using an external economy via Vault instead of the built-in one.");
             if (!economyHolder.tryLinkExternal()) {
-                // EcoTP is load: STARTUP, so Vault and whatever economy plugin is meant to
-                // provide the Economy service (both typically load: POSTWORLD) may not have
-                // enabled yet. Don't give up yet — try again once every plugin has finished
-                // enabling, right before the server starts accepting connections.
+                // Vault is guaranteed enabled by now (hard depend), but the actual economy
+                // plugin backing it (e.g. EssentialsX) isn't a declared dependency of EcoTP,
+                // so it may not have registered its Economy service yet. Don't give up yet —
+                // try again once every plugin has finished enabling, right before the server
+                // starts accepting connections.
                 getServer().getPluginManager().registerEvents(new Listener() {
                     @EventHandler
                     public void onServerLoad(ServerLoadEvent event) {
@@ -157,8 +158,10 @@ public class EcoTpPlugin extends JavaPlugin {
         if (placeholderApi != null && placeholderApi.isEnabled()) {
             registerPlaceholders();
         } else if (placeholderApi != null) {
-            // EcoTP is load: STARTUP; PlaceholderAPI (typically load: POSTWORLD) exists but
-            // hasn't enabled yet, so register once it actually does instead of right now.
+            // softdepend normally guarantees PlaceholderAPI enables before EcoTP, but it's
+            // still possible to reach this if PlaceholderAPI is present yet not enabled
+            // (e.g. it errored during its own onEnable) — defer until it actually enables,
+            // if it ever does, rather than never registering placeholders at all.
             getServer().getPluginManager().registerEvents(new Listener() {
                 @EventHandler
                 public void onPluginEnable(PluginEnableEvent event) {

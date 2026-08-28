@@ -3,42 +3,38 @@ version: '${project.version}'
 main: com.yamakotaro.ecotp.EcoTpPlugin
 api-version: '26.2'
 author: yamakotaro0328
-# Almost every plugin leaves this unset, which defaults to POSTWORLD (enabled
-# after worlds finish loading). STARTUP plugins are always enabled first, in a
-# separate earlier pass, regardless of depend/softdepend/loadbefore — so this
-# alone is what actually makes EcoTP register its Vault economy before nearly
-# any other plugin's onEnable runs, no per-plugin listing required. Vault,
-# PlaceholderAPI, and any economy plugin used via economy.enabled: false are
-# themselves still typically POSTWORLD, so EcoTpPlugin defers those specific
-# hookups to ServerLoadEvent / PluginEnableEvent rather than assuming they're
-# already up at this plugin's own (now much earlier) onEnable.
-# (日本語) ほとんどのプラグインはこの項目を指定しておらず、その場合デフォルトの
-# POSTWORLD (ワールド読み込み後に有効化) になる。STARTUP を指定したプラグインは
-# depend/softdepend/loadbefore に関係なく必ず先に (別の早い段階で) 有効化される。
-# そのためこれ一つで、EcoTPのVault経済登録がほぼ全てのプラグインのonEnableより
-# 先に行われるようになる (loadbeforeのような個別列挙は不要)。ただしVault・
-# PlaceholderAPI・economy.enabled: falseのときの外部経済プラグイン自体も通常は
-# POSTWORLDなので、EcoTpPlugin側ではそれらの連携だけはServerLoadEvent /
-# PluginEnableEventで遅延させ、自分のonEnableが早まった影響を受けないようにしている。
-load: STARTUP
-softdepend: [Vault, PlaceholderAPI]
-# Some plugins check for a Vault economy exactly once at their own onEnable and
-# never retry (unlike e.g. EvenMoreFish, which retries and succeeds either way).
-# If they happen to enable before EcoTP registers its economy with Vault, they
-# give up permanently (GambleGate/VillagerMarket/Roulette/Gun were confirmed
-# doing this on a real server log). Bukkit has no "always load first" flag, so
-# the only way to influence this is loadbefore naming plugins explicitly — this
-# lists every other plugin seen on that server so EcoTP wins the race against
-# all of them. Vault/PlaceholderAPI are excluded since softdepend above already
-# requires the opposite order for those. A newly installed plugin not in this
-# list won't get this guarantee until its name is added here too.
-# (日本語) 一部のプラグインはVault経済の有無を自身のonEnable時に一度だけ確認し、
-# リトライしない (実サーバーのログでGambleGate/VillagerMarket/Roulette/Gunを確認)。
-# Bukkitには「常に最初に読み込む」という汎用フラグが無いため、loadbeforeで
-# プラグイン名を明示的に列挙する以外に手段が無い。ここではそのサーバーで確認できた
-# 他の全プラグインを列挙し、EcoTPがすべてに先んじて有効化されるようにしている。
-# Vault/PlaceholderAPIは上のsoftdependで逆順を要求しているため除外。ここに無い
-# 新規プラグインには、名前を追記するまでこの保証は効かない。
+# Vault is a hard dependency: Bukkit refuses to even load EcoTP if Vault is
+# missing, and (since both are default load: POSTWORLD) guarantees Vault's
+# onEnable runs, and its Economy service is available, before EcoTP's onEnable
+# runs — no race condition, no STARTUP-phase trickery needed. PlaceholderAPI
+# stays a soft dependency (genuinely optional; EcoTP works fine without it).
+# (日本語) Vault を必須依存にする。Vault が無いサーバーではEcoTPそのものが
+# ロードされなくなる代わりに、(両方ともデフォルトの load: POSTWORLD のため)
+# VaultのonEnableとEconomyサービスの登録がEcoTPのonEnableより必ず先に完了する
+# ことが保証される (競合状態が発生しない。STARTUPのような特殊な仕組みも不要)。
+# PlaceholderAPIは本当に任意 (無くてもEcoTPは問題なく動く) なのでsoftdependのまま。
+depend: [Vault]
+softdepend: [PlaceholderAPI]
+# depend: [Vault] only guarantees ordering between EcoTP and Vault itself — it
+# says nothing about EcoTP vs. unrelated third-party plugins like GambleGate.
+# Some of those check for a Vault economy exactly once at their own onEnable
+# and never retry (unlike e.g. EvenMoreFish, which retries and succeeds either
+# way). If they happen to enable before EcoTP registers its economy with
+# Vault, they give up permanently (GambleGate/VillagerMarket/Roulette/Gun were
+# confirmed doing this on a real server log). loadbefore is the only way to
+# influence that — this lists every other plugin seen on that server so EcoTP
+# wins the race against all of them. Vault/PlaceholderAPI are excluded since
+# depend/softdepend above already require the opposite order for those. A
+# newly installed plugin not in this list won't get this guarantee until its
+# name is added here too.
+# (日本語) depend: [Vault] が保証するのはEcoTPとVault自体の順序だけで、GambleGate
+# のような無関係な他プラグインとの順序は何も保証しない。一部のプラグインはVault
+# 経済の有無を自身のonEnable時に一度だけ確認し、リトライしない (実サーバーの
+# ログでGambleGate/VillagerMarket/Roulette/Gunを確認)。これに対処できるのは
+# loadbeforeだけなので、そのサーバーで確認できた他の全プラグインを列挙し、EcoTPが
+# すべてに先んじて有効化されるようにしている。Vault/PlaceholderAPIは上の
+# depend/softdependで逆順を要求しているため除外。ここに無い新規プラグインには、
+# 名前を追記するまでこの保証は効かない。
 loadbefore: [AdvancedBan, ArmorStandTools, Bolt, CMILib, Citizens, DecentHolograms,
   DiscordSRV, EvenMoreFish, GSit, GambleGate, Geyser-Spigot, Gun, ImageFrame,
   ItemEdit, Jobs, Lands, LuckPerms, LunaChat, Maintenance, Multiverse-Core,

@@ -1,10 +1,10 @@
 # EcoTP
 
-**A standalone economy plugin with distance-priced teleportation.** No Essentials or any other economy plugin required — EcoTP manages balances itself, while still hooking into Vault (optional) so shops and other plugins can use its economy too.
+**A standalone economy plugin with distance-priced teleportation.** No Essentials or any other economy plugin required — EcoTP manages balances itself, while hooking into Vault (required) so shops and other plugins can use its economy too.
 
 ## Highlights
 
-- **Self-contained economy** — balances are stored by EcoTP (YAML by default, or MySQL to share them across multiple servers). Vault is optional, purely for interoperability with other plugins.
+- **Self-contained economy** — balances are stored by EcoTP (YAML by default, or MySQL to share them across multiple servers). Vault is required, purely for interoperability with other plugins.
 - **Import from Essentials** — switching away from Essentials? The first time a player is seen, their existing Essentials balance is imported automatically.
 - **Distance-based teleport pricing** — `/home`, `/spawn`, `/tpa`, and `/tphere` are priced by real 3D distance: `max(min fee, ceil(distance / blocks-per-unit))`. Fully configurable.
 - **/tphere (cash on delivery)** — summon another player to you; *they* pay, since they're the one who moves. `/tpa` works the other way around — you request to go to them, and you pay.
@@ -22,7 +22,8 @@
 ## Requirements
 
 - Paper/Spigot 26.2, Java 25
-- Optional: Vault (economy interoperability), PlaceholderAPI (placeholders)
+- Required: Vault (economy interoperability)
+- Optional: PlaceholderAPI (placeholders)
 
 ## Configuration
 

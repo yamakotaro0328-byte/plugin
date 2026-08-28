@@ -1,10 +1,10 @@
 # EcoTP configuration
 # This plugin has its own built-in economy, so it works without Essentials or
-# any other economy plugin. Vault is optional: if present, this economy is
-# also exposed to other plugins (shops, etc).
+# any other economy plugin. Vault is required (it's how this economy is
+# exposed to other plugins, e.g. shops) — install it alongside EcoTP.
 # (日本語) このプラグインは独自の経済システムを内蔵しているため、Essentials 等の
-# 経済プラグインが無くても動作します。Vault はオプションで、導入されていれば
-# 他のプラグイン (ショップ等) にもこの経済を公開します。
+# 経済プラグインが無くても動作します。Vault は必須です (この経済を他のプラグイン
+# (ショップ等) に公開するために使われます)。EcoTPと一緒に導入してください。
 
 # Language for messages.yml: "en" or "ja".
 # Used the first time messages.yml is generated, and also whenever you change
