@@ -3,7 +3,7 @@ version: '${project.version}'
 main: com.yamakotaro.ecotp.EcoTpPlugin
 api-version: '1.20'
 author: yamakotaro0328
-depend: [Vault]
+softdepend: [Vault, PlaceholderAPI]
 
 commands:
   home:
@@ -33,6 +33,16 @@ commands:
   accept:
     description: 支払いの確認待ちの操作を承諾/キャンセルします (統合版対応)
     usage: /accept [cancel]
+  balance:
+    description: 所持金を確認します
+    usage: /balance [プレイヤー名]
+    aliases: [bal, money]
+  pay:
+    description: 他のプレイヤーに送金します
+    usage: /pay <プレイヤー名> <金額>
+  eco:
+    description: 所持金を操作します (管理者用)
+    usage: /eco <give|take|set> <プレイヤー名> <金額>
 
 permissions:
   ecotp.home:
@@ -53,3 +63,12 @@ permissions:
   ecotp.tpa:
     description: /tpa を使用できる
     default: true
+  ecotp.balance.others:
+    description: 他のプレイヤーの所持金を確認できる
+    default: op
+  ecotp.pay:
+    description: /pay を使用できる
+    default: true
+  ecotp.admin:
+    description: /eco を使用できる
+    default: op

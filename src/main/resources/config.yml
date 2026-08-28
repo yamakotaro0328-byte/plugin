@@ -1,7 +1,18 @@
 # EcoTP 設定ファイル
+# このプラグインは独自の経済システムを内蔵しているため、Essentials 等の
+# 経済プラグインが無くても動作します。Vault はオプションで、導入されていれば
+# 他のプラグイン (ショップ等) にもこの経済を公開します。
 
 # チャットに表示する接頭辞 (& でカラーコード使用可)
 prefix: "&8[&6EcoTP&8]&r "
+
+# 新規プレイヤーの初期所持金 (Essentials のデータが見つかった場合はそちらを優先する)
+starting-balance: 0.0
+
+essentials-import:
+  # 有効にすると、初めて見るプレイヤーの所持金を
+  # plugins/Essentials/userdata/<uuid>.yml から一度だけ引き継ぐ
+  enabled: true
 
 # 料金設定
 costs:

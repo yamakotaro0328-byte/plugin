@@ -1,7 +1,10 @@
 package com.yamakotaro.ecotp;
 
 import com.yamakotaro.ecotp.commands.AcceptCommand;
+import com.yamakotaro.ecotp.commands.BalanceCommand;
+import com.yamakotaro.ecotp.commands.EcoAdminCommand;
 import com.yamakotaro.ecotp.commands.HomeCommand;
+import com.yamakotaro.ecotp.commands.PayCommand;
 import com.yamakotaro.ecotp.commands.SetHomeCommand;
 import com.yamakotaro.ecotp.commands.SetSpawnCommand;
 import com.yamakotaro.ecotp.commands.SpawnCommand;
@@ -9,14 +12,15 @@ import com.yamakotaro.ecotp.commands.TpCommand;
 import com.yamakotaro.ecotp.commands.TpaAcceptCommand;
 import com.yamakotaro.ecotp.commands.TpaCommand;
 import com.yamakotaro.ecotp.commands.TpaDenyCommand;
+import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
 import net.milkbowl.vault.economy.Economy;
-import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class EcoTpPlugin extends JavaPlugin {
 
-    private Economy economy;
+    private EcoTpEconomy economy;
     private ConfirmationManager confirmationManager;
     private HomeManager homeManager;
     private SpawnManager spawnManager;
@@ -26,11 +30,9 @@ public class EcoTpPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
 
-        if (!setupEconomy()) {
-            getLogger().severe("Vault の Economy プロバイダが見つかりません。Vault と経済プラグイン (EssentialsX 等) を導入してください。");
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
+        BalanceManager balanceManager = new BalanceManager(this);
+        EssentialsImporter essentialsImporter = new EssentialsImporter(this);
+        this.economy = new EcoTpEconomy(this, balanceManager, essentialsImporter);
 
         this.confirmationManager = new ConfirmationManager(this);
         this.homeManager = new HomeManager(this);
@@ -46,10 +48,20 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("tpaccept").setExecutor(new TpaAcceptCommand(this));
         getCommand("tpdeny").setExecutor(new TpaDenyCommand(this));
         getCommand("accept").setExecutor(new AcceptCommand(this));
+        getCommand("balance").setExecutor(new BalanceCommand(this));
+        getCommand("pay").setExecutor(new PayCommand(this));
+        getCommand("eco").setExecutor(new EcoAdminCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
+        getServer().getPluginManager().registerEvents(new EconomyJoinListener(this), this);
 
-        getLogger().info("EcoTP が有効になりました。");
+        setupVault();
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new EcoTpPlaceholders(this).register();
+            getLogger().info("PlaceholderAPI のプレースホルダーを登録しました。(%ecotp_balance% など)");
+        }
+
+        getLogger().info("EcoTP が有効になりました。(独自の経済システムで動作中、Essentials は不要です)");
     }
 
     @Override
@@ -62,19 +74,24 @@ public class EcoTpPlugin extends JavaPlugin {
         }
     }
 
-    private boolean setupEconomy() {
+    /**
+     * Vault が導入されていれば、この経済システムを他のプラグインにも公開する。
+     * Vault が無くてもこのプラグイン自身の機能はすべて動作する。
+     */
+    private void setupVault() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            return false;
+            getLogger().info("Vault が見つかりません。他のプラグインとの経済連携なしで動作します。");
+            return;
         }
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) {
-            return false;
-        }
-        this.economy = rsp.getProvider();
-        return true;
+        getServer().getServicesManager().register(Economy.class, economy, this, ServicePriority.Highest);
+        getLogger().info("Vault 経由でこの経済システムを他のプラグインに公開しました。");
     }
 
     public Economy getEconomy() {
+        return economy;
+    }
+
+    public EcoTpEconomy getEcoTpEconomy() {
         return economy;
     }
 

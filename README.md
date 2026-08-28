@@ -1,7 +1,21 @@
 # EcoTP
 
-Home / Spawn / TP / TPA をお金で行うエコノミープラグイン (Spigot / Paper 用)。
-[Vault](https://www.spigotmc.org/resources/vault.34315/) 経由で経済プラグイン (EssentialsX など) と連携します。
+Minecraft 用の**単独で動作する経済プラグイン** (Spigot / Paper)。
+Essentials など外部の経済プラグインは不要です。所持金はこのプラグイン自身が管理し、
+Home / Spawn / TP / TPA をお金で行う機能に加えて、`/balance`・`/pay`・`/eco` も内蔵しています。
+
+Vault と PlaceholderAPI は**両方とも任意**(ソフト依存)です。導入されていれば追加で連携しますが、
+入っていなくてもこのプラグインの全機能は動作します。
+
+## 特徴
+
+- 所持金はこのプラグインが独自に保持 (`plugins/EcoTP/balances.yml`)。Essentials 不要。
+- **Essentials からの自動移行**: プレイヤーが初めてこのプラグインに登録されるとき、
+  `plugins/Essentials/userdata/<uuid>.yml` に残高が見つかればそれを初期所持金として引き継ぐ
+  (Essentials プラグイン自体が入っていなくても、旧データフォルダが残っていれば移行可能)。
+- Vault が導入されていれば、この経済を `Economy` サービスとして公開し、ショップ等の
+  他プラグインからも利用可能にする (`ServicePriority.Highest` で登録)。
+- PlaceholderAPI が導入されていれば `%ecotp_balance%` 等のプレースホルダーを自動登録。
 
 ## 料金
 
@@ -13,8 +27,15 @@ Home / Spawn / TP / TPA をお金で行うエコノミープラグイン (Spigot
 | `/setspawn` | 無料 (`ecotp.setspawn` 権限が必要、デフォルトOPのみ) |
 | `/tp <プレイヤー>` | 1ブロックあたり1円 (相手の場所へ即座にテレポート) |
 | `/tpa <プレイヤー>` | 1ブロックあたり1円 (相手が承諾した場合のみ課金・テレポート) |
+| `/pay <プレイヤー> <金額>` | 送金する金額そのもの |
 
 金額は `config.yml` の `costs` セクションで変更できます。
+
+## 経済コマンド
+
+- `/balance` (`/bal`, `/money`) : 自分の所持金を確認 (`/balance <プレイヤー名>` で他人も確認可能、`ecotp.balance.others` 権限が必要)
+- `/pay <プレイヤー名> <金額>` : 送金 (チャットクリック承諾が必要)
+- `/eco give|take|set <プレイヤー名> <金額>` : 管理者用の所持金操作 (`ecotp.admin` 権限、デフォルトOP)
 
 ## 支払いの承諾 (チャットクリック / 統合版対応)
 
@@ -32,9 +53,21 @@ Home / Spawn / TP / TPA をお金で行うエコノミープラグイン (Spigot
 
 ## 導入方法
 
-1. サーバーに [Vault](https://www.spigotmc.org/resources/vault.34315/) と、EssentialsX などの経済プラグインを導入する。
-2. 本プラグインをビルドし (`mvn package`)、生成された `target/ecotp-plugin-1.0.0.jar` を `plugins/` に入れる。
-3. サーバーを再起動する。`plugins/EcoTP/config.yml` で料金などを調整できる。
+1. 本プラグインをビルドし (`mvn package`)、生成された `target/ecotp-plugin-1.0.0.jar` を `plugins/` に入れる。
+2. サーバーを再起動する。`plugins/EcoTP/config.yml` で料金や初期所持金を調整できる。
+3. (任意) Vault を導入すると、他のプラグインからもこの経済を利用できるようになる。
+4. (任意) PlaceholderAPI を導入すると、プレースホルダーが自動で使えるようになる。
+5. Essentials から乗り換える場合、`plugins/Essentials/userdata` フォルダを残したまま
+   このプラグインを導入すれば、プレイヤーが最初にサーバーへ参加したタイミングで
+   自動的に残高が引き継がれる (`essentials-import.enabled: false` で無効化可能)。
+
+## プレースホルダー (PlaceholderAPI)
+
+| プレースホルダー | 内容 |
+| --- | --- |
+| `%ecotp_balance%` | 所持金 (数値のみ) |
+| `%ecotp_balance_formatted%` | 所持金 (「1000円」のように整形) |
+| `%ecotp_sethome_cost%` | 次に `/sethome` を使ったときの料金 |
 
 ## 権限
 
@@ -46,3 +79,6 @@ Home / Spawn / TP / TPA をお金で行うエコノミープラグイン (Spigot
 | `ecotp.setspawn` | op | `/setspawn` を使用できる |
 | `ecotp.tp` | true | `/tp` を使用できる |
 | `ecotp.tpa` | true | `/tpa` を使用できる |
+| `ecotp.pay` | true | `/pay` を使用できる |
+| `ecotp.balance.others` | op | 他人の `/balance` を確認できる |
+| `ecotp.admin` | op | `/eco` を使用できる |
