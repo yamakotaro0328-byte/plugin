@@ -69,7 +69,7 @@ public class PayCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        Economy economy = plugin.getEconomy();
+        Economy economy = plugin.getEconomyHolder().get();
         if (!economy.has(player, amount)) {
             player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(amount)));
             return true;

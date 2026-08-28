@@ -55,7 +55,7 @@ public class EcoAdminCommand implements CommandExecutor, TabCompleter {
         }
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        Economy economy = plugin.getEconomy();
+        Economy economy = plugin.getEconomyHolder().get();
         // 独自の経済 (economy.enabled) を使っている場合のみ口座の事前作成が必要。
         // 外部の経済プラグインに任せている場合は、そちら側の口座管理に任せる。
         EcoTpEconomy ecoTpEconomy = plugin.getEcoTpEconomy();

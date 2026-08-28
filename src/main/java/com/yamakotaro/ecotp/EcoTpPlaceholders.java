@@ -43,8 +43,8 @@ public class EcoTpPlaceholders extends PlaceholderExpansion {
             return "";
         }
         return switch (identifier.toLowerCase()) {
-            case "balance" -> String.valueOf(Math.round(plugin.getEconomy().getBalance(player)));
-            case "balance_formatted" -> ChatUtil.formatMoney(plugin.getEconomy().getBalance(player));
+            case "balance" -> String.valueOf(Math.round(plugin.getEconomyHolder().get().getBalance(player)));
+            case "balance_formatted" -> ChatUtil.formatMoney(plugin.getEconomyHolder().get().getBalance(player));
             case "sethome_cost" -> ChatUtil.formatMoney(plugin.getHomeManager().getNextSetHomeCost(player.getUniqueId()));
             default -> null;
         };

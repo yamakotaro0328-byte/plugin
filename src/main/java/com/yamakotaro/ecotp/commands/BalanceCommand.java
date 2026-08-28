@@ -18,7 +18,7 @@ public class BalanceCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        Economy economy = plugin.getEconomy();
+        Economy economy = plugin.getEconomyHolder().get();
 
         if (args.length == 0) {
             if (!(sender instanceof Player player)) {

@@ -128,7 +128,7 @@ public class TpaManager {
             double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 100.0);
             double actualCost = CostUtil.distanceCost(mover.getLocation(), destination, minFee, blocksPerYen);
 
-            Economy economy = plugin.getEconomy();
+            Economy economy = plugin.getEconomyHolder().get();
             if (!economy.has(mover, actualCost)) {
                 mover.sendMessage(plugin.msg("tpa.insufficient-funds-requester", "player", destinationPlayer.getName(), "cost", ChatUtil.formatMoney(actualCost)));
                 destinationPlayer.sendMessage(plugin.msg("tpa.insufficient-funds-target", "player", mover.getName(), "cost", ChatUtil.formatMoney(actualCost)));

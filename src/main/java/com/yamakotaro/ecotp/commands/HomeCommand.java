@@ -64,7 +64,7 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                 ? CostUtil.distanceCost(player.getLocation(), home, minFee, blocksPerYen)
                 : minFee;
 
-        Economy economy = plugin.getEconomy();
+        Economy economy = plugin.getEconomyHolder().get();
         if (!economy.has(player, cost)) {
             player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
             return true;

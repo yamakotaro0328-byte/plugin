@@ -62,7 +62,7 @@ public class TpaCommand implements CommandExecutor, TabCompleter {
                 ? CostUtil.distanceCost(player.getLocation(), target.getLocation(), minFee, blocksPerYen)
                 : minFee;
 
-        Economy economy = plugin.getEconomy();
+        Economy economy = plugin.getEconomyHolder().get();
         if (!economy.has(player, estimatedCost)) {
             player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(estimatedCost)));
             return true;

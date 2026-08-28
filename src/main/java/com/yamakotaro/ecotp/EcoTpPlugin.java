@@ -21,19 +21,27 @@ import com.yamakotaro.ecotp.commands.TphereCommand;
 import com.yamakotaro.ecotp.gui.GuiListener;
 import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.server.ServerLoadEvent;
-import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
+/**
+ * このクラス (plugin.yml の main) は、net.milkbowl.vault.economy.Economy 型を
+ * フィールド・メソッドの引数/戻り値・キャストのどこにも直接書かないこと。
+ * Bukkit はサーバー起動時にこのクラスをロードした瞬間にクラス全体を検証するため、
+ * Vault (softdepend、まだファイルスキャンで読み込まれていない可能性がある) の型を
+ * ここで直接参照すると、Vaultより先にこのjarが処理された場合に
+ * NoClassDefFoundError でロードそのものに失敗する。実際にこれで起動できなかった
+ * ことがあるため、Economy に触れる処理はすべて EconomyHolder (onEnable() の中で
+ * 初めて new される、完全に独立したクラス) に閉じ込めてある。
+ */
 public class EcoTpPlugin extends JavaPlugin {
 
     private Messages messages;
-    private Economy economy;
+    private EconomyHolder economyHolder;
     private EcoTpEconomy ecoTpEconomy;
     private BalanceStorage balanceStorage;
     private HomeStorage homeStorage;
@@ -49,6 +57,7 @@ public class EcoTpPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        this.economyHolder = new EconomyHolder(this);
         this.messages = new Messages(this);
         ChatUtil.init(messages);
 
@@ -68,10 +77,10 @@ public class EcoTpPlugin extends JavaPlugin {
                     : new YamlBalanceStorage(this);
             EssentialsImporter essentialsImporter = new EssentialsImporter(this);
             this.ecoTpEconomy = new EcoTpEconomy(this, balanceStorage, essentialsImporter);
-            this.economy = ecoTpEconomy;
+            economyHolder.setEcoTpEconomy(ecoTpEconomy);
         } else {
             getLogger().info("economy.enabled is false: using an external economy via Vault instead of the built-in one.");
-            if (!tryLinkExternalEconomy()) {
+            if (!economyHolder.tryLinkExternal()) {
                 // EcoTP is load: STARTUP, so Vault and whatever economy plugin is meant to
                 // provide the Economy service (both typically load: POSTWORLD) may not have
                 // enabled yet. Don't give up yet — try again once every plugin has finished
@@ -80,7 +89,7 @@ public class EcoTpPlugin extends JavaPlugin {
                     @EventHandler
                     public void onServerLoad(ServerLoadEvent event) {
                         HandlerList.unregisterAll(this);
-                        if (!tryLinkExternalEconomy()) {
+                        if (!economyHolder.tryLinkExternal()) {
                             getLogger().severe("economy.enabled is false but no economy plugin is registered with Vault. Install Vault and an economy plugin (e.g. EssentialsX), or set economy.enabled to true.");
                             getServer().getPluginManager().disablePlugin(EcoTpPlugin.this);
                         }
@@ -142,7 +151,7 @@ public class EcoTpPlugin extends JavaPlugin {
         if (ecoTpEconomy != null) {
             // 独自の経済を使っている場合のみ、Vault に登録して他のプラグインへ公開する。
             // 外部の経済を使っている場合は、既に登録されているものをそのまま使うので上書きしない。
-            setupVault();
+            economyHolder.publishToVault();
         }
         var placeholderApi = getServer().getPluginManager().getPlugin("PlaceholderAPI");
         if (placeholderApi != null && placeholderApi.isEnabled()) {
@@ -185,37 +194,6 @@ public class EcoTpPlugin extends JavaPlugin {
         }
     }
 
-    /**
-     * Vault が導入されていれば、この経済システムを他のプラグインにも公開する。
-     * Vault が無くてもこのプラグイン自身の機能はすべて動作する。
-     */
-    private void setupVault() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            getLogger().info("Vault not found; running without economy integration for other plugins.");
-            return;
-        }
-        getServer().getServicesManager().register(Economy.class, economy, this, ServicePriority.Highest);
-        getLogger().info("Published this economy to other plugins via Vault.");
-    }
-
-    /**
-     * economy.enabled が false のとき、Vault 経由で既に登録されている外部の経済プラグイン
-     * (Essentials 等) を取得する。ここではまだ見つからなくても (STARTUP なので単に相手が
-     * まだ有効化されていないだけかもしれず) 何もログを出さず false を返すだけにする。
-     * 「本当に無い」のか「まだ見つかっていないだけ」なのかは呼び出し側が判断する。
-     */
-    private boolean tryLinkExternalEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            return false;
-        }
-        var registration = getServer().getServicesManager().getRegistration(Economy.class);
-        if (registration == null) {
-            return false;
-        }
-        this.economy = registration.getProvider();
-        return true;
-    }
-
     private void registerPlaceholders() {
         new EcoTpPlaceholders(this).register();
         getLogger().info("Registered PlaceholderAPI placeholders (%ecotp_balance% and others).");
@@ -228,8 +206,8 @@ public class EcoTpPlugin extends JavaPlugin {
         return getConfig().getBoolean("features." + key, true);
     }
 
-    public Economy getEconomy() {
-        return economy;
+    public EconomyHolder getEconomyHolder() {
+        return economyHolder;
     }
 
     /**

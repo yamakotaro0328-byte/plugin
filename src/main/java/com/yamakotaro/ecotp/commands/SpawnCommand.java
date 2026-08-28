@@ -45,7 +45,7 @@ public class SpawnCommand implements CommandExecutor {
                 ? CostUtil.distanceCost(player.getLocation(), spawn, minFee, blocksPerYen)
                 : minFee;
 
-        Economy economy = plugin.getEconomy();
+        Economy economy = plugin.getEconomyHolder().get();
         if (!economy.has(player, cost)) {
             player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
             return true;
