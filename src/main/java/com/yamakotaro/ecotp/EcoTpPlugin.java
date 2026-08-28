@@ -3,6 +3,7 @@ package com.yamakotaro.ecotp;
 import com.yamakotaro.ecotp.commands.AcceptCommand;
 import com.yamakotaro.ecotp.commands.BalanceCommand;
 import com.yamakotaro.ecotp.commands.BaltopCommand;
+import com.yamakotaro.ecotp.commands.DelHomeCommand;
 import com.yamakotaro.ecotp.commands.EcoAdminCommand;
 import com.yamakotaro.ecotp.commands.HomeCommand;
 import com.yamakotaro.ecotp.commands.HomesCommand;
@@ -12,6 +13,7 @@ import com.yamakotaro.ecotp.commands.SetHomeCommand;
 import com.yamakotaro.ecotp.commands.SetSpawnCommand;
 import com.yamakotaro.ecotp.commands.SpawnCommand;
 import com.yamakotaro.ecotp.commands.TpaAcceptCommand;
+import com.yamakotaro.ecotp.commands.TpaCancelCommand;
 import com.yamakotaro.ecotp.commands.TpaCommand;
 import com.yamakotaro.ecotp.commands.TpaDenyCommand;
 import com.yamakotaro.ecotp.commands.TphereCommand;
@@ -25,8 +27,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class EcoTpPlugin extends JavaPlugin {
 
     private Messages messages;
-    private EcoTpEconomy economy;
+    private Economy economy;
+    private EcoTpEconomy ecoTpEconomy;
     private BalanceStorage balanceStorage;
+    private HomeStorage homeStorage;
+    private MySqlConnectionProvider mySqlConnectionProvider;
     private ConfirmationManager confirmationManager;
     private HomeManager homeManager;
     private SpawnManager spawnManager;
@@ -41,31 +46,68 @@ public class EcoTpPlugin extends JavaPlugin {
         this.messages = new Messages(this);
         ChatUtil.init(messages);
 
-        this.balanceStorage = createBalanceStorage();
-        EssentialsImporter essentialsImporter = new EssentialsImporter(this);
-        this.economy = new EcoTpEconomy(this, balanceStorage, essentialsImporter);
+        boolean useMysql = getConfig().getString("storage.type", "yaml").equalsIgnoreCase("mysql");
+        if (useMysql) {
+            getLogger().info("Connecting to MySQL to manage homes (and balances, if enabled).");
+            this.mySqlConnectionProvider = new MySqlConnectionProvider(this);
+        }
+        this.homeStorage = useMysql
+                ? new MySqlHomeStorage(this, mySqlConnectionProvider)
+                : new YamlHomeStorage(this);
+
+        boolean economyEnabled = getConfig().getBoolean("economy.enabled", true);
+        if (economyEnabled) {
+            this.balanceStorage = useMysql
+                    ? new MySqlBalanceStorage(this, mySqlConnectionProvider)
+                    : new YamlBalanceStorage(this);
+            EssentialsImporter essentialsImporter = new EssentialsImporter(this);
+            this.ecoTpEconomy = new EcoTpEconomy(this, balanceStorage, essentialsImporter);
+            this.economy = ecoTpEconomy;
+        } else {
+            getLogger().info("economy.enabled is false: using an external economy via Vault instead of the built-in one.");
+            if (!setupExternalEconomy()) {
+                getServer().getPluginManager().disablePlugin(this);
+                return;
+            }
+        }
 
         this.confirmationManager = new ConfirmationManager(this);
-        this.homeManager = new HomeManager(this);
+        this.homeManager = new HomeManager(this, homeStorage);
         this.spawnManager = new SpawnManager(this);
         this.tpaManager = new TpaManager(this);
         this.combatTracker = new CombatTracker(this);
         this.teleportSafetyManager = new TeleportSafetyManager(this, combatTracker);
         this.chatInputManager = new ChatInputManager(this);
 
-        getCommand("home").setExecutor(new HomeCommand(this));
-        getCommand("sethome").setExecutor(new SetHomeCommand(this));
+        HomeCommand homeCommand = new HomeCommand(this);
+        getCommand("home").setExecutor(homeCommand);
+        getCommand("home").setTabCompleter(homeCommand);
+        SetHomeCommand setHomeCommand = new SetHomeCommand(this);
+        getCommand("sethome").setExecutor(setHomeCommand);
+        getCommand("sethome").setTabCompleter(setHomeCommand);
+        DelHomeCommand delHomeCommand = new DelHomeCommand(this);
+        getCommand("delhome").setExecutor(delHomeCommand);
+        getCommand("delhome").setTabCompleter(delHomeCommand);
         getCommand("homes").setExecutor(new HomesCommand(this));
         getCommand("spawn").setExecutor(new SpawnCommand(this));
         getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
-        getCommand("tpa").setExecutor(new TpaCommand(this));
-        getCommand("tphere").setExecutor(new TphereCommand(this));
+        TpaCommand tpaCommand = new TpaCommand(this);
+        getCommand("tpa").setExecutor(tpaCommand);
+        getCommand("tpa").setTabCompleter(tpaCommand);
+        TphereCommand tphereCommand = new TphereCommand(this);
+        getCommand("tphere").setExecutor(tphereCommand);
+        getCommand("tphere").setTabCompleter(tphereCommand);
         getCommand("tpaccept").setExecutor(new TpaAcceptCommand(this));
         getCommand("tpdeny").setExecutor(new TpaDenyCommand(this));
+        getCommand("tpacancel").setExecutor(new TpaCancelCommand(this));
         getCommand("accept").setExecutor(new AcceptCommand(this));
         getCommand("balance").setExecutor(new BalanceCommand(this));
-        getCommand("pay").setExecutor(new PayCommand(this));
-        getCommand("eco").setExecutor(new EcoAdminCommand(this));
+        PayCommand payCommand = new PayCommand(this);
+        getCommand("pay").setExecutor(payCommand);
+        getCommand("pay").setTabCompleter(payCommand);
+        EcoAdminCommand ecoAdminCommand = new EcoAdminCommand(this);
+        getCommand("eco").setExecutor(ecoAdminCommand);
+        getCommand("eco").setTabCompleter(ecoAdminCommand);
         getCommand("baltop").setExecutor(new BaltopCommand(this));
         getCommand("menu").setExecutor(new MenuCommand(this));
 
@@ -76,38 +118,38 @@ public class EcoTpPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(chatInputManager, this);
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
 
-        setupVault();
+        if (ecoTpEconomy != null) {
+            // 独自の経済を使っている場合のみ、Vault に登録して他のプラグインへ公開する。
+            // 外部の経済を使っている場合は、既に登録されているものをそのまま使うので上書きしない。
+            setupVault();
+        }
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new EcoTpPlaceholders(this).register();
-            getLogger().info("PlaceholderAPI のプレースホルダーを登録しました。(%ecotp_balance% など)");
+            getLogger().info("Registered PlaceholderAPI placeholders (%ecotp_balance% and others).");
         }
 
-        // 取引の度にディスクへ保存すると負荷になるため、変更があったときだけ定期的にまとめて保存する。
-        getServer().getScheduler().runTaskTimer(this, () -> balanceStorage.saveIfDirty(), 20L * 60, 20L * 60);
+        if (balanceStorage != null) {
+            // 取引の度にディスクへ保存すると負荷になるため、変更があったときだけ定期的にまとめて保存する。
+            getServer().getScheduler().runTaskTimer(this, () -> balanceStorage.saveIfDirty(), 20L * 60, 20L * 60);
+        }
 
-        getLogger().info("EcoTP が有効になりました。(独自の経済システムで動作中、Essentials は不要です)");
+        getLogger().info("EcoTP has been enabled. (economy.enabled=" + economyEnabled + ")");
     }
 
     @Override
     public void onDisable() {
-        if (homeManager != null) {
-            homeManager.save();
-        }
         if (spawnManager != null) {
             spawnManager.save();
+        }
+        if (homeStorage != null) {
+            homeStorage.close();
         }
         if (balanceStorage != null) {
             balanceStorage.close();
         }
-    }
-
-    private BalanceStorage createBalanceStorage() {
-        String type = getConfig().getString("storage.type", "yaml");
-        if (type.equalsIgnoreCase("mysql")) {
-            getLogger().info("MySQL に接続して残高を管理します。");
-            return new MySqlBalanceStorage(this);
+        if (mySqlConnectionProvider != null) {
+            mySqlConnectionProvider.close();
         }
-        return new YamlBalanceStorage(this);
     }
 
     /**
@@ -116,19 +158,48 @@ public class EcoTpPlugin extends JavaPlugin {
      */
     private void setupVault() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            getLogger().info("Vault が見つかりません。他のプラグインとの経済連携なしで動作します。");
+            getLogger().info("Vault not found; running without economy integration for other plugins.");
             return;
         }
         getServer().getServicesManager().register(Economy.class, economy, this, ServicePriority.Highest);
-        getLogger().info("Vault 経由でこの経済システムを他のプラグインに公開しました。");
+        getLogger().info("Published this economy to other plugins via Vault.");
+    }
+
+    /**
+     * economy.enabled が false のとき、Vault 経由で他の経済プラグイン (Essentials 等) の
+     * Economy を取得して使う。見つからない場合は false を返す (呼び出し側でプラグインを無効化する)。
+     */
+    private boolean setupExternalEconomy() {
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            getLogger().severe("economy.enabled is false but Vault was not found. Install Vault and an economy plugin (e.g. EssentialsX), or set economy.enabled to true.");
+            return false;
+        }
+        var registration = getServer().getServicesManager().getRegistration(Economy.class);
+        if (registration == null) {
+            getLogger().severe("economy.enabled is false but no economy plugin is registered with Vault.");
+            return false;
+        }
+        this.economy = registration.getProvider();
+        return true;
+    }
+
+    /**
+     * config.yml の features.* で個別に無効化できる機能かどうか。未設定ならデフォルトで有効。
+     */
+    public boolean isFeatureEnabled(String key) {
+        return getConfig().getBoolean("features." + key, true);
     }
 
     public Economy getEconomy() {
         return economy;
     }
 
+    /**
+     * @return 独自の経済 (economy.enabled: true) を使っている場合はそのインスタンス。
+     * economy.enabled: false で外部の経済プラグインに任せている場合は null。
+     */
     public EcoTpEconomy getEcoTpEconomy() {
-        return economy;
+        return ecoTpEconomy;
     }
 
     public ConfirmationManager getConfirmationManager() {

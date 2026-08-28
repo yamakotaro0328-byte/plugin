@@ -6,7 +6,9 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -116,6 +118,7 @@ public class TpaManager {
 
             economy.withdrawPlayer(mover, actualCost);
             mover.teleport(destination);
+            plugin.getTeleportSafetyManager().playTeleportEffects(mover);
             mover.sendMessage(plugin.msg("tpa.accepted-requester", "player", destinationPlayer.getName(), "cost", ChatUtil.formatMoney(actualCost)));
         });
     }
@@ -133,6 +136,36 @@ public class TpaManager {
         if (requester != null) {
             requester.sendMessage(plugin.msg("tpa.denied-requester", "player", target.getName()));
         }
+    }
+
+    /**
+     * /tpacancel で呼ばれる。自分が送信した (相手がまだ応答していない) リクエストを取り消す。
+     *
+     * @return 取り消すリクエストがあった場合 true。無かった場合 false。
+     */
+    public boolean cancelByRequester(Player requester) {
+        UUID requesterUuid = requester.getUniqueId();
+        List<UUID> targetUuids = new ArrayList<>();
+        for (Map.Entry<UUID, Request> entry : requests.entrySet()) {
+            if (entry.getValue().requesterUuid.equals(requesterUuid)) {
+                targetUuids.add(entry.getKey());
+            }
+        }
+        if (targetUuids.isEmpty()) {
+            return false;
+        }
+        for (UUID targetUuid : targetUuids) {
+            Request request = requests.remove(targetUuid);
+            if (request == null) {
+                continue;
+            }
+            request.timeoutTask.cancel();
+            Player target = Bukkit.getPlayer(targetUuid);
+            if (target != null) {
+                target.sendMessage(plugin.msg("tpa.cancelled-by-requester", "player", requester.getName()));
+            }
+        }
+        return true;
     }
 
     /**

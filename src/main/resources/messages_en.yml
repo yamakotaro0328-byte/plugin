@@ -1,0 +1,142 @@
+# EcoTP messages (English)
+# {placeholder} text is replaced at runtime. & color codes are supported (&a, &c, &l, etc.).
+# Edit this file freely to reword anything or change the currency unit — no code changes needed.
+
+currency:
+  singular: "coin"
+  plural: "coins"
+  format: "{amount} {unit}"
+
+general:
+  players-only: "&cOnly players can use this command."
+  no-permission: "&cYou don't have permission to use this command."
+  insufficient-funds: "&cInsufficient funds. (needed: {cost})"
+  player-offline: "&cThat player is not online."
+  player-went-offline: "&c{player} went offline."
+  cannot-target-self: "&cYou can't target yourself."
+  feature-disabled: "&cThis feature is currently disabled."
+
+confirm:
+  accept-button: "[Accept]"
+  accept-hover: "Click to accept (re-running the same command, /accept, or /ok also work)"
+  cancel-button: "[Cancel]"
+  cancel-hover: "Click to cancel"
+  bedrock-hint: "&7Bedrock players: type &f/accept &7or &f/ok &7to accept (&f/accept cancel &7to cancel)"
+  none-pending: "&cYou have no pending confirmation."
+  none-to-cancel: "&cYou have nothing to cancel."
+  cancelled: "&eCancelled."
+  timed-out: "&cThe confirmation timed out."
+
+teleport-safety:
+  countdown: "&eTeleporting to {description} in &f{seconds}s&e... moving or taking damage will cancel it"
+  cancelled-move: "&cCancelled because you moved."
+  cancelled-damage: "&cCancelled because you took damage."
+  cancelled-mob: "&cCancelled because a hostile mob appeared nearby."
+  cancelled-pvp: "&cCancelled because combat was detected."
+  hostile-mob-nearby: "&cYou can't do that with a hostile mob nearby."
+  pvp-cooldown: "&cYou can't do that so soon after combat. Try again shortly."
+  wrong-dimension: "&cYou can't do that — the destination is in a different dimension."
+
+home:
+  not-set: "&cHome \"{name}\" is not set. Use /sethome {name} to set it."
+  world-missing: "&cThe world for that home could not be found."
+  teleporting: "home \"{name}\""
+  success: "&aTeleported to home \"{name}\". (paid {cost})"
+
+sethome:
+  description: "setting home \"{name}\" here"
+  success: "&aHome \"{name}\" set. (paid {cost})"
+  invalid-name: "&cHome names may only contain letters, digits, and Japanese characters, up to 16 characters."
+  limit-reached: "&cYou've reached your home limit ({max}). Overwrite an existing home instead."
+
+homes:
+  empty: "&cYou haven't set any homes yet. Use /sethome to set one."
+  list: "&aYour homes: &f{names}"
+
+delhome:
+  usage: "&cUsage: /delhome <name>"
+  not-found: "&cNo home named \"{name}\" was found."
+  success: "&aHome \"{name}\" deleted."
+
+spawn:
+  teleporting: "spawn"
+  success: "&aTeleported to spawn. (paid {cost})"
+
+setspawn:
+  success: "&aSpawn set to your current location."
+
+tpa:
+  usage: "&cUsage: /tpa <player>"
+  description: "a teleport request to {player}"
+  travel-description: "{player}"
+  sent: "&aSent a teleport request to {player}. Waiting for them to accept."
+  incoming: "&e{player} &fsent you a teleport request. (they will pay {cost})"
+  incoming-accept-hover: "Click to accept"
+  incoming-deny-hover: "Click to deny"
+  bedrock-hint: "&7Bedrock players: type &f/tpaccept &7or &f/tpdeny"
+  accepted-requester: "&aTeleported to {player}. (paid {cost})"
+  accepted-target: "&aAccepted {player}'s teleport request."
+  denied-target: "&eTeleport request denied."
+  denied-requester: "&e{player} denied your teleport request."
+  none-to-accept: "&cThere's no teleport request to accept."
+  none-to-deny: "&cThere's no teleport request to deny."
+  requester-offline: "&c{player}, who sent the request, went offline."
+  insufficient-funds-target: "&c{player} couldn't afford the teleport. (needed: {cost})"
+  insufficient-funds-requester: "&cYou couldn't afford to teleport to {player}. (needed: {cost})"
+  timeout-target: "&cThe teleport request timed out."
+  timeout-requester: "&cYour teleport request to {player} timed out."
+  cancelled-by-requester: "&e{player} cancelled their request."
+  no-outgoing-request: "&cYou have no outgoing request to cancel."
+  outgoing-cancelled: "&eYour request was cancelled."
+
+tphere:
+  usage: "&cUsage: /tphere <player>"
+  sent: "&aSummoned {player}. Waiting for them to accept. (they will pay)"
+  incoming: "&e{player} &fis summoning you. (accepting will cost you {cost})"
+
+balance:
+  self: "&aYour balance: &f{balance}"
+  other: "&a{player}'s balance: &f{balance}"
+  no-permission-others: "&cYou don't have permission to check other players' balance."
+
+pay:
+  usage: "&cUsage: /pay <player> <amount>"
+  invalid-amount: "&cThe amount must be a number."
+  amount-too-low: "&cThe amount must be at least 1."
+  description: "paying {player}"
+  sent: "&aSent {amount} to {player}."
+  received: "&aReceived {amount} from {player}."
+  failed: "&cPayment failed: {error}"
+  refunded: "&cPayment failed and was refunded: {error}"
+
+eco:
+  usage: "&cUsage: /eco <give|take|set> <player> <amount>"
+  invalid-amount: "&cThe amount must be a number."
+  negative-amount: "&cThe amount must be at least 0."
+  gave: "&aGave {amount} to {player}."
+  took: "&aTook {amount} from {player}."
+  took-failed: "&cFailed: {error}"
+  set: "&aSet {player}'s balance to {amount}."
+
+baltop:
+  header: "&6==== Balance Leaderboard (Top {limit}) ===="
+  line: "&e{rank}. &f{player} &7- &a{balance}"
+  empty: "&7No data yet."
+  unsupported-external-economy: "&cThe leaderboard isn't available while using an external economy plugin."
+
+menu:
+  title: "EcoTP Menu"
+  home: "&aTeleport home"
+  sethome: "&bSet home"
+  spawn: "&aTeleport to spawn"
+  tpa: "&dRequest teleport"
+  tphere: "&5Summon a player (they pay)"
+  balance: "&6Check balance"
+  pay: "&ePay"
+  baltop: "&bLeaderboard"
+  close: "&cClose"
+  select-player-title: "Select a player"
+  no-players-online: "&cThere are no other players online."
+  chat-input-amount: "&aType the amount to send in chat. (type cancel to cancel)"
+  chat-input-cancelled: "&eCancelled."
+  chat-input-timeout: "&cInput timed out."

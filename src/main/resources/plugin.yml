@@ -7,57 +7,63 @@ softdepend: [Vault, PlaceholderAPI]
 
 commands:
   home:
-    description: 保存したホームへテレポートします (距離制、詳細は messages.yml/config.yml 参照)
-    usage: /home [ホーム名]
+    description: Teleport to a saved home (distance-based fee, see config.yml/messages.yml)
+    usage: /home [home name]
   sethome:
-    description: 現在地をホームとして設定します (1000円から、使うたびに1000円ずつ上昇)
-    usage: /sethome [ホーム名]
+    description: Set a home at your current location (starts at 1000, +1000 per use)
+    usage: /sethome [home name]
+  delhome:
+    description: Delete one of your homes (free)
+    usage: /delhome <home name>
   homes:
-    description: 自分のホーム一覧を表示します (無料)
+    description: List your homes (free)
     usage: /homes
   spawn:
-    description: スポーン地点へテレポートします
+    description: Teleport to the server spawn
     usage: /spawn
   setspawn:
-    description: スポーン地点を設定します (管理者用・無料)
+    description: Set the server spawn location (admin, free)
     usage: /setspawn
   tpa:
-    description: 指定したプレイヤーのもとへ移動するリクエストを送ります (自分が支払う)
-    usage: /tpa <プレイヤー名>
+    description: Request to teleport to a player (you pay)
+    usage: /tpa <player>
   tphere:
-    description: 指定したプレイヤーを自分のもとへ呼び出します (着払い・相手が支払う)
-    usage: /tphere <プレイヤー名>
+    description: Request to summon a player to you (cash on delivery, they pay)
+    usage: /tphere <player>
   tpaccept:
-    description: 受け取ったテレポートリクエスト (/tpa, /tphere) を承諾します
+    description: Accept an incoming teleport request (/tpa or /tphere)
     usage: /tpaccept
   tpdeny:
-    description: 受け取ったテレポートリクエストを拒否します
+    description: Deny an incoming teleport request
     usage: /tpdeny
+  tpacancel:
+    description: Cancel a teleport request you sent
+    usage: /tpacancel
   accept:
-    description: 支払いの確認待ちの操作を承諾/キャンセルします (統合版対応)
+    description: Confirm or cancel a pending payment (Bedrock-friendly)
     usage: /accept [cancel]
     aliases: [ok]
   balance:
-    description: 所持金を確認します
-    usage: /balance [プレイヤー名]
+    description: Check your (or another player's) balance
+    usage: /balance [player]
     aliases: [bal, money]
   pay:
-    description: 他のプレイヤーに送金します
-    usage: /pay <プレイヤー名> <金額>
+    description: Send money to another player
+    usage: /pay <player> <amount>
   eco:
-    description: 所持金を操作します (管理者用)
-    usage: /eco <give|take|set> <プレイヤー名> <金額>
+    description: Modify a player's balance (admin)
+    usage: /eco <give|take|set> <player> <amount>
   baltop:
-    description: 所持金ランキングを表示します
+    description: Show the balance leaderboard
     usage: /baltop
   menu:
-    description: GUIメニューを開きます (ホーム/スポーン/tpa/送金/ランキングをクリックで操作)
+    description: Open the GUI menu (home/spawn/tpa/tphere/pay/baltop by clicking)
     usage: /menu
     aliases: [ecomenu]
 
 permissions:
   ecotp.player:
-    description: EcoTP の基本プレイヤー機能をすべて使用できる (home/sethome/spawn/tpa/tphere/pay/menu)
+    description: Grants all basic player features (home/sethome/spawn/tpa/tphere/pay/menu)
     default: true
     children:
       ecotp.home: true
@@ -68,32 +74,32 @@ permissions:
       ecotp.pay: true
       ecotp.menu: true
   ecotp.home:
-    description: /home, /homes を使用できる
+    description: Can use /home, /homes
     default: false
   ecotp.sethome:
-    description: /sethome を使用できる
+    description: Can use /sethome, /delhome
     default: false
   ecotp.spawn:
-    description: /spawn を使用できる
+    description: Can use /spawn
     default: false
   ecotp.setspawn:
-    description: /setspawn を使用できる (管理者用)
+    description: Can use /setspawn (admin)
     default: op
   ecotp.tpa:
-    description: /tpa を使用できる
+    description: Can use /tpa
     default: false
   ecotp.tphere:
-    description: /tphere を使用できる
+    description: Can use /tphere
     default: false
   ecotp.balance.others:
-    description: 他のプレイヤーの所持金を確認できる
+    description: Can check other players' balance
     default: op
   ecotp.pay:
-    description: /pay を使用できる
+    description: Can use /pay
     default: false
   ecotp.admin:
-    description: /eco を使用できる
+    description: Can use /eco
     default: op
   ecotp.menu:
-    description: /menu を使用できる
+    description: Can use /menu
     default: false

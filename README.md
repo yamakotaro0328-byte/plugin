@@ -12,16 +12,25 @@ Vault と PlaceholderAPI は**両方とも任意**(ソフト依存)です。導�
 ## 特徴
 
 - 所持金はこのプラグインが独自に保持 (YAML または MySQL)。Essentials 不要。
+  `economy.enabled: false` にすれば、代わりに Vault 経由で外部の経済プラグイン (Essentials 等)
+  をそのまま使うこともできる (デフォルトは独自経済が ON)。
 - **Essentials からの自動移行**: プレイヤーが初めてこのプラグインに登録されるとき、
   `plugins/Essentials/userdata/<uuid>.yml` に残高が見つかればそれを初期所持金として引き継ぐ
   (Essentials プラグイン自体が入っていなくても、旧データフォルダが残っていれば移行可能)。
 - Vault が導入されていれば、この経済を `Economy` サービスとして公開し、ショップ等の
   他プラグインからも利用可能にする (`ServicePriority.Highest` で登録)。
 - PlaceholderAPI が導入されていれば `%ecotp_balance%` 等のプレースホルダーを自動登録。
-- テレポート前に安全確認・詠唱時間があり、悪用 (戦闘中の逃げテレポ等) を防止する。
+- テレポート前に安全確認・詠唱時間があり、悪用 (戦闘中の逃げテレポ等) を防止する。詠唱中は
+  ボスバーでカウントダウンを表示し、成功時には効果音とパーティクルが鳴る (どちらも無効化可能)。
+- `/home`・`/sethome`・`/spawn`・`/tpa`・`/tphere`・`/pay`・`/baltop`・`/menu` は
+  `config.yml` の `features.*` で個別にオン/オフできる (デフォルトすべて ON)。
+- `/tpa`・`/tphere`・`/pay`・`/eco` のプレイヤー名、`/home`・`/sethome`・`/delhome` の
+  ホーム名はタブ補完に対応。
 - 全メッセージ・通貨単位は `messages.yml` で自由にカスタマイズ可能。
+  デフォルトは英語 (`config.yml` の `language: en`) で、日本語版も同梱 (`language: ja`)。
 - `/menu` から、コマンドを覚えていなくてもGUIで一通りの操作ができる。
 - GitHub Actions で push のたびに自動ビルドし、jar を Artifact として保存する。
+- Modrinth 掲載用の説明文 (英語・日本語) を `docs/modrinth-en.md` / `docs/modrinth-ja.md` に同梱。
 
 ## テレポートコマンドと安全条件
 
@@ -66,9 +75,11 @@ Vault と PlaceholderAPI は**両方とも任意**(ソフト依存)です。導�
 
 - ホーム名は数字・日本語・英字のみ、16文字以内で指定できます (例: `/sethome 拠点`, `/home base2`)。
 - `/home [名前]` `/sethome [名前]` : 名前を省略すると `home` という名前として扱われます。
+- `/delhome <名前>` : 自分のホームを削除します (無料。`/sethome` の使用回数カウントはリセットされません)。
 - `/homes` : 自分が設定しているホームの一覧を表示します (無料)。
 - プレイヤーごとのホーム上限数は `config.yml` の `homes.max-per-player` で変更できます (デフォルト3個)。
   上限に達していても、既存の名前を上書きすることはできます。
+- `storage.type: mysql` にすると、残高だけでなくホームも MySQL に保存され、複数サーバー間で共有できます。
 
 ## 経済コマンド
 
@@ -105,6 +116,7 @@ GUIから選んだ操作も、通常のコマンドと全く同じ確認・安�
 ボタンに加えて、通常どおり `/tpaccept` / `/tpdeny` コマンドが使えます (これらは元々統合版でも入力可能です)。
 支払いの確認待ちが無ければ `/accept` はテレポートリクエストの承諾としても扱われます。
 相手が拒否・タイムアウト・詠唱中のキャンセルをした場合は課金されません。
+リクエストを送った側は `/tpacancel` で、相手の応答を待たずに自分から取り消せます。
 
 ## 残高の保存先 (YAML / MySQL)
 
@@ -123,7 +135,32 @@ storage:
 ```
 
 複数サーバー間で残高を共有したい場合は `mysql` を使ってください。MySQL の JDBC ドライバーは
-プラグインの jar に同梱されているため、別途ドライバーを用意する必要はありません。
+プラグインの jar に同梱されているため、別途ドライバーを用意する必要はありません
+(`storage.type: mysql` にすると、残高とホームの両方が MySQL に保存されます)。
+
+## 独自経済のオン/オフ
+
+`config.yml` の `economy.enabled` (デフォルト `true`) で切り替えられます。
+
+```yaml
+economy:
+  enabled: true   # false にすると、Vault 経由で外部の経済プラグインを使う
+```
+
+`false` にすると、このプラグインは自前で残高を持たず、Vault に登録されている他の経済プラグイン
+(EssentialsX 等) の `Economy` をそのまま利用します。この場合 Vault と経済プラグインの両方の導入が
+必須で、`/baltop` は使用できません (Vault の API には「全員のランキングを取得する」手段が無いため)。
+
+## 機能ごとのオン/オフ
+
+`config.yml` の `features.*` で、`/home`・`/sethome`・`/spawn`・`/tpa`・`/tphere`・`/pay`・`/baltop`・`/menu`
+を個別に無効化できます (デフォルトすべて `true`)。無効化されたコマンドは実行時にその旨のメッセージを返します。
+
+## 言語 (messages.yml)
+
+`config.yml` の `language` (デフォルト `en`) で、初回生成される `messages.yml` の言語を選べます
+(`en` または `ja`)。同梱の `messages_en.yml` / `messages_ja.yml` がそれぞれのベースになり、
+一度 `plugins/EcoTP/messages.yml` が生成された後は自由に編集・翻訳できます。
 
 ## 導入方法
 

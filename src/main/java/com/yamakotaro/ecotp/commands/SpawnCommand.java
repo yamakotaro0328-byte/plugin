@@ -25,6 +25,10 @@ public class SpawnCommand implements CommandExecutor {
             sender.sendMessage(plugin.getMessages().get("general.players-only"));
             return true;
         }
+        if (!plugin.isFeatureEnabled("spawn")) {
+            player.sendMessage(plugin.msg("general.feature-disabled"));
+            return true;
+        }
         if (!player.hasPermission("ecotp.spawn")) {
             player.sendMessage(plugin.msg("general.no-permission"));
             return true;
@@ -65,6 +69,7 @@ public class SpawnCommand implements CommandExecutor {
                     }
                     economy.withdrawPlayer(player, finalCost);
                     player.teleport(finalSpawn);
+                    plugin.getTeleportSafetyManager().playTeleportEffects(player);
                     player.sendMessage(plugin.msg("spawn.success", "cost", ChatUtil.formatMoney(finalCost)));
                 }));
         return true;

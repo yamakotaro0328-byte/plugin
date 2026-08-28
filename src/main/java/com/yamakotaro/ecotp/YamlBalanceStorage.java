@@ -101,7 +101,7 @@ public class YamlBalanceStorage implements BalanceStorage {
             data.save(file);
             dirty = false;
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "balances.yml の保存に失敗しました", e);
+            plugin.getLogger().log(Level.SEVERE, "Failed to save balances.yml", e);
         }
     }
 

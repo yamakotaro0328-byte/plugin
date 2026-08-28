@@ -30,7 +30,7 @@ public final class ChatUtil {
         if (messages != null) {
             return messages.formatMoney(amount);
         }
-        return Math.round(amount) + "円";
+        return Math.round(amount) + " coins";
     }
 
     /**

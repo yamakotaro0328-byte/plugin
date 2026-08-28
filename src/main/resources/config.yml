@@ -1,54 +1,119 @@
-# EcoTP 設定ファイル
-# このプラグインは独自の経済システムを内蔵しているため、Essentials 等の
+# EcoTP configuration
+# This plugin has its own built-in economy, so it works without Essentials or
+# any other economy plugin. Vault is optional: if present, this economy is
+# also exposed to other plugins (shops, etc).
+# (日本語) このプラグインは独自の経済システムを内蔵しているため、Essentials 等の
 # 経済プラグインが無くても動作します。Vault はオプションで、導入されていれば
 # 他のプラグイン (ショップ等) にもこの経済を公開します。
 
-# チャットに表示する接頭辞 (& でカラーコード使用可)
+# Language for messages.yml's bundled defaults: "en" or "ja".
+# Only used the first time messages.yml is generated (and as a fallback for
+# missing keys) — once messages.yml exists you can freely edit/translate it.
+# (日本語) messages.yml の初期言語。"en" または "ja"。
+language: en
+
+# Chat prefix (supports & color codes).
+# (日本語) チャットに表示する接頭辞 (& でカラーコード使用可)
 prefix: "&8[&6EcoTP&8]&r "
 
-# 新規プレイヤーの初期所持金 (Essentials のデータが見つかった場合はそちらを優先する)
+economy:
+  # If true (default), this plugin manages balances itself — no Essentials or
+  # other economy plugin required. If false, it instead fetches an Economy
+  # from Vault (so you can keep using Essentials/another economy plugin);
+  # in that case Vault AND another economy plugin must be installed, and
+  # /baltop is unavailable (Vault has no "list all balances" API).
+  # (日本語) true (デフォルト) なら独自の経済システムを使用 (Essentials 不要)。
+  # false にすると Vault 経由で他の経済プラグインを使う (Vault と経済プラグインの
+  # 両方が必要。/baltop は使用不可)。
+  enabled: true
+
+# Toggle individual player-facing features on/off. All default to true.
+# (日本語) 各機能を個別にオン/オフできます。デフォルトはすべて true。
+features:
+  home: true
+  sethome: true
+  spawn: true
+  tpa: true
+  tphere: true
+  pay: true
+  baltop: true
+  menu: true
+
+# Starting balance for new players (used only when economy.enabled: true and
+# no matching Essentials data was found — see essentials-import below).
+# (日本語) 新規プレイヤーの初期所持金 (Essentials のデータが見つかった場合はそちらを優先)
 starting-balance: 0.0
 
 essentials-import:
-  # 有効にすると、初めて見るプレイヤーの所持金を
+  # If true, the first time a player is seen, their balance is imported once
+  # from plugins/Essentials/userdata/<uuid>.yml (only used when
+  # economy.enabled: true).
+  # (日本語) 有効にすると、初めて見るプレイヤーの所持金を
   # plugins/Essentials/userdata/<uuid>.yml から一度だけ引き継ぐ
   enabled: true
 
-# 料金設定
+# Prices. (日本語) 料金設定
 costs:
-  # /sethome の初回料金。以降 sethome-increment ずつ加算されていく
+  # First /sethome fee; increases by sethome-increment on every later use.
+  # (日本語) /sethome の初回料金。以降 sethome-increment ずつ加算されていく
   sethome-base: 1000.0
   sethome-increment: 1000.0
-  # /home, /spawn, /tpa, /tphere のテレポート料金:
+  # Teleport fee for /home, /spawn, /tpa, /tphere:
+  # fee = max(distance-min-fee, ceil(3D straight-line distance / distance-blocks-per-yen))
+  # (default: 1 currency unit per 100 blocks, minimum 100)
+  # (日本語) /home, /spawn, /tpa, /tphere のテレポート料金:
   # 料金 = max(distance-min-fee, ceil(3次元の直線距離 ÷ distance-blocks-per-yen))
-  # (デフォルト: 100ブロックにつき1円、最低100円)
+  # (デフォルト: 100ブロックにつき1、最低100)
   distance-min-fee: 100.0
   distance-blocks-per-yen: 100.0
 
-# 支払い確認 (チャットクリック / 同じコマンドの再実行 / /accept, /ok コマンド) のタイムアウト秒数
+# Timeout (seconds) for payment confirmation (chat button / re-running the
+# same command / /accept, /ok).
+# (日本語) 支払い確認 (チャットクリック / 同じコマンドの再実行 / /accept, /ok) のタイムアウト秒数
 confirmation-timeout-seconds: 30
 
-# /tpa, /tphere リクエスト自体 (相手の承諾待ち) のタイムアウト秒数
+# Timeout (seconds) for /tpa, /tphere requests themselves (waiting on the
+# other player to respond).
+# (日本語) /tpa, /tphere リクエスト自体 (相手の承諾待ち) のタイムアウト秒数
 tpa-request-timeout-seconds: 60
 
-# /home, /spawn, /tpa, /tphere でテレポートする前の安全確認・詠唱時間。
+# Safety checks and cast time before teleporting via /home, /spawn, /tpa,
+# /tphere. Payment only happens after this completes, so a cancelled
+# teleport is never charged.
+# (日本語) /home, /spawn, /tpa, /tphere でテレポートする前の安全確認・詠唱時間。
 # 支払いはこの待機が完了してから行われるため、キャンセルされた場合は課金されない。
 teleport-safety:
-  # 開始地点から動かずに待つ秒数
+  # Seconds the player must stand still at the starting location.
+  # (日本語) 開始地点から動かずに待つ秒数
   countdown-seconds: 5
-  # 「動いた」と判定するまでの許容範囲 (ブロック)。視点移動だけでは反応しない。
+  # Movement tolerance (blocks) before it counts as "moved". Looking around
+  # alone does not cancel the countdown.
+  # (日本語) 「動いた」と判定するまでの許容範囲 (ブロック)。視点移動だけでは反応しない。
   movement-tolerance: 0.2
-  # この半径 (ブロック) 以内に敵対Mobがいるとテレポートできない/キャンセルされる
+  # Teleporting is blocked/cancelled if a hostile mob is within this radius
+  # (blocks). Set to 0 to disable this check.
+  # (日本語) この半径 (ブロック) 以内に敵対Mobがいるとテレポートできない/キャンセルされる (0で無効)
   hostile-mob-radius: 10.0
-  # 直近にプレイヤー同士の戦闘があってからこの秒数はテレポートできない
+  # Teleporting is blocked for this many seconds after any player-vs-player
+  # combat. Set to 0 to disable this check.
+  # (日本語) 直近にプレイヤー同士の戦闘があってからこの秒数はテレポートできない (0で無効)
   pvp-cooldown-seconds: 15
+  # Show a boss bar with a countdown while waiting.
+  # (日本語) 詠唱中にボスバーでカウントダウンを表示する
+  show-bossbar: true
+  # Play a sound/particle effect when a teleport completes successfully.
+  # (日本語) テレポート成功時に効果音とパーティクルを再生する
+  play-effects: true
 
-# プレイヤーごとに設定できるホームの上限数
+# Maximum number of homes each player may set.
+# (日本語) プレイヤーごとに設定できるホームの上限数
 homes:
   max-per-player: 3
 
-# 残高の保存先。yaml (デフォルト、追加設定不要) か mysql を選べる。
-# 複数サーバーで残高を共有したい場合は mysql を使う。
+# Where balances/homes are stored: "yaml" (default, no extra setup) or
+# "mysql" (share them across multiple servers).
+# (日本語) 残高・ホームの保存先。yaml (デフォルト、追加設定不要) か mysql を選べる。
+# 複数サーバーで共有したい場合は mysql を使う。
 storage:
   type: yaml
   mysql:
@@ -59,5 +124,6 @@ storage:
     password: ""
     table-prefix: "ecotp_"
 
-# /baltop で表示する人数
+# Number of players shown by /baltop.
+# (日本語) /baltop で表示する人数
 baltop-limit: 10

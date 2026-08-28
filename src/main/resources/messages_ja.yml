@@ -1,10 +1,11 @@
-# EcoTP メッセージ設定ファイル
+# EcoTP メッセージ設定ファイル (日本語)
 # {placeholder} の部分は実行時に値へ置き換わります。& でカラーコードが使えます (&a, &c, &l など)。
 # ここを書き換えるだけで、コードを触らずに文言や通貨単位を変更できます。
 
 currency:
   singular: "円"
   plural: "円"
+  format: "{amount}{unit}"
 
 general:
   players-only: "&cプレイヤーのみ実行できます。"
@@ -13,6 +14,7 @@ general:
   player-offline: "&cそのプレイヤーはオンラインではありません。"
   player-went-offline: "&c{player} はオフラインになりました。"
   cannot-target-self: "&c自分自身には指定できません。"
+  feature-disabled: "&cこの機能は現在無効になっています。"
 
 confirm:
   accept-button: "[承諾する]"
@@ -51,6 +53,11 @@ homes:
   empty: "&cまだホームが設定されていません。/sethome で設定できます。"
   list: "&aあなたのホーム: &f{names}"
 
+delhome:
+  usage: "&c使い方: /delhome <名前>"
+  not-found: "&cホーム「{name}」が見つかりません。"
+  success: "&aホーム「{name}」を削除しました。"
+
 spawn:
   teleporting: "スポーン地点へワープします"
   success: "&aスポーン地点にテレポートしました。({cost} 支払いました)"
@@ -78,6 +85,9 @@ tpa:
   insufficient-funds-requester: "&c所持金が不足しているため {player} へテレポートできませんでした。(必要: {cost})"
   timeout-target: "&cテレポートリクエストがタイムアウトしました。"
   timeout-requester: "&c{player} へのテレポートリクエストがタイムアウトしました。"
+  cancelled-by-requester: "&e{player} がリクエストを取り消しました。"
+  no-outgoing-request: "&c取り消せるリクエストはありません。"
+  outgoing-cancelled: "&eリクエストを取り消しました。"
 
 tphere:
   usage: "&c使い方: /tphere <プレイヤー名>"
@@ -112,6 +122,7 @@ baltop:
   header: "&6==== 所持金ランキング (上位{limit}人) ===="
   line: "&e{rank}. &f{player} &7- &a{balance}"
   empty: "&7まだデータがありません。"
+  unsupported-external-economy: "&c外部の経済プラグインを使用しているため、ランキングは利用できません。"
 
 menu:
   title: "EcoTPメニュー"

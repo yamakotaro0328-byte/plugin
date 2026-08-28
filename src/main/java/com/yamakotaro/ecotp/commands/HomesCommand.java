@@ -25,6 +25,10 @@ public class HomesCommand implements CommandExecutor {
             sender.sendMessage(plugin.getMessages().get("general.players-only"));
             return true;
         }
+        if (!plugin.isFeatureEnabled("home")) {
+            player.sendMessage(plugin.msg("general.feature-disabled"));
+            return true;
+        }
         if (!player.hasPermission("ecotp.home")) {
             player.sendMessage(plugin.msg("general.no-permission"));
             return true;

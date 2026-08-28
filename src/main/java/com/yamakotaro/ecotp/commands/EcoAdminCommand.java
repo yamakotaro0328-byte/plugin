@@ -1,7 +1,9 @@
 package com.yamakotaro.ecotp.commands;
 
 import com.yamakotaro.ecotp.ChatUtil;
+import com.yamakotaro.ecotp.EcoTpEconomy;
 import com.yamakotaro.ecotp.EcoTpPlugin;
+import com.yamakotaro.ecotp.TabCompleteUtil;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
@@ -9,11 +11,17 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * 管理者用: /eco give|take|set <プレイヤー名> <金額>
  */
-public class EcoAdminCommand implements CommandExecutor {
+public class EcoAdminCommand implements CommandExecutor, TabCompleter {
+
+    private static final List<String> SUBCOMMANDS = List.of("give", "take", "set");
 
     private final EcoTpPlugin plugin;
 
@@ -48,7 +56,12 @@ public class EcoAdminCommand implements CommandExecutor {
 
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
         Economy economy = plugin.getEconomy();
-        plugin.getEcoTpEconomy().ensureAccount(target.getUniqueId(), targetName);
+        // 独自の経済 (economy.enabled) を使っている場合のみ口座の事前作成が必要。
+        // 外部の経済プラグインに任せている場合は、そちら側の口座管理に任せる。
+        EcoTpEconomy ecoTpEconomy = plugin.getEcoTpEconomy();
+        if (ecoTpEconomy != null) {
+            ecoTpEconomy.ensureAccount(target.getUniqueId(), targetName);
+        }
 
         switch (sub) {
             case "give" -> {
@@ -75,5 +88,16 @@ public class EcoAdminCommand implements CommandExecutor {
             default -> sender.sendMessage(plugin.msg("eco.usage"));
         }
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return TabCompleteUtil.filterPrefix(SUBCOMMANDS, args[0]);
+        }
+        if (args.length == 2) {
+            return TabCompleteUtil.onlinePlayerNames(args[1], null);
+        }
+        return Collections.emptyList();
     }
 }

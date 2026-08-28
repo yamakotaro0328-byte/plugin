@@ -1,7 +1,6 @@
 package com.yamakotaro.ecotp;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,66 +18,28 @@ import java.util.logging.Level;
 /**
  * 残高を MySQL に保存するストレージ。複数サーバー間で残高を共有したい場合に使う。
  * config.yml の storage.type を "mysql" にすると有効になる (storage.mysql 以下で接続先を設定)。
+ * 接続自体は MySqlConnectionProvider (ホームストレージと共有) が管理する。
  */
 public class MySqlBalanceStorage implements BalanceStorage {
 
-    static {
-        try {
-            // Bukkit のプラグインクラスローダー環境では JDBC4 の自動登録が効かないことがあるため明示的に読み込む。
-            Class.forName("com.mysql.cj.jdbc.Driver");
-        } catch (ClassNotFoundException ignored) {
-            // ドライバーが同梱されていない場合、後続の接続でエラーになった時点で気づける
-        }
-    }
-
     private final EcoTpPlugin plugin;
-    private final String url;
-    private final String username;
-    private final String password;
+    private final MySqlConnectionProvider connectionProvider;
     private final String table;
-
-    private Connection connection;
 
     private final Map<UUID, Double> balanceCache = new HashMap<>();
     private final Map<UUID, String> nameCache = new HashMap<>();
     private final Map<String, UUID> nameToUuid = new HashMap<>();
     private final Set<UUID> dirty = new HashSet<>();
 
-    public MySqlBalanceStorage(EcoTpPlugin plugin) {
+    public MySqlBalanceStorage(EcoTpPlugin plugin, MySqlConnectionProvider connectionProvider) {
         this.plugin = plugin;
-        String host = plugin.getConfig().getString("storage.mysql.host", "localhost");
-        int port = plugin.getConfig().getInt("storage.mysql.port", 3306);
-        String database = plugin.getConfig().getString("storage.mysql.database", "ecotp");
-        this.username = plugin.getConfig().getString("storage.mysql.username", "root");
-        this.password = plugin.getConfig().getString("storage.mysql.password", "");
+        this.connectionProvider = connectionProvider;
         this.table = plugin.getConfig().getString("storage.mysql.table-prefix", "ecotp_") + "balances";
-        this.url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&autoReconnect=true&characterEncoding=utf8";
-
-        connect();
         createTable();
     }
 
-    private void connect() {
-        try {
-            connection = DriverManager.getConnection(url, username, password);
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "MySQL への接続に失敗しました。config.yml の storage.mysql 設定を確認してください。", e);
-        }
-    }
-
-    private Connection getConnection() {
-        try {
-            if (connection == null || connection.isClosed() || !connection.isValid(2)) {
-                connect();
-            }
-        } catch (SQLException e) {
-            connect();
-        }
-        return connection;
-    }
-
     private void createTable() {
-        Connection conn = getConnection();
+        Connection conn = connectionProvider.get();
         if (conn == null) {
             return;
         }
@@ -89,7 +50,7 @@ public class MySqlBalanceStorage implements BalanceStorage {
         try (Statement statement = conn.createStatement()) {
             statement.executeUpdate(sql);
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "残高テーブルの作成に失敗しました", e);
+            plugin.getLogger().log(Level.SEVERE, "Failed to create the balances table", e);
         }
     }
 
@@ -111,7 +72,7 @@ public class MySqlBalanceStorage implements BalanceStorage {
     }
 
     private Optional<Double> load(UUID uuid) {
-        Connection conn = getConnection();
+        Connection conn = connectionProvider.get();
         if (conn == null) {
             return Optional.empty();
         }
@@ -131,7 +92,7 @@ public class MySqlBalanceStorage implements BalanceStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "残高の読み込みに失敗しました (" + uuid + ")", e);
+            plugin.getLogger().log(Level.SEVERE, "Failed to load balance (" + uuid + ")", e);
         }
         return Optional.empty();
     }
@@ -163,7 +124,7 @@ public class MySqlBalanceStorage implements BalanceStorage {
             return Optional.of(cached);
         }
 
-        Connection conn = getConnection();
+        Connection conn = connectionProvider.get();
         if (conn == null) {
             return Optional.empty();
         }
@@ -178,7 +139,7 @@ public class MySqlBalanceStorage implements BalanceStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "名前からのUUID検索に失敗しました (" + name + ")", e);
+            plugin.getLogger().log(Level.SEVERE, "Failed to look up UUID by name (" + name + ")", e);
         }
         return Optional.empty();
     }
@@ -186,7 +147,7 @@ public class MySqlBalanceStorage implements BalanceStorage {
     @Override
     public List<BalanceEntry> getTopBalances(int limit) {
         List<BalanceEntry> entries = new ArrayList<>();
-        Connection conn = getConnection();
+        Connection conn = connectionProvider.get();
         if (conn == null) {
             return entries;
         }
@@ -199,7 +160,7 @@ public class MySqlBalanceStorage implements BalanceStorage {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "所持金ランキングの取得に失敗しました", e);
+            plugin.getLogger().log(Level.SEVERE, "Failed to fetch the balance leaderboard", e);
         }
         return entries;
     }
@@ -209,7 +170,7 @@ public class MySqlBalanceStorage implements BalanceStorage {
         if (dirty.isEmpty()) {
             return;
         }
-        Connection conn = getConnection();
+        Connection conn = connectionProvider.get();
         if (conn == null) {
             return;
         }
@@ -227,19 +188,13 @@ public class MySqlBalanceStorage implements BalanceStorage {
             statement.executeBatch();
             dirty.removeAll(flushed);
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "残高の保存に失敗しました (MySQL)", e);
+            plugin.getLogger().log(Level.SEVERE, "Failed to save balances (MySQL)", e);
         }
     }
 
     @Override
     public void close() {
         saveIfDirty();
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-            }
-        } catch (SQLException e) {
-            plugin.getLogger().log(Level.WARNING, "MySQL接続のクローズに失敗しました", e);
-        }
+        // 接続自体のクローズは共有元の MySqlConnectionProvider (EcoTpPlugin) が行う。
     }
 }

@@ -3,18 +3,23 @@ package com.yamakotaro.ecotp.commands;
 import com.yamakotaro.ecotp.ChatUtil;
 import com.yamakotaro.ecotp.CostUtil;
 import com.yamakotaro.ecotp.EcoTpPlugin;
+import com.yamakotaro.ecotp.TabCompleteUtil;
 import com.yamakotaro.ecotp.TpaManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * /tpa <プレイヤー名> : 自分が相手のもとへ移動するリクエストを送る。支払いは自分 (移動する側)。
  */
-public class TpaCommand implements CommandExecutor {
+public class TpaCommand implements CommandExecutor, TabCompleter {
 
     private final EcoTpPlugin plugin;
 
@@ -26,6 +31,10 @@ public class TpaCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(plugin.getMessages().get("general.players-only"));
+            return true;
+        }
+        if (!plugin.isFeatureEnabled("tpa")) {
+            player.sendMessage(plugin.msg("general.feature-disabled"));
             return true;
         }
         if (!player.hasPermission("ecotp.tpa")) {
@@ -76,5 +85,13 @@ public class TpaCommand implements CommandExecutor {
             plugin.getTpaManager().sendRequest(TpaManager.Type.TPA, player, currentTarget, estimatedCost);
         });
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1 && sender instanceof Player player) {
+            return TabCompleteUtil.onlinePlayerNames(args[0], player.getUniqueId());
+        }
+        return Collections.emptyList();
     }
 }

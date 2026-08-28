@@ -2,19 +2,24 @@ package com.yamakotaro.ecotp.commands;
 
 import com.yamakotaro.ecotp.CostUtil;
 import com.yamakotaro.ecotp.EcoTpPlugin;
+import com.yamakotaro.ecotp.TabCompleteUtil;
 import com.yamakotaro.ecotp.TpaManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * /tphere <プレイヤー名> : 相手を自分のもとへ呼ぶリクエストを送る。着払いのため、
  * 支払いは呼ばれた相手 (実際に移動する側)。呼び出す側 (自分) は支払わないため
  * 料金の事前承諾は不要 — 相手の承諾 (支払いへの同意を兼ねる) だけで進む。
  */
-public class TphereCommand implements CommandExecutor {
+public class TphereCommand implements CommandExecutor, TabCompleter {
 
     private final EcoTpPlugin plugin;
 
@@ -26,6 +31,10 @@ public class TphereCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(plugin.getMessages().get("general.players-only"));
+            return true;
+        }
+        if (!plugin.isFeatureEnabled("tphere")) {
+            player.sendMessage(plugin.msg("general.feature-disabled"));
             return true;
         }
         if (!player.hasPermission("ecotp.tphere")) {
@@ -55,5 +64,13 @@ public class TphereCommand implements CommandExecutor {
 
         plugin.getTpaManager().sendRequest(TpaManager.Type.TPHERE, player, target, estimatedCost);
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1 && sender instanceof Player player) {
+            return TabCompleteUtil.onlinePlayerNames(args[0], player.getUniqueId());
+        }
+        return Collections.emptyList();
     }
 }

@@ -1,6 +1,12 @@
 package com.yamakotaro.ecotp;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Ghast;
 import org.bukkit.entity.LivingEntity;
@@ -44,11 +50,20 @@ public class TeleportSafetyManager implements Listener {
         final Location startLocation;
         final BukkitTask completionTask;
         final BukkitTask monitorTask;
+        final BossBar bossBar;
+        final String description;
+        final int totalTicks;
+        int remainingTicks;
 
-        private Countdown(Location startLocation, BukkitTask completionTask, BukkitTask monitorTask) {
+        private Countdown(Location startLocation, BukkitTask completionTask, BukkitTask monitorTask,
+                           BossBar bossBar, String description, int totalTicks) {
             this.startLocation = startLocation;
             this.completionTask = completionTask;
             this.monitorTask = monitorTask;
+            this.bossBar = bossBar;
+            this.description = description;
+            this.totalTicks = totalTicks;
+            this.remainingTicks = totalTicks;
         }
     }
 
@@ -117,6 +132,14 @@ public class TeleportSafetyManager implements Listener {
         UUID uuid = player.getUniqueId();
         cancelSilently(uuid);
 
+        int totalTicks = seconds * 20;
+        boolean showBossBar = plugin.getConfig().getBoolean("teleport-safety.show-bossbar", true);
+        BossBar bossBar = null;
+        if (showBossBar) {
+            bossBar = Bukkit.createBossBar(bossBarTitle(description, seconds), BarColor.BLUE, BarStyle.SOLID);
+            bossBar.addPlayer(player);
+            bossBar.setProgress(1.0);
+        }
         player.sendMessage(plugin.msg("teleport-safety.countdown", "description", description, "seconds", seconds));
 
         BukkitTask completionTask = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
@@ -125,12 +148,15 @@ public class TeleportSafetyManager implements Listener {
             Countdown finished = countdowns.remove(uuid);
             if (finished != null) {
                 finished.monitorTask.cancel();
+                if (finished.bossBar != null) {
+                    finished.bossBar.removeAll();
+                }
             }
             onComplete.run();
-        }, seconds * 20L);
+        }, totalTicks);
 
         // 移動/ダメージはイベントで即検知できるが、モブの接近やPvPクールダウンの発生は
-        // イベントが無いため、待機中は毎秒ポーリングして確認する。
+        // イベントが無いため、待機中は毎秒ポーリングして確認する (ボスバーの更新も兼ねる)。
         BukkitTask monitorTask = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             if (!player.isOnline()) {
                 cancelSilently(uuid);
@@ -138,13 +164,40 @@ public class TeleportSafetyManager implements Listener {
             }
             if (hasHostileMobNearby(player)) {
                 cancel(player, "teleport-safety.cancelled-mob");
-            } else if (isInPvpCooldown(player)) {
+                return;
+            }
+            if (isInPvpCooldown(player)) {
                 cancel(player, "teleport-safety.cancelled-pvp");
+                return;
+            }
+            Countdown current = countdowns.get(uuid);
+            if (current != null && current.bossBar != null) {
+                current.remainingTicks -= 20;
+                int remainingSeconds = Math.max(0, current.remainingTicks / 20);
+                current.bossBar.setProgress(Math.max(0.0, (double) current.remainingTicks / current.totalTicks));
+                current.bossBar.setTitle(bossBarTitle(current.description, remainingSeconds));
             }
         }, 20L, 20L);
 
-        countdowns.put(uuid, new Countdown(player.getLocation(), completionTask, monitorTask));
+        countdowns.put(uuid, new Countdown(player.getLocation(), completionTask, monitorTask, bossBar, description, totalTicks));
         return true;
+    }
+
+    private String bossBarTitle(String description, int remainingSeconds) {
+        return ChatUtil.color(description + " &f(" + remainingSeconds + "s)");
+    }
+
+    /**
+     * テレポート成功時の演出 (効果音 + パーティクル)。実際に player.teleport(...) した直後に呼ぶこと。
+     * config.yml の teleport-safety.play-effects で無効化できる。
+     */
+    public void playTeleportEffects(Player player) {
+        if (!plugin.getConfig().getBoolean("teleport-safety.play-effects", true)) {
+            return;
+        }
+        Location location = player.getLocation();
+        player.getWorld().playSound(location, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+        player.getWorld().spawnParticle(Particle.PORTAL, location, 32, 0.5, 1.0, 0.5, 0.1);
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -180,6 +233,9 @@ public class TeleportSafetyManager implements Listener {
         if (countdown != null) {
             countdown.completionTask.cancel();
             countdown.monitorTask.cancel();
+            if (countdown.bossBar != null) {
+                countdown.bossBar.removeAll();
+            }
             player.sendMessage(plugin.msg(messageKey));
         }
     }
@@ -189,6 +245,9 @@ public class TeleportSafetyManager implements Listener {
         if (countdown != null) {
             countdown.completionTask.cancel();
             countdown.monitorTask.cancel();
+            if (countdown.bossBar != null) {
+                countdown.bossBar.removeAll();
+            }
         }
     }
 }

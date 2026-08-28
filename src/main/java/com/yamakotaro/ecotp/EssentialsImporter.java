@@ -47,7 +47,7 @@ public class EssentialsImporter {
         try {
             return new BigDecimal(moneyStr).doubleValue();
         } catch (NumberFormatException e) {
-            plugin.getLogger().warning("Essentials のデータから所持金を読み取れませんでした (" + uuid + "): " + moneyStr);
+            plugin.getLogger().warning("Could not parse balance from Essentials data (" + uuid + "): " + moneyStr);
             return null;
         }
     }

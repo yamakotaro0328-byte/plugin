@@ -40,7 +40,7 @@ public class EcoTpEconomy implements Economy {
         double initial = imported != null ? imported : plugin.getConfig().getDouble("starting-balance", 0.0);
         balances.createAccount(uuid, name, initial);
         if (imported != null) {
-            plugin.getLogger().info((name != null ? name : uuid) + " の所持金を Essentials から引き継ぎました (" + ChatUtil.formatMoney(initial) + ")");
+            plugin.getLogger().info("Imported balance for " + (name != null ? name : uuid) + " from Essentials (" + ChatUtil.formatMoney(initial) + ")");
         }
     }
 

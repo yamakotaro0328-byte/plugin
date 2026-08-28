@@ -55,7 +55,7 @@ public class SpawnManager {
         try {
             data.save(file);
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "spawn.yml の保存に失敗しました", e);
+            plugin.getLogger().log(Level.SEVERE, "Failed to save spawn.yml", e);
         }
     }
 }
