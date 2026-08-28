@@ -7,14 +7,29 @@ softdepend: [Vault, PlaceholderAPI]
 # Some plugins check for a Vault economy exactly once at their own onEnable and
 # never retry (unlike e.g. EvenMoreFish, which retries and succeeds either way).
 # If they happen to enable before EcoTP registers its economy with Vault, they
-# give up permanently. loadbefore nudges Bukkit's enable order so EcoTP goes
-# first for the ones we've actually observed doing this.
+# give up permanently (GambleGate/VillagerMarket/Roulette/Gun were confirmed
+# doing this on a real server log). Bukkit has no "always load first" flag, so
+# the only way to influence this is loadbefore naming plugins explicitly — this
+# lists every other plugin seen on that server so EcoTP wins the race against
+# all of them. Vault/PlaceholderAPI are excluded since softdepend above already
+# requires the opposite order for those. A newly installed plugin not in this
+# list won't get this guarantee until its name is added here too.
 # (日本語) 一部のプラグインはVault経済の有無を自身のonEnable時に一度だけ確認し、
-# リトライしない (EvenMoreFishはリトライするので影響を受けない)。EcoTPがVaultに
-# 経済を登録する前にそれらが先に有効化されてしまうと、以後ずっと「経済プラグインが
-# 見つからない」ままになる。loadbefore で、実際にこの問題が確認できたプラグインに
-# ついてはEcoTPを先に有効化させる。
-loadbefore: [GambleGate, VillagerMarket, Roulette, Gun]
+# リトライしない (実サーバーのログでGambleGate/VillagerMarket/Roulette/Gunを確認)。
+# Bukkitには「常に最初に読み込む」という汎用フラグが無いため、loadbeforeで
+# プラグイン名を明示的に列挙する以外に手段が無い。ここではそのサーバーで確認できた
+# 他の全プラグインを列挙し、EcoTPがすべてに先んじて有効化されるようにしている。
+# Vault/PlaceholderAPIは上のsoftdependで逆順を要求しているため除外。ここに無い
+# 新規プラグインには、名前を追記するまでこの保証は効かない。
+loadbefore: [AdvancedBan, ArmorStandTools, Bolt, CMILib, Citizens, DecentHolograms,
+  DiscordSRV, EvenMoreFish, GSit, GambleGate, Geyser-Spigot, Gun, ImageFrame,
+  ItemEdit, Jobs, Lands, LuckPerms, LunaChat, Maintenance, Multiverse-Core,
+  Multiverse-NetherPortals, MyPet, Pl3xMap, PlayerDataSyncReloaded,
+  QuickShop-Hikari, ResourcePackManager, Roulette, ServerListPlus, Siboutixesuto,
+  Skript, TAB, Train_Carts, UndineMailer, ViaBackwards, ViaRewind, ViaVersion,
+  VillagerMarket, Vulcan, WorldEdit, WorldGuard, console, floodgate, ghastmaster,
+  packetevents, prism, BKCommonLib, FarmersDelight, Nova, PlugManX, SkBee,
+  Veinminer, g]
 
 commands:
   home:
