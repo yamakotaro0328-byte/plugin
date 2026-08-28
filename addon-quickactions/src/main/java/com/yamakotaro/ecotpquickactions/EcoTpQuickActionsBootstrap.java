@@ -1,28 +1,24 @@
 package com.yamakotaro.ecotpquickactions;
 
-import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.plugin.bootstrap.BootstrapContext;
 import io.papermc.paper.plugin.bootstrap.PluginBootstrap;
 import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
-import io.papermc.paper.registry.RegistryKey;
-import io.papermc.paper.registry.TypedKey;
-import io.papermc.paper.registry.data.dialog.ActionButton;
-import io.papermc.paper.registry.data.dialog.DialogBase;
-import io.papermc.paper.registry.data.dialog.action.DialogAction;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
-import io.papermc.paper.registry.data.dialog.type.DialogType;
-import io.papermc.paper.registry.event.RegistryEvents;
-import io.papermc.paper.registry.keys.tags.DialogTagKeys;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.Component;
 
-import java.util.List;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
- * サーバー起動の一番早い段階(全プラグインのロードより前)で、独自のDialogをレジストリに
- * 登録し、バニラのQuick Actions(Gキー)タグ(minecraft:quick_actions)に加える。
- * これによりプレイヤーがGキーを押すだけでこのダイアログが開くようになる
- * (コマンド実行やイベント購読は一切不要、クライアント側が直接タグを参照する)。
+ * このアドオンのQuick Actionsダイアログは、Javaコードで組み立てるのではなく、jarに同梱した
+ * データパック(src/main/resources/pack/以下)として定義している。理由:
+ * - RegistryEvents.DIALOG で新しいDialogを登録すること自体は可能だが、そのDialogを
+ *   バニラの #minecraft:quick_actions タグに追加する(=Gキーで自動的に開くようにする)
+ *   Java APIが見当たらなかった (event.getOrCreateTag(...) は他のレジストリの項目から
+ *   既存タグを「参照」するための読み取り専用ハンドルであり、タグへの追加には使えない)。
+ * - タグへの追加はバニラのデータパック的な仕組み(data/minecraft/tags/dialog/quick_actions.json
+ *   にmerge)でしか行えないため、ダイアログ自体もデータパックのJSONとして定義し、
+ *   LifecycleEvents.DATAPACK_DISCOVERY でjar内のデータパックをサーバーに検出させている。
  */
 public class EcoTpQuickActionsBootstrap implements PluginBootstrap {
 
@@ -31,31 +27,14 @@ public class EcoTpQuickActionsBootstrap implements PluginBootstrap {
     @Override
     public void bootstrap(BootstrapContext context) {
         LifecycleEventManager<BootstrapContext> manager = context.getLifecycleManager();
-        manager.registerEventHandler(RegistryEvents.DIALOG.compose().newHandler(event -> {
-            TypedKey<Dialog> key = TypedKey.create(RegistryKey.DIALOG, DIALOG_KEY);
-            event.registry().register(key, builder -> builder
-                    .base(DialogBase.builder(Component.text("EcoTP"))
-                            .body(List.of(DialogBody.plainMessage(Component.text("Quick actions"))))
-                            .canCloseWithEscape(true)
-                            .build())
-                    .type(DialogType.multiAction(List.of(
-                            actionButton("Home", "home"),
-                            actionButton("Set Home", "sethome"),
-                            actionButton("Spawn", "spawn"),
-                            actionButton("Balance", "balance"),
-                            actionButton("Ranking", "baltop"),
-                            actionButton("Menu (TPA / TPHere / Pay)", "menu"),
-                            actionButton("Vote: Clear weather", "weathervote clear"),
-                            actionButton("Vote: Rain", "weathervote rain")
-                    )).build()));
-
-            event.getOrCreateTag(DialogTagKeys.QUICK_ACTIONS).add(key);
-        }));
-    }
-
-    private static ActionButton actionButton(String label, String commandTemplate) {
-        return ActionButton.builder(Component.text(label))
-                .action(DialogAction.commandTemplate(commandTemplate))
-                .build();
+        manager.registerEventHandler(LifecycleEvents.DATAPACK_DISCOVERY, event -> {
+            URI packUri;
+            try {
+                packUri = getClass().getResource("/pack").toURI();
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+            event.registrar().discoverPack(packUri, "ecotpqa_quick_actions");
+        });
     }
 }
