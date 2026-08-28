@@ -2,6 +2,8 @@
 
 **A standalone economy plugin with distance-priced teleportation.** No Essentials or any other economy plugin required — EcoTP manages balances itself, while hooking into Vault (required) so shops and other plugins can use its economy too.
 
+---
+
 ## Highlights
 
 - **Self-contained economy** — balances are stored by EcoTP (YAML by default, or MySQL to share them across multiple servers). Vault is required, purely for interoperability with other plugins.
@@ -15,15 +17,21 @@
 - **Fully configurable** — every message and the currency name/unit live in `messages.yml` (ships in English by default; a Japanese translation is bundled too). Individual features (home, sethome, spawn, tpa, tphere, pay, baltop, menu) and the built-in economy itself can each be toggled on/off.
 - **PlaceholderAPI support** — `%ecotp_balance%`, `%ecotp_balance_formatted%`, `%ecotp_sethome_cost%`.
 
+---
+
 ## Commands
 
 `/home`, `/sethome`, `/delhome`, `/homes`, `/spawn`, `/setspawn`, `/tpa`, `/tphere`, `/tpaccept`, `/tpdeny`, `/tpacancel`, `/accept` (alias `/ok`), `/balance`, `/pay`, `/eco`, `/baltop`, `/menu`, `/ecotp reload`
+
+---
 
 ## Requirements
 
 - Paper/Spigot 26.2, Java 25
 - Required: Vault (economy interoperability)
 - Optional: PlaceholderAPI (placeholders)
+
+---
 
 ## Configuration
 

@@ -2,6 +2,8 @@
 
 **距離制の料金でテレポートする、単独動作の経済プラグイン。** Essentials など他の経済プラグインは不要です。EcoTPが自前で残高を管理しつつ、Vault(必須)経由でショップ等の他プラグインとも連携できます。
 
+---
+
 ## 主な特徴
 
 - **独立した経済システム** — 残高はEcoTP自身が保持します (デフォルトはYAML、複数サーバーで共有したい場合はMySQLも選択可)。Vaultは他プラグインとの連携のために必須です。
@@ -15,15 +17,21 @@
 - **細かくカスタマイズ可能** — メッセージ文言や通貨単位はすべて`messages.yml`にまとまっており (デフォルトは英語、日本語版も同梱)、home/sethome/spawn/tpa/tphere/pay/baltop/menuの各機能や、独自経済そのもののオン/オフも個別に設定できます。
 - **PlaceholderAPI対応** — `%ecotp_balance%`、`%ecotp_balance_formatted%`、`%ecotp_sethome_cost%`。
 
+---
+
 ## コマンド一覧
 
 `/home`、`/sethome`、`/delhome`、`/homes`、`/spawn`、`/setspawn`、`/tpa`、`/tphere`、`/tpaccept`、`/tpdeny`、`/tpacancel`、`/accept`(エイリアス`/ok`)、`/balance`、`/pay`、`/eco`、`/baltop`、`/menu`、`/ecotp reload`
+
+---
 
 ## 動作環境
 
 - Paper/Spigot 26.2、Java 25
 - 必須: Vault(他プラグインとの経済連携)
 - 任意: PlaceholderAPI(プレースホルダー)
+
+---
 
 ## 設定
 
