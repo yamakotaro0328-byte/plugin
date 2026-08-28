@@ -66,12 +66,14 @@ costs:
   sethome-increment: 1000.0
   # Teleport fee for /home, /spawn, /tpa, /tphere:
   # fee = max(distance-min-fee, ceil(3D straight-line distance / distance-blocks-per-yen))
-  # (default: 1 currency unit per 100 blocks, minimum 100)
+  # (default: 1 currency unit per 10 blocks, minimum 100 — the fee starts growing
+  # past the minimum once you're over 1000 blocks away)
   # (日本語) /home, /spawn, /tpa, /tphere のテレポート料金:
   # 料金 = max(distance-min-fee, ceil(3次元の直線距離 ÷ distance-blocks-per-yen))
-  # (デフォルト: 100ブロックにつき1、最低100)
+  # (デフォルト: 10ブロックにつき1、最低100 — 1000ブロックを超えたあたりから
+  # 最低料金より増え始めます)
   distance-min-fee: 100.0
-  distance-blocks-per-yen: 100.0
+  distance-blocks-per-yen: 10.0
 
 # Timeout (seconds) for payment confirmation (chat button / re-running the
 # same command / /accept, /ok).
