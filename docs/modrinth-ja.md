@@ -21,7 +21,7 @@
 
 ## 動作環境
 
-- Paper/Spigot 26.2、Java 17
+- Paper/Spigot 26.2、Java 25
 - 任意: Vault(他プラグインとの経済連携)、PlaceholderAPI(プレースホルダー)
 
 ## 設定

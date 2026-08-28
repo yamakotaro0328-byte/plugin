@@ -204,6 +204,6 @@ economy:
 
 ## CI (GitHub Actions)
 
-`.github/workflows/build.yml` が push / PR のたびに JDK 17 で `mvn package` を実行し、
+`.github/workflows/build.yml` が push / PR のたびに JDK 25 で `mvn package` を実行し、
 成果物 (`ecotp-plugin-*.jar`) を Actions の Artifact としてアップロードします。
 ローカルにビルド環境が無くても、GitHub 上でコンパイルが通るか確認できます。
