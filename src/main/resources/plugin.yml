@@ -4,6 +4,17 @@ main: com.yamakotaro.ecotp.EcoTpPlugin
 api-version: '26.2'
 author: yamakotaro0328
 softdepend: [Vault, PlaceholderAPI]
+# Some plugins check for a Vault economy exactly once at their own onEnable and
+# never retry (unlike e.g. EvenMoreFish, which retries and succeeds either way).
+# If they happen to enable before EcoTP registers its economy with Vault, they
+# give up permanently. loadbefore nudges Bukkit's enable order so EcoTP goes
+# first for the ones we've actually observed doing this.
+# (日本語) 一部のプラグインはVault経済の有無を自身のonEnable時に一度だけ確認し、
+# リトライしない (EvenMoreFishはリトライするので影響を受けない)。EcoTPがVaultに
+# 経済を登録する前にそれらが先に有効化されてしまうと、以後ずっと「経済プラグインが
+# 見つからない」ままになる。loadbefore で、実際にこの問題が確認できたプラグインに
+# ついてはEcoTPを先に有効化させる。
+loadbefore: [GambleGate, VillagerMarket, Roulette, Gun]
 
 commands:
   home:
