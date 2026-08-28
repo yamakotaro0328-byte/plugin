@@ -56,12 +56,6 @@ public class TpaCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        String targetName = target.getName();
-        String actionKey = "tpa:" + targetName;
-        if (plugin.getConfirmationManager().tryConfirmIfSameAction(player, actionKey)) {
-            return true;
-        }
-
         double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
         double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 100.0);
         double estimatedCost = plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), target.getLocation())
@@ -74,16 +68,9 @@ public class TpaCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        String description = plugin.getMessages().get("tpa.description", "player", targetName);
-        // ここではお金は引き落とさない。相手が承諾し、詠唱が完了した時点で初めて課金する。
-        plugin.getConfirmationManager().request(player, actionKey, estimatedCost, description, () -> {
-            Player currentTarget = Bukkit.getPlayerExact(targetName);
-            if (currentTarget == null || !currentTarget.isOnline()) {
-                player.sendMessage(plugin.msg("general.player-went-offline", "player", targetName));
-                return;
-            }
-            plugin.getTpaManager().sendRequest(TpaManager.Type.TPA, player, currentTarget, estimatedCost);
-        });
+        // ここではまだ支払い確認を求めない。相手が承諾した後、実際に移動する側 (自分) に
+        // あらためて「本当に行きますか？」と確認してから課金する (TpaManager.acceptRequest 参照)。
+        plugin.getTpaManager().sendRequest(TpaManager.Type.TPA, player, target, estimatedCost);
         return true;
     }
 

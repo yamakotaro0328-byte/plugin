@@ -94,7 +94,26 @@ public class TpaManager {
 
         target.sendMessage(plugin.msg("tpa.accepted-target", "player", req.requesterName));
 
+        // 相手が承諾しても、実際に移動して支払うのは mover なので、ここであらためて
+        // 「本当に行きますか？」と確認してから詠唱・課金に進む。金額はこの時点の距離での
+        // 概算であり、実際の請求は詠唱完了時点の距離で再計算する (下記 startTeleport 内)。
+        double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
+        double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 100.0);
+        double estimatedCost = plugin.getTeleportSafetyManager().isSameDimension(mover.getLocation(), destinationPlayer.getLocation())
+                ? CostUtil.distanceCost(mover.getLocation(), destinationPlayer.getLocation(), minFee, blocksPerYen)
+                : minFee;
+
         String description = plugin.getMessages().get("tpa.travel-description", "player", destinationPlayer.getName());
+        String moveActionKey = "tpa-move:" + mover.getUniqueId();
+        plugin.getConfirmationManager().request(mover, moveActionKey, estimatedCost, description, () -> {
+            if (!mover.isOnline() || !destinationPlayer.isOnline()) {
+                return;
+            }
+            startTeleport(mover, destinationPlayer, description);
+        });
+    }
+
+    private void startTeleport(Player mover, Player destinationPlayer, String description) {
         plugin.getTeleportSafetyManager().start(mover, destinationPlayer.getLocation(), description, () -> {
             if (!mover.isOnline() || !destinationPlayer.isOnline()) {
                 return;
