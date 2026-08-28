@@ -6,6 +6,8 @@ import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.key.Key;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -34,7 +36,11 @@ public class EcoTpQuickActionsBootstrap implements PluginBootstrap {
             } catch (URISyntaxException e) {
                 throw new RuntimeException(e);
             }
-            event.registrar().discoverPack(packUri, "ecotpqa_quick_actions");
+            try {
+                event.registrar().discoverPack(packUri, "ecotpqa_quick_actions");
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         });
     }
 }
