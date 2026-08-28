@@ -15,7 +15,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Paper 26.2's API is compiled for Java 25 (class file version 69); compiling
-             against it with an older --release rejects its class files outright. -->
+             against it with an older release flag rejects its class files outright. -->
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
     </properties>
