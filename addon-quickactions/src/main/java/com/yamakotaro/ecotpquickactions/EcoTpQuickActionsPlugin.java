@@ -76,10 +76,12 @@ public class EcoTpQuickActionsPlugin extends JavaPlugin {
             player.sendMessage(messages.get("no-permission", Map.of()));
             return Command.SINGLE_SUCCESS;
         }
-        RegistryAccess.registryAccess()
+        var dialog = RegistryAccess.registryAccess()
                 .getRegistry(RegistryKey.DIALOG)
-                .get(EcoTpQuickActionsBootstrap.DIALOG_KEY)
-                .ifPresent(player::showDialog);
+                .get(EcoTpQuickActionsBootstrap.DIALOG_KEY);
+        if (dialog != null) {
+            player.showDialog(dialog);
+        }
         return Command.SINGLE_SUCCESS;
     }
 }

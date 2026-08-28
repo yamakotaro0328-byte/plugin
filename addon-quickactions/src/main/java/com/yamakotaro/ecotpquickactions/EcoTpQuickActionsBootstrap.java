@@ -12,7 +12,7 @@ import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import io.papermc.paper.registry.event.RegistryEvents;
-import io.papermc.paper.registry.tag.DialogTagKeys;
+import io.papermc.paper.registry.keys.tags.DialogTagKeys;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 
@@ -47,7 +47,7 @@ public class EcoTpQuickActionsBootstrap implements PluginBootstrap {
                             actionButton("Menu (TPA / TPHere / Pay)", "menu"),
                             actionButton("Vote: Clear weather", "weathervote clear"),
                             actionButton("Vote: Rain", "weathervote rain")
-                    ))));
+                    )).build()));
 
             event.getOrCreateTag(DialogTagKeys.QUICK_ACTIONS).add(key);
         }));
