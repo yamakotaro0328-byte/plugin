@@ -34,10 +34,13 @@
     </repositories>
 
     <dependencies>
+        <!-- Paper 26.1+ dropped the old "1.x.y-R0.1-SNAPSHOT" scheme; Maven needs a version
+             range to track the latest build the way "-SNAPSHOT" used to (see PaperMC docs'
+             "Project setup" page). -->
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.26.2-R0.1-SNAPSHOT</version>
+            <version>[26.2.build,)</version>
             <scope>provided</scope>
         </dependency>
         <!-- Vault は任意連携のためだけに使用 (このプラグイン自体は Vault が無くても動作する) -->

@@ -1,7 +1,7 @@
 name: EcoTP
 version: '${project.version}'
 main: com.yamakotaro.ecotp.EcoTpPlugin
-api-version: '1.26'
+api-version: '26.2'
 author: yamakotaro0328
 softdepend: [Vault, PlaceholderAPI]
 

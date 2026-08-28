@@ -21,7 +21,7 @@
 
 ## Requirements
 
-- Paper/Spigot 1.26.2, Java 17
+- Paper/Spigot 26.2, Java 17
 - Optional: Vault (economy interoperability), PlaceholderAPI (placeholders)
 
 ## Configuration
