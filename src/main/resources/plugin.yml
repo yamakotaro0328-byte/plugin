@@ -3,6 +3,24 @@ version: '${project.version}'
 main: com.yamakotaro.ecotp.EcoTpPlugin
 api-version: '26.2'
 author: yamakotaro0328
+# Almost every plugin leaves this unset, which defaults to POSTWORLD (enabled
+# after worlds finish loading). STARTUP plugins are always enabled first, in a
+# separate earlier pass, regardless of depend/softdepend/loadbefore — so this
+# alone is what actually makes EcoTP register its Vault economy before nearly
+# any other plugin's onEnable runs, no per-plugin listing required. Vault,
+# PlaceholderAPI, and any economy plugin used via economy.enabled: false are
+# themselves still typically POSTWORLD, so EcoTpPlugin defers those specific
+# hookups to ServerLoadEvent / PluginEnableEvent rather than assuming they're
+# already up at this plugin's own (now much earlier) onEnable.
+# (日本語) ほとんどのプラグインはこの項目を指定しておらず、その場合デフォルトの
+# POSTWORLD (ワールド読み込み後に有効化) になる。STARTUP を指定したプラグインは
+# depend/softdepend/loadbefore に関係なく必ず先に (別の早い段階で) 有効化される。
+# そのためこれ一つで、EcoTPのVault経済登録がほぼ全てのプラグインのonEnableより
+# 先に行われるようになる (loadbeforeのような個別列挙は不要)。ただしVault・
+# PlaceholderAPI・economy.enabled: falseのときの外部経済プラグイン自体も通常は
+# POSTWORLDなので、EcoTpPlugin側ではそれらの連携だけはServerLoadEvent /
+# PluginEnableEventで遅延させ、自分のonEnableが早まった影響を受けないようにしている。
+load: STARTUP
 softdepend: [Vault, PlaceholderAPI]
 # Some plugins check for a Vault economy exactly once at their own onEnable and
 # never retry (unlike e.g. EvenMoreFish, which retries and succeeds either way).

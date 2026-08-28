@@ -22,6 +22,11 @@ import com.yamakotaro.ecotp.gui.GuiListener;
 import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.PluginEnableEvent;
+import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -66,9 +71,21 @@ public class EcoTpPlugin extends JavaPlugin {
             this.economy = ecoTpEconomy;
         } else {
             getLogger().info("economy.enabled is false: using an external economy via Vault instead of the built-in one.");
-            if (!setupExternalEconomy()) {
-                getServer().getPluginManager().disablePlugin(this);
-                return;
+            if (!tryLinkExternalEconomy()) {
+                // EcoTP is load: STARTUP, so Vault and whatever economy plugin is meant to
+                // provide the Economy service (both typically load: POSTWORLD) may not have
+                // enabled yet. Don't give up yet — try again once every plugin has finished
+                // enabling, right before the server starts accepting connections.
+                getServer().getPluginManager().registerEvents(new Listener() {
+                    @EventHandler
+                    public void onServerLoad(ServerLoadEvent event) {
+                        HandlerList.unregisterAll(this);
+                        if (!tryLinkExternalEconomy()) {
+                            getLogger().severe("economy.enabled is false but no economy plugin is registered with Vault. Install Vault and an economy plugin (e.g. EssentialsX), or set economy.enabled to true.");
+                            getServer().getPluginManager().disablePlugin(EcoTpPlugin.this);
+                        }
+                    }
+                }, this);
             }
         }
 
@@ -127,9 +144,21 @@ public class EcoTpPlugin extends JavaPlugin {
             // 外部の経済を使っている場合は、既に登録されているものをそのまま使うので上書きしない。
             setupVault();
         }
-        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new EcoTpPlaceholders(this).register();
-            getLogger().info("Registered PlaceholderAPI placeholders (%ecotp_balance% and others).");
+        var placeholderApi = getServer().getPluginManager().getPlugin("PlaceholderAPI");
+        if (placeholderApi != null && placeholderApi.isEnabled()) {
+            registerPlaceholders();
+        } else if (placeholderApi != null) {
+            // EcoTP is load: STARTUP; PlaceholderAPI (typically load: POSTWORLD) exists but
+            // hasn't enabled yet, so register once it actually does instead of right now.
+            getServer().getPluginManager().registerEvents(new Listener() {
+                @EventHandler
+                public void onPluginEnable(PluginEnableEvent event) {
+                    if (event.getPlugin().getName().equals("PlaceholderAPI")) {
+                        HandlerList.unregisterAll(this);
+                        registerPlaceholders();
+                    }
+                }
+            }, this);
         }
 
         if (balanceStorage != null) {
@@ -170,21 +199,26 @@ public class EcoTpPlugin extends JavaPlugin {
     }
 
     /**
-     * economy.enabled が false のとき、Vault 経由で他の経済プラグイン (Essentials 等) の
-     * Economy を取得して使う。見つからない場合は false を返す (呼び出し側でプラグインを無効化する)。
+     * economy.enabled が false のとき、Vault 経由で既に登録されている外部の経済プラグイン
+     * (Essentials 等) を取得する。ここではまだ見つからなくても (STARTUP なので単に相手が
+     * まだ有効化されていないだけかもしれず) 何もログを出さず false を返すだけにする。
+     * 「本当に無い」のか「まだ見つかっていないだけ」なのかは呼び出し側が判断する。
      */
-    private boolean setupExternalEconomy() {
+    private boolean tryLinkExternalEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            getLogger().severe("economy.enabled is false but Vault was not found. Install Vault and an economy plugin (e.g. EssentialsX), or set economy.enabled to true.");
             return false;
         }
         var registration = getServer().getServicesManager().getRegistration(Economy.class);
         if (registration == null) {
-            getLogger().severe("economy.enabled is false but no economy plugin is registered with Vault.");
             return false;
         }
         this.economy = registration.getProvider();
         return true;
+    }
+
+    private void registerPlaceholders() {
+        new EcoTpPlaceholders(this).register();
+        getLogger().info("Registered PlaceholderAPI placeholders (%ecotp_balance% and others).");
     }
 
     /**
