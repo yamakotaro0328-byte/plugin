@@ -1,0 +1,30 @@
+name: EcoTP-QuickActions
+version: '${project.version}'
+main: com.yamakotaro.ecotpquickactions.EcoTpQuickActionsPlugin
+bootstrapper: com.yamakotaro.ecotpquickactions.EcoTpQuickActionsBootstrap
+api-version: '26.2'
+author: yamakotaro0328
+description: Adds a vanilla Quick Actions (G key) menu for EcoTP's commands, plus a weather vote.
+
+# EcoTP itself is not a hard requirement: every button in the Quick Actions dialog just
+# runs a normal chat command (e.g. "home", "menu") the same way a player typing it would,
+# so this add-on never touches EcoTP's Java classes directly. Declared only so EcoTP is
+# enabled first when both are present, matching the intent of this add-on.
+# (日本語) EcoTPは必須依存ではない。Quick Actionsダイアログの各ボタンは、プレイヤーが
+# 手動でコマンドを打つのと同じように普通のチャットコマンド(例: "home", "menu")を実行する
+# だけなので、このアドオンはEcoTPのJavaクラスに直接触れない。両方導入されている場合に
+# EcoTPが先に有効化されるよう、意図を明示するためだけに宣言している。
+dependencies:
+  server:
+    EcoTP:
+      load: BEFORE
+      required: false
+      join-classpath: false
+
+permissions:
+  ecotpqa.quickmenu:
+    description: Can use /quickmenu and the vanilla Quick Actions (G key) dialog
+    default: true
+  ecotpqa.weathervote:
+    description: Can start/join a /weathervote
+    default: true

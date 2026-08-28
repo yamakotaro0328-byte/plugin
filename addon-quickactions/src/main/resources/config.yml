@@ -1,0 +1,47 @@
+# EcoTP-QuickActions configuration
+# Language for messages below: "en" or "ja".
+# (日本語) 以下のメッセージの言語。"en" または "ja"。
+language: en
+
+weather-vote:
+  # How long (seconds) a vote stays open collecting votes before it fails for lack of support.
+  # (日本語) 賛成が足りずに失敗するまで、投票を受け付け続ける秒数。
+  duration-seconds: 60
+  # Fraction of the world's online players that must vote yes for the change to happen (0.0-1.0).
+  # (日本語) 天気を変えるために必要な、そのワールドのオンライン人数に対する賛成割合 (0.0〜1.0)。
+  required-ratio: 0.5
+  # Seconds a player must wait after a vote ends (pass or fail) before starting/joining another.
+  # (日本語) 投票終了(成立・不成立問わず)後、次の投票を開始/参加できるまでのクールダウン秒数。
+  cooldown-seconds: 120
+
+messages:
+  en:
+    started: "&e{player} started a vote to make it {weather}. Type &f/weathervote {weather} &eto agree! ({votes}/{needed})"
+    joined: "&e{player} agreed. ({votes}/{needed})"
+    already-voted: "&cYou already voted on this."
+    passed: "&aVote passed! Changing the weather to {weather}."
+    failed: "&cThe weather vote failed (not enough support in time)."
+    no-vote-in-progress: "&cThere's no weather vote in progress for {weather}; starting one."
+    on-cooldown: "&cPlease wait {seconds}s before starting or joining another weather vote."
+    usage: "&cUsage: /weathervote <clear|rain>"
+    no-permission: "&cYou don't have permission to do that."
+    players-only: "&cThis command can only be used by players."
+  ja:
+    started: "&e{player} が天気を「{weather}」にする投票を開始しました。賛成するには &f/weathervote {weather} &eと入力してください！ ({votes}/{needed})"
+    joined: "&e{player} が賛成しました。({votes}/{needed})"
+    already-voted: "&cすでに投票済みです。"
+    passed: "&a投票が成立しました！天気を「{weather}」に変更します。"
+    failed: "&c天気投票は不成立でした(制限時間内に賛成が集まりませんでした)。"
+    no-vote-in-progress: "&c「{weather}」への投票はまだ開始されていないため、新しく開始します。"
+    on-cooldown: "&c次の天気投票を開始/参加できるまであと{seconds}秒お待ちください。"
+    usage: "&c使い方: /weathervote <clear|rain>"
+    no-permission: "&cこの操作を行う権限がありません。"
+    players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
+
+weather-names:
+  en:
+    clear: "clear"
+    rain: "rain"
+  ja:
+    clear: "晴れ"
+    rain: "雨"

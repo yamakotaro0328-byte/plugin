@@ -30,3 +30,30 @@ jobs:
           name: ecotp-plugin
           path: target/ecotp-plugin-*.jar
           if-no-files-found: error
+
+  build-addon:
+    # Independent Maven project (its own pom.xml), built in its own job so a build failure
+    # here never blocks or reflects on the main EcoTP plugin's build above.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+          cache-dependency-path: addon-quickactions/pom.xml
+
+      - name: Build with Maven
+        working-directory: addon-quickactions
+        run: mvn -B package --no-transfer-progress
+
+      - name: Upload add-on jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecotp-quickactions
+          path: addon-quickactions/target/ecotp-quickactions-*.jar
+          if-no-files-found: error
