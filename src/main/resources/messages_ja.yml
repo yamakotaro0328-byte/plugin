@@ -124,6 +124,10 @@ baltop:
   empty: "&7まだデータがありません。"
   unsupported-external-economy: "&c外部の経済プラグインを使用しているため、ランキングは利用できません。"
 
+ecotp:
+  usage: "&c使い方: /ecotp reload"
+  reloaded: "&aconfig.yml と messages.yml を再読み込みしました。(storage.type と economy.enabled の変更を反映するには再起動が必要です)"
+
 menu:
   title: "EcoTPメニュー"
   home: "&aホームへワープ"

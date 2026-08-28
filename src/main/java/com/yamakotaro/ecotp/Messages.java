@@ -13,12 +13,18 @@ import java.util.logging.Level;
 /**
  * messages.yml からメッセージを読み込み、プレースホルダーを置換する。
  * サーバー管理者はコードを一切触らずに文言・通貨単位を変更できる。
- * 初回はプラグインの言語設定 (config.yml の language: en/ja) に応じて、
- * 同梱の messages_en.yml か messages_ja.yml を messages.yml としてコピーする。
- * 一度 messages.yml が生成された後は、その内容 (と後から追加されたキーのみ
- * デフォルト言語のフォールバック) が使われる。
+ * config.yml の language: en/ja に応じて、同梱の messages_en.yml か
+ * messages_ja.yml を messages.yml としてコピーする。
+ * messages.yml の先頭には、生成時点の言語を記録する隠しキー (meta.language) を
+ * 付け加えておき、reload() のたびに config.yml の language と比較する。
+ * 値が変わっていれば「言語を切り替えたい」という意思表示とみなし、その言語の
+ * テンプレートで messages.yml を再生成する (このときカスタマイズした文言は
+ * 上書きされる)。値が一致している間は、既存の messages.yml (と自由な編集内容)
+ * がそのまま使われる。
  */
 public class Messages {
+
+    private static final String LANGUAGE_MARKER_PATH = "meta.language";
 
     private final EcoTpPlugin plugin;
     private final File file;
@@ -27,19 +33,20 @@ public class Messages {
     public Messages(EcoTpPlugin plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "messages.yml");
-        if (!file.exists()) {
-            copyDefaultResource();
-        }
         reload();
     }
 
-    private String bundledResourceName() {
+    private String configuredLanguage() {
         String language = plugin.getConfig().getString("language", "en");
-        return "ja".equalsIgnoreCase(language) ? "messages_ja.yml" : "messages_en.yml";
+        return "ja".equalsIgnoreCase(language) ? "ja" : "en";
     }
 
-    private void copyDefaultResource() {
-        String resourceName = bundledResourceName();
+    private String bundledResourceName(String language) {
+        return "ja".equals(language) ? "messages_ja.yml" : "messages_en.yml";
+    }
+
+    private void regenerateFromBundledResource(String language) {
+        String resourceName = bundledResourceName(language);
         try (InputStream in = plugin.getResource(resourceName)) {
             if (in == null) {
                 plugin.getLogger().warning("Bundled " + resourceName + " was not found.");
@@ -49,16 +56,37 @@ public class Messages {
             if (parent != null) {
                 parent.mkdirs();
             }
-            Files.copy(in, file.toPath());
+            Files.copy(in, file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            // 生成した言語を記録しておく。テンプレート自体にはこのキーは無いので追記する。
+            YamlConfiguration generated = YamlConfiguration.loadConfiguration(file);
+            generated.set(LANGUAGE_MARKER_PATH, language);
+            generated.save(file);
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to create messages.yml", e);
         }
     }
 
     public void reload() {
+        String desiredLanguage = configuredLanguage();
+        if (!file.exists()) {
+            regenerateFromBundledResource(desiredLanguage);
+        } else {
+            YamlConfiguration existing = YamlConfiguration.loadConfiguration(file);
+            String storedLanguage = existing.getString(LANGUAGE_MARKER_PATH);
+            // マーカーが無い (アップデート前に生成された) messages.yml はカスタマイズ済みの
+            // 可能性があるので勝手に上書きしない。マーカーがあって現在の設定と食い違う場合のみ、
+            // 「language を切り替えた」という明示的な意思表示として再生成する。
+            if (storedLanguage != null && !storedLanguage.equals(desiredLanguage)) {
+                plugin.getLogger().info("language changed to \"" + desiredLanguage
+                        + "\" in config.yml: regenerating messages.yml from the bundled "
+                        + bundledResourceName(desiredLanguage) + " template.");
+                regenerateFromBundledResource(desiredLanguage);
+            }
+        }
+
         this.data = YamlConfiguration.loadConfiguration(file);
         // jar 内のデフォルト値をフォールバックとして重ねる (アップデートで新しいキーが増えても壊れない)
-        try (InputStream in = plugin.getResource(bundledResourceName())) {
+        try (InputStream in = plugin.getResource(bundledResourceName(desiredLanguage))) {
             if (in != null) {
                 YamlConfiguration defaults = YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
                 data.setDefaults(defaults);

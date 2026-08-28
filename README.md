@@ -87,6 +87,10 @@ Vault と PlaceholderAPI は**両方とも任意**(ソフト依存)です。導�
 - `/pay <プレイヤー名> <金額>` : 送金 (支払い承認が必要)
 - `/eco give|take|set <プレイヤー名> <金額>` : 管理者用の所持金操作 (`ecotp.admin` 権限、デフォルトOP)
 - `/baltop` : 所持金ランキングを表示 (人数は `config.yml` の `baltop-limit`)
+- `/ecotp reload` : `config.yml` と `messages.yml` を再読み込み (`ecotp.admin` 権限、デフォルトOP)。
+  `storage.type` と `economy.enabled` はサーバー起動時にしか決まらないため、これらを変更した場合は
+  再起動が必要です。`language` を変更した場合は、このコマンド (または再起動) で `messages.yml` が
+  その言語のテンプレートから再生成されます (それまでの編集内容は上書きされます)。
 
 ## GUIメニュー
 
@@ -200,7 +204,7 @@ economy:
 | `ecotp.pay` | (親経由) | `/pay` を使用できる |
 | `ecotp.menu` | (親経由) | `/menu` を使用できる |
 | `ecotp.balance.others` | op | 他人の `/balance` を確認できる |
-| `ecotp.admin` | op | `/eco` を使用できる |
+| `ecotp.admin` | op | `/eco` と `/ecotp reload` を使用できる |
 
 ## CI (GitHub Actions)
 

@@ -124,6 +124,10 @@ baltop:
   empty: "&7No data yet."
   unsupported-external-economy: "&cThe leaderboard isn't available while using an external economy plugin."
 
+ecotp:
+  usage: "&cUsage: /ecotp reload"
+  reloaded: "&aReloaded config.yml and messages.yml. (storage.type and economy.enabled need a full restart to take effect)"
+
 menu:
   title: "EcoTP Menu"
   home: "&aTeleport home"

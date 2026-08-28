@@ -17,7 +17,7 @@
 
 ## コマンド一覧
 
-`/home`、`/sethome`、`/delhome`、`/homes`、`/spawn`、`/setspawn`、`/tpa`、`/tphere`、`/tpaccept`、`/tpdeny`、`/tpacancel`、`/accept`(エイリアス`/ok`)、`/balance`、`/pay`、`/eco`、`/baltop`、`/menu`
+`/home`、`/sethome`、`/delhome`、`/homes`、`/spawn`、`/setspawn`、`/tpa`、`/tphere`、`/tpaccept`、`/tpdeny`、`/tpacancel`、`/accept`(エイリアス`/ok`)、`/balance`、`/pay`、`/eco`、`/baltop`、`/menu`、`/ecotp reload`
 
 ## 動作環境
 

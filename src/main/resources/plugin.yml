@@ -60,6 +60,9 @@ commands:
     description: Open the GUI menu (home/spawn/tpa/tphere/pay/baltop by clicking)
     usage: /menu
     aliases: [ecomenu]
+  ecotp:
+    description: Reload config.yml and messages.yml (admin)
+    usage: /ecotp reload
 
 permissions:
   ecotp.player:
@@ -98,7 +101,7 @@ permissions:
     description: Can use /pay
     default: false
   ecotp.admin:
-    description: Can use /eco
+    description: Can use /eco and /ecotp reload
     default: op
   ecotp.menu:
     description: Can use /menu

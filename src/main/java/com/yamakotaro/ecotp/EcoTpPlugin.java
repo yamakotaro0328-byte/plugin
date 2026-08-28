@@ -5,6 +5,7 @@ import com.yamakotaro.ecotp.commands.BalanceCommand;
 import com.yamakotaro.ecotp.commands.BaltopCommand;
 import com.yamakotaro.ecotp.commands.DelHomeCommand;
 import com.yamakotaro.ecotp.commands.EcoAdminCommand;
+import com.yamakotaro.ecotp.commands.EcoTpCommand;
 import com.yamakotaro.ecotp.commands.HomeCommand;
 import com.yamakotaro.ecotp.commands.HomesCommand;
 import com.yamakotaro.ecotp.commands.MenuCommand;
@@ -110,6 +111,9 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("eco").setTabCompleter(ecoAdminCommand);
         getCommand("baltop").setExecutor(new BaltopCommand(this));
         getCommand("menu").setExecutor(new MenuCommand(this));
+        EcoTpCommand ecoTpCommand = new EcoTpCommand(this);
+        getCommand("ecotp").setExecutor(ecoTpCommand);
+        getCommand("ecotp").setTabCompleter(ecoTpCommand);
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
         getServer().getPluginManager().registerEvents(new EconomyJoinListener(this), this);

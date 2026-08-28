@@ -17,7 +17,7 @@
 
 ## Commands
 
-`/home`, `/sethome`, `/delhome`, `/homes`, `/spawn`, `/setspawn`, `/tpa`, `/tphere`, `/tpaccept`, `/tpdeny`, `/tpacancel`, `/accept` (alias `/ok`), `/balance`, `/pay`, `/eco`, `/baltop`, `/menu`
+`/home`, `/sethome`, `/delhome`, `/homes`, `/spawn`, `/setspawn`, `/tpa`, `/tphere`, `/tpaccept`, `/tpdeny`, `/tpacancel`, `/accept` (alias `/ok`), `/balance`, `/pay`, `/eco`, `/baltop`, `/menu`, `/ecotp reload`
 
 ## Requirements
 

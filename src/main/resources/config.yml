@@ -6,10 +6,16 @@
 # 経済プラグインが無くても動作します。Vault はオプションで、導入されていれば
 # 他のプラグイン (ショップ等) にもこの経済を公開します。
 
-# Language for messages.yml's bundled defaults: "en" or "ja".
-# Only used the first time messages.yml is generated (and as a fallback for
-# missing keys) — once messages.yml exists you can freely edit/translate it.
-# (日本語) messages.yml の初期言語。"en" または "ja"。
+# Language for messages.yml: "en" or "ja".
+# Used the first time messages.yml is generated, and also whenever you change
+# this value afterwards and run /ecotp reload (or restart) — messages.yml is
+# then regenerated from the bundled template for that language, overwriting
+# any custom edits. As long as you leave this unchanged, messages.yml keeps
+# whatever you've edited into it.
+# (日本語) messages.yml の言語。"en" または "ja"。
+# 初回生成時だけでなく、後からこの値を変更して /ecotp reload (または再起動) すると、
+# その言語の同梱テンプレートで messages.yml が再生成されます (それまでの編集内容は
+# 上書きされます)。この値を変えない限り、messages.yml の編集内容はそのまま残ります。
 language: en
 
 # Chat prefix (supports & color codes).
