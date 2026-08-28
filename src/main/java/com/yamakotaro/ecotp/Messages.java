@@ -16,11 +16,12 @@ import java.util.logging.Level;
  * config.yml の language: en/ja に応じて、同梱の messages_en.yml か
  * messages_ja.yml を messages.yml としてコピーする。
  * messages.yml の先頭には、生成時点の言語を記録する隠しキー (meta.language) を
- * 付け加えておき、reload() のたびに config.yml の language と比較する。
- * 値が変わっていれば「言語を切り替えたい」という意思表示とみなし、その言語の
- * テンプレートで messages.yml を再生成する (このときカスタマイズした文言は
- * 上書きされる)。値が一致している間は、既存の messages.yml (と自由な編集内容)
- * がそのまま使われる。
+ * 付け加えておき、reload() のたびに config.yml の language と比較する
+ * (マーカーが無い messages.yml は、このマーカーが導入される前の "en" 固定時代の
+ * ものとみなす)。値が変わっていれば「言語を切り替えたい」という意思表示とみなし、
+ * その言語のテンプレートで messages.yml を再生成する (このときカスタマイズした
+ * 文言は上書きされる)。値が一致している間は、既存の messages.yml (と自由な
+ * 編集内容) がそのまま使われる。
  */
 public class Messages {
 
@@ -72,11 +73,10 @@ public class Messages {
             regenerateFromBundledResource(desiredLanguage);
         } else {
             YamlConfiguration existing = YamlConfiguration.loadConfiguration(file);
-            String storedLanguage = existing.getString(LANGUAGE_MARKER_PATH);
-            // マーカーが無い (アップデート前に生成された) messages.yml はカスタマイズ済みの
-            // 可能性があるので勝手に上書きしない。マーカーがあって現在の設定と食い違う場合のみ、
-            // 「language を切り替えた」という明示的な意思表示として再生成する。
-            if (storedLanguage != null && !storedLanguage.equals(desiredLanguage)) {
+            // マーカーが無い messages.yml は、このマーカーが存在する前のバージョンで
+            // 生成されたものであり、当時のデフォルト言語は常に "en" だった。
+            String storedLanguage = existing.getString(LANGUAGE_MARKER_PATH, "en");
+            if (!storedLanguage.equals(desiredLanguage)) {
                 plugin.getLogger().info("language changed to \"" + desiredLanguage
                         + "\" in config.yml: regenerating messages.yml from the bundled "
                         + bundledResourceName(desiredLanguage) + " template.");
