@@ -103,6 +103,12 @@ commands:
   ecotp:
     description: Reload config.yml and messages.yml (admin)
     usage: /ecotp reload
+  donate:
+    description: Donate money to another player (broadcasts a thank-you message)
+    usage: /donate <player> <amount>
+  donatemessage:
+    description: Set (or reset) your own thank-you message shown when someone donates to you
+    usage: /donatemessage <message>|reset
 
 permissions:
   ecotp.player:
@@ -116,6 +122,7 @@ permissions:
       ecotp.tphere: true
       ecotp.pay: true
       ecotp.menu: true
+      ecotp.donate: true
   ecotp.home:
     description: Can use /home, /homes
     default: false
@@ -145,4 +152,7 @@ permissions:
     default: op
   ecotp.menu:
     description: Can use /menu
+    default: false
+  ecotp.donate:
+    description: Can use /donate and /donatemessage
     default: false

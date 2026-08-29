@@ -128,6 +128,21 @@ ecotp:
   usage: "&cUsage: /ecotp reload"
   reloaded: "&aReloaded config.yml and messages.yml. (storage.type and economy.enabled need a full restart to take effect)"
 
+donate:
+  usage: "&cUsage: /donate <player> <amount>"
+  description: "donating to {player}"
+  sent: "&aDonated {amount} to {player}!"
+  broadcast-default: "&6&l[Donate] &e{player} &6donated &e{amount} &6to &e{recipient}&6! Thank you!"
+
+donatemessage:
+  usage: "&cUsage: /donatemessage <message>|reset (placeholders: {player}, {amount})"
+  set: "&aYour donation thank-you message has been updated."
+  reset: "&aYour donation thank-you message has been reset to the default."
+
+vote:
+  thanks: "&aThanks for voting! You received {amount}."
+  broadcast: "&b&l[Vote] &e{player} &bvoted for the server and received &e{amount}&b! Thank you!"
+
 menu:
   title: "EcoTP Menu"
   home: "&aTeleport home"

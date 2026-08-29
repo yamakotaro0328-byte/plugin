@@ -128,6 +128,21 @@ ecotp:
   usage: "&c使い方: /ecotp reload"
   reloaded: "&aconfig.yml と messages.yml を再読み込みしました。(storage.type と economy.enabled の変更を反映するには再起動が必要です)"
 
+donate:
+  usage: "&c使い方: /donate <プレイヤー名> <金額>"
+  description: "{player}への寄付"
+  sent: "&a{player}に{amount}を寄付しました！"
+  broadcast-default: "&6&l[寄付] &e{player} &6が &e{recipient} &6に &e{amount} &6を寄付しました！ありがとうございます！"
+
+donatemessage:
+  usage: "&c使い方: /donatemessage <メッセージ>|reset (使えるプレースホルダー: {player}, {amount})"
+  set: "&a寄付お礼メッセージを更新しました。"
+  reset: "&a寄付お礼メッセージをデフォルトに戻しました。"
+
+vote:
+  thanks: "&a投票ありがとうございます！{amount}を受け取りました。"
+  broadcast: "&b&l[投票] &e{player} &bさんがサーバーに投票して &e{amount} &bを受け取りました！ありがとうございます！"
+
 menu:
   title: "EcoTPメニュー"
   home: "&aホームへワープ"

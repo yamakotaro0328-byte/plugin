@@ -4,6 +4,8 @@ import com.yamakotaro.ecotp.commands.AcceptCommand;
 import com.yamakotaro.ecotp.commands.BalanceCommand;
 import com.yamakotaro.ecotp.commands.BaltopCommand;
 import com.yamakotaro.ecotp.commands.DelHomeCommand;
+import com.yamakotaro.ecotp.commands.DonateCommand;
+import com.yamakotaro.ecotp.commands.DonateMessageCommand;
 import com.yamakotaro.ecotp.commands.EcoAdminCommand;
 import com.yamakotaro.ecotp.commands.EcoTpCommand;
 import com.yamakotaro.ecotp.commands.HomeCommand;
@@ -21,6 +23,7 @@ import com.yamakotaro.ecotp.commands.TphereCommand;
 import com.yamakotaro.ecotp.gui.GuiListener;
 import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
+import com.yamakotaro.ecotp.listeners.VoteRewardJoinListener;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -53,6 +56,8 @@ public class EcoTpPlugin extends JavaPlugin {
     private CombatTracker combatTracker;
     private TeleportSafetyManager teleportSafetyManager;
     private ChatInputManager chatInputManager;
+    private DonationManager donationManager;
+    private VoteRewardManager voteRewardManager;
 
     @Override
     public void onEnable() {
@@ -106,6 +111,8 @@ public class EcoTpPlugin extends JavaPlugin {
         this.combatTracker = new CombatTracker(this);
         this.teleportSafetyManager = new TeleportSafetyManager(this, combatTracker);
         this.chatInputManager = new ChatInputManager(this);
+        this.donationManager = new DonationManager(this);
+        this.voteRewardManager = new VoteRewardManager(this);
 
         HomeCommand homeCommand = new HomeCommand(this);
         getCommand("home").setExecutor(homeCommand);
@@ -141,13 +148,19 @@ public class EcoTpPlugin extends JavaPlugin {
         EcoTpCommand ecoTpCommand = new EcoTpCommand(this);
         getCommand("ecotp").setExecutor(ecoTpCommand);
         getCommand("ecotp").setTabCompleter(ecoTpCommand);
+        DonateCommand donateCommand = new DonateCommand(this);
+        getCommand("donate").setExecutor(donateCommand);
+        getCommand("donate").setTabCompleter(donateCommand);
+        getCommand("donatemessage").setExecutor(new DonateMessageCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
         getServer().getPluginManager().registerEvents(new EconomyJoinListener(this), this);
+        getServer().getPluginManager().registerEvents(new VoteRewardJoinListener(this), this);
         getServer().getPluginManager().registerEvents(combatTracker, this);
         getServer().getPluginManager().registerEvents(teleportSafetyManager, this);
         getServer().getPluginManager().registerEvents(chatInputManager, this);
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
+        new VoteRewardListener(this).register();
 
         if (ecoTpEconomy != null) {
             // 独自の経済を使っている場合のみ、Vault に登録して他のプラグインへ公開する。
@@ -247,6 +260,14 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public ChatInputManager getChatInputManager() {
         return chatInputManager;
+    }
+
+    public DonationManager getDonationManager() {
+        return donationManager;
+    }
+
+    public VoteRewardManager getVoteRewardManager() {
+        return voteRewardManager;
     }
 
     public Messages getMessages() {

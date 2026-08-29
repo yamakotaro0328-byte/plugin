@@ -44,6 +44,22 @@ features:
   pay: true
   baltop: true
   menu: true
+  donate: true
+
+# Broadcasts a thank-you message server-wide whenever /donate succeeds. Recipients can
+# personalize their own message with /donatemessage (placeholders: {player}, {amount}).
+# (日本語) /donate が成功するたびにサーバー全体へお礼メッセージを流す。受け取った本人は
+# /donatemessage で自分専用の文言に変更できる(使えるプレースホルダー: {player}, {amount})。
+
+# Rewards a player for voting on a voting site, via any NuVotifier-compatible plugin
+# (detected automatically; no extra setup here beyond installing NuVotifier itself and
+# pointing your voting sites at it). If the player is offline when the vote arrives, the
+# reward is queued and given the next time they join.
+# (日本語) 投票サイトでの投票報酬(NuVotifier互換プラグインを自動検出)。投票時に
+# オフラインだった場合は保留され、次回ログイン時に付与される。
+vote-reward:
+  enabled: true
+  amount: 1000.0
 
 # Starting balance for new players (used only when economy.enabled: true and
 # no matching Essentials data was found — see essentials-import below).
