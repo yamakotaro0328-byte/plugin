@@ -1,16 +1,20 @@
 package com.yamakotaro.serverkit.staff.commands;
 
 import com.yamakotaro.serverkit.Messages;
+import com.yamakotaro.serverkit.TabCompleteUtil;
 import com.yamakotaro.serverkit.staff.FreezeManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
-public class FreezeCommand implements CommandExecutor {
+public class FreezeCommand implements CommandExecutor, TabCompleter {
 
     private final FreezeManager freezeManager;
     private final Messages messages;
@@ -40,5 +44,13 @@ public class FreezeCommand implements CommandExecutor {
                 Map.of("player", target.getName())));
         target.sendMessage(messages.get(nowFrozen ? "staff.you-were-frozen" : "staff.you-were-unfrozen", Map.of()));
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return TabCompleteUtil.onlinePlayerNames(args[0], null);
+        }
+        return Collections.emptyList();
     }
 }

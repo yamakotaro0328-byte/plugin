@@ -3,7 +3,10 @@ package com.yamakotaro.serverkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -12,7 +15,7 @@ import java.util.Map;
  * from disk at startup) - this command is the only way to pick up an edited config.yml
  * (e.g. switching language) without restarting the whole server.
  */
-public class ServerKitCommand implements CommandExecutor {
+public class ServerKitCommand implements CommandExecutor, TabCompleter {
 
     private final ServerKitPlugin plugin;
     private final Messages messages;
@@ -35,5 +38,13 @@ public class ServerKitCommand implements CommandExecutor {
         plugin.reloadConfig();
         sender.sendMessage(messages.get("general.reloaded", Map.of()));
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return TabCompleteUtil.filterPrefix(List.of("reload"), args[0]);
+        }
+        return Collections.emptyList();
     }
 }

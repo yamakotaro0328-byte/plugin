@@ -28,7 +28,9 @@ public class ServerKitPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         Messages messages = new Messages(this);
-        getCommand("serverkit").setExecutor(new ServerKitCommand(this, messages));
+        ServerKitCommand serverKitCommand = new ServerKitCommand(this, messages);
+        getCommand("serverkit").setExecutor(serverKitCommand);
+        getCommand("serverkit").setTabCompleter(serverKitCommand);
 
         if (getConfig().getBoolean("modules.staff", true)) {
             VanishManager vanishManager = new VanishManager(this);
@@ -37,7 +39,9 @@ public class ServerKitPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(
                     new StaffListener(vanishManager, freezeManager, staffChatManager, messages), this);
             getCommand("vanish").setExecutor(new VanishCommand(vanishManager, messages));
-            getCommand("freeze").setExecutor(new FreezeCommand(freezeManager, messages));
+            FreezeCommand freezeCommand = new FreezeCommand(freezeManager, messages);
+            getCommand("freeze").setExecutor(freezeCommand);
+            getCommand("freeze").setTabCompleter(freezeCommand);
             getCommand("staffchat").setExecutor(new StaffChatCommand(staffChatManager, messages));
         }
 
@@ -46,14 +50,18 @@ public class ServerKitPlugin extends JavaPlugin {
             economyHolder.setup();
             this.referralManager = new ReferralManager(this, economyHolder);
             referralManager.load();
-            getCommand("referral").setExecutor(new ReferralCommand(referralManager, messages));
+            ReferralCommand referralCommand = new ReferralCommand(referralManager, messages);
+            getCommand("referral").setExecutor(referralCommand);
+            getCommand("referral").setTabCompleter(referralCommand);
         }
 
         if (getConfig().getBoolean("modules.dragonarena", true)) {
             PartyManager partyManager = new PartyManager();
             DragonArenaManager arenaManager = new DragonArenaManager(this, messages, partyManager);
             getServer().getPluginManager().registerEvents(new DragonArenaListener(arenaManager, messages), this);
-            getCommand("dragonfight").setExecutor(new DragonFightCommand(this, arenaManager, partyManager, messages));
+            DragonFightCommand dragonFightCommand = new DragonFightCommand(this, arenaManager, partyManager, messages);
+            getCommand("dragonfight").setExecutor(dragonFightCommand);
+            getCommand("dragonfight").setTabCompleter(dragonFightCommand);
         }
     }
 

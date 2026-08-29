@@ -1,17 +1,21 @@
 package com.yamakotaro.serverkit.referral.commands;
 
 import com.yamakotaro.serverkit.Messages;
+import com.yamakotaro.serverkit.TabCompleteUtil;
 import com.yamakotaro.serverkit.referral.ReferralManager;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
-public class ReferralCommand implements CommandExecutor {
+public class ReferralCommand implements CommandExecutor, TabCompleter {
 
     private final ReferralManager referralManager;
     private final Messages messages;
@@ -82,5 +86,16 @@ public class ReferralCommand implements CommandExecutor {
                 }
             }
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return TabCompleteUtil.filterPrefix(List.of("claim", "confirm"), args[0]);
+        }
+        if (args.length == 2 && sender instanceof Player player) {
+            return TabCompleteUtil.onlinePlayerNames(args[1], player.getUniqueId());
+        }
+        return Collections.emptyList();
     }
 }

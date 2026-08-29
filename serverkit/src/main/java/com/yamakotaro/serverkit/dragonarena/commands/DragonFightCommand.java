@@ -1,19 +1,23 @@
 package com.yamakotaro.serverkit.dragonarena.commands;
 
 import com.yamakotaro.serverkit.Messages;
+import com.yamakotaro.serverkit.TabCompleteUtil;
 import com.yamakotaro.serverkit.dragonarena.DragonArenaManager;
 import com.yamakotaro.serverkit.dragonarena.PartyManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class DragonFightCommand implements CommandExecutor {
+public class DragonFightCommand implements CommandExecutor, TabCompleter {
 
     private final Plugin plugin;
     private final DragonArenaManager arenaManager;
@@ -133,5 +137,20 @@ public class DragonFightCommand implements CommandExecutor {
         } else {
             player.sendMessage(messages.get("dragonarena.party-not-in-party", Map.of()));
         }
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1) {
+            return TabCompleteUtil.filterPrefix(List.of("start", "leave", "party"), args[0]);
+        }
+        if (args.length == 2 && args[0].equalsIgnoreCase("party")) {
+            return TabCompleteUtil.filterPrefix(List.of("invite", "accept", "leave"), args[1]);
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("party") && args[1].equalsIgnoreCase("invite")
+                && sender instanceof Player player) {
+            return TabCompleteUtil.onlinePlayerNames(args[2], player.getUniqueId());
+        }
+        return Collections.emptyList();
     }
 }
