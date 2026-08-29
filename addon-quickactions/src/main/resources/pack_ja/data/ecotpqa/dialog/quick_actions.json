@@ -1,0 +1,53 @@
+{
+  "type": "minecraft:multi_action",
+  "title": {
+    "text": "EcoTP"
+  },
+  "body": [
+    {
+      "type": "minecraft:plain_message",
+      "contents": {
+        "text": "クイックアクション"
+      }
+    }
+  ],
+  "columns": 2,
+  "actions": [
+    {
+      "label": { "text": "ホーム" },
+      "action": { "type": "minecraft:run_command", "command": "home" }
+    },
+    {
+      "label": { "text": "ホーム設定" },
+      "action": { "type": "minecraft:run_command", "command": "sethome" }
+    },
+    {
+      "label": { "text": "スポーン" },
+      "action": { "type": "minecraft:run_command", "command": "spawn" }
+    },
+    {
+      "label": { "text": "残高" },
+      "action": { "type": "minecraft:run_command", "command": "balance" }
+    },
+    {
+      "label": { "text": "ランキング" },
+      "action": { "type": "minecraft:run_command", "command": "baltop" }
+    },
+    {
+      "label": { "text": "メニュー (TPA / TPHere / Pay)" },
+      "action": { "type": "minecraft:run_command", "command": "menu" }
+    },
+    {
+      "label": { "text": "投票: 天気を晴れに" },
+      "action": { "type": "minecraft:run_command", "command": "weathervote clear" }
+    },
+    {
+      "label": { "text": "投票: 雨を降らせる" },
+      "action": { "type": "minecraft:run_command", "command": "weathervote rain" }
+    },
+    {
+      "label": { "text": "アドミンショップ" },
+      "action": { "type": "minecraft:run_command", "command": "adminshop" }
+    }
+  ]
+}
