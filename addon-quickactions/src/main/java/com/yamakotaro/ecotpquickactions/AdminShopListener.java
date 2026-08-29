@@ -1,49 +1,35 @@
 package com.yamakotaro.ecotpquickactions;
 
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Map;
 
 /**
- * アドミンショップのGUI操作。出品(アイテムの追加・削除・価格設定)はすべてGUI内で完結し、
- * コマンドを打つ必要はない。
+ * アドミンショップのGUI操作。出品(アイテムの追加・削除)はGUI内のクリックだけで完結し、
+ * 価格の入力だけはチャットで行う(EcoTP本体の/pay金額入力と同じ方式)。
  */
 public class AdminShopListener implements Listener {
 
     private final Plugin plugin;
     private final AdminShopManager manager;
     private final Messages messages;
+    private final ChatInputManager chatInputManager;
 
-    public AdminShopListener(Plugin plugin, AdminShopManager manager, Messages messages) {
+    public AdminShopListener(Plugin plugin, AdminShopManager manager, Messages messages, ChatInputManager chatInputManager) {
         this.plugin = plugin;
         this.manager = manager;
         this.messages = messages;
-    }
-
-    @EventHandler
-    public void onPrepareAnvil(PrepareAnvilEvent event) {
-        if (!(event.getInventory().getHolder() instanceof PriceInputHolder)) {
-            return;
-        }
-        // バニラの修理費用計算に関係なく、常にリネーム後の内容をそのまま結果スロットに反映する。
-        ItemStack input = event.getInventory().getItem(0);
-        event.setResult(input == null ? null : input.clone());
+        this.chatInputManager = chatInputManager;
     }
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
-        if (event.getInventory().getHolder() instanceof PriceInputHolder priceHolder) {
-            handlePriceInputClick(event, priceHolder);
-            return;
-        }
         if (!(event.getInventory().getHolder() instanceof AdminShopHolder holder)) {
             return;
         }
@@ -93,29 +79,13 @@ public class AdminShopListener implements Listener {
         }
 
         boolean buy = !event.isRightClick();
-        Double current = buy ? existing.getBuyPrice() : existing.getSellPrice();
-        String currentValue = current == null ? "-" : String.valueOf(current);
-        Component title = messages.get(buy ? "adminshop.set-buy-price" : "adminshop.set-sell-price", Map.of());
-        var priceInput = new PriceInputHolder(slot, buy, title, existing.getMaterial(), currentValue);
-        // クリック処理中に別のインベントリを開くと不具合が起きることがあるため、次のtickにずらす。
-        Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(priceInput.getInventory()));
+        player.closeInventory();
+        player.sendMessage(messages.get(buy ? "adminshop.enter-buy-price" : "adminshop.enter-sell-price", Map.of()));
+        chatInputManager.request(player, input -> applyPrice(player, slot, buy, input));
     }
 
-    private void handlePriceInputClick(InventoryClickEvent event, PriceInputHolder holder) {
-        event.setCancelled(true);
-        if (event.getClickedInventory() != event.getInventory() || event.getSlot() != 2) {
-            return;
-        }
-        if (!(event.getWhoClicked() instanceof Player player)) {
-            return;
-        }
-        ItemStack result = event.getCurrentItem();
-        if (result == null || !result.hasItemMeta() || !result.getItemMeta().hasDisplayName()) {
-            return;
-        }
-        String raw = result.getItemMeta().getDisplayName();
-        player.closeInventory();
-
+    private void applyPrice(Player player, int slot, boolean buy, String rawInput) {
+        String raw = rawInput.trim();
         Double parsed;
         if (raw.equals("-")) {
             parsed = null;
@@ -124,25 +94,31 @@ public class AdminShopListener implements Listener {
                 parsed = Double.parseDouble(raw);
             } catch (NumberFormatException e) {
                 player.sendMessage(messages.get("adminshop.price-invalid-number", Map.of()));
+                chatInputManager.request(player, input -> applyPrice(player, slot, buy, input));
                 return;
             }
         }
 
-        boolean updated = holder.isBuy()
-                ? manager.setBuyPrice(holder.getShopSlot(), parsed)
-                : manager.setSellPrice(holder.getShopSlot(), parsed);
-        if (!updated) {
-            return; // その間にスロットが削除された等
+        boolean updated = buy ? manager.setBuyPrice(slot, parsed) : manager.setSellPrice(slot, parsed);
+        if (updated) {
+            String messageKey;
+            Map<String, String> placeholders;
+            if (parsed == null) {
+                messageKey = buy ? "adminshop.buy-price-disabled" : "adminshop.sell-price-disabled";
+                placeholders = Map.of();
+            } else {
+                messageKey = buy ? "adminshop.buy-price-set" : "adminshop.sell-price-set";
+                placeholders = Map.of("price", String.valueOf(parsed));
+            }
+            player.sendMessage(messages.get(messageKey, placeholders));
         }
-        String messageKey;
-        Map<String, String> placeholders;
-        if (parsed == null) {
-            messageKey = holder.isBuy() ? "adminshop.buy-price-disabled" : "adminshop.sell-price-disabled";
-            placeholders = Map.of();
-        } else {
-            messageKey = holder.isBuy() ? "adminshop.buy-price-set" : "adminshop.sell-price-set";
-            placeholders = Map.of("price", String.valueOf(parsed));
-        }
-        player.sendMessage(messages.get(messageKey, placeholders));
+        reopenAdmin(player);
+    }
+
+    private void reopenAdmin(Player player) {
+        // チャット送信直後にインベントリを開くと不具合が起きることがあるため、次のtickにずらす。
+        Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(
+                new AdminShopHolder(AdminShopHolder.Mode.ADMIN, manager,
+                        messages.get("adminshop.admin-title", Map.of())).getInventory()));
     }
 }
