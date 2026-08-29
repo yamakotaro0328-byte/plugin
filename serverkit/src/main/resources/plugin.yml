@@ -26,8 +26,14 @@ commands:
     description: Solo or team Ender Dragon arena fights
     usage: /dragonfight <start|leave|party> [args]
     aliases: [df]
+  serverkit:
+    description: Reload ServerKit's config.yml (e.g. after changing language)
+    usage: /serverkit reload
 
 permissions:
+  serverkit.admin:
+    description: Can use /serverkit reload
+    default: op
   serverkit.staff.vanish:
     description: Can use /vanish
     default: op

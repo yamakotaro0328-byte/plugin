@@ -34,6 +34,8 @@ messages:
       players-only: "&cThis command can only be used by players."
       no-permission: "&cYou don't have permission to do that."
       player-not-found: "&cPlayer '{player}' not found."
+      reload-usage: "&cUsage: /serverkit reload"
+      reloaded: "&aServerKit's config.yml has been reloaded."
     staff:
       vanish-on: "&7You are now vanished."
       vanish-off: "&7You are now visible."
@@ -89,6 +91,8 @@ messages:
       players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
       no-permission: "&cこの操作を行う権限がありません。"
       player-not-found: "&cプレイヤー '{player}' が見つかりません。"
+      reload-usage: "&c使い方: /serverkit reload"
+      reloaded: "&aServerKitのconfig.ymlを再読み込みしました。"
     staff:
       vanish-on: "&7バニッシュしました(透明化)。"
       vanish-off: "&7バニッシュを解除しました。"

@@ -28,6 +28,7 @@ public class ServerKitPlugin extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         Messages messages = new Messages(this);
+        getCommand("serverkit").setExecutor(new ServerKitCommand(this, messages));
 
         if (getConfig().getBoolean("modules.staff", true)) {
             VanishManager vanishManager = new VanishManager(this);
