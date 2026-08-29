@@ -14,12 +14,23 @@ description: Adds a vanilla Quick Actions (G key) menu for EcoTP's commands, plu
 # 手動でコマンドを打つのと同じように普通のチャットコマンド(例: "home", "menu")を実行する
 # だけなので、このアドオンはEcoTPのJavaクラスに直接触れない。両方導入されている場合に
 # EcoTPが先に有効化されるよう、意図を明示するためだけに宣言している。
+# Vault is soft: the admin shop's buy/sell simply reports "no economy available"
+# without it. join-classpath: true so we can load Vault's (provided, never shaded)
+# Economy class at runtime — see EconomyHolder.
+# (日本語) Vaultはソフト依存。無くてもアドミンショップの購入/売却が
+# 「経済が利用できません」と表示するだけになる。join-classpath: true は、
+# Vaultの(providedスコープで同梱していない)Economyクラスを実行時に読み込むため
+# — EconomyHolder参照。
 dependencies:
   server:
     EcoTP:
       load: BEFORE
       required: false
       join-classpath: false
+    Vault:
+      load: BEFORE
+      required: false
+      join-classpath: true
 
 permissions:
   ecotpqa.quickmenu:
@@ -28,3 +39,9 @@ permissions:
   ecotpqa.weathervote:
     description: Can start/join a /weathervote
     default: true
+  ecotpqa.adminshop:
+    description: Can open and use /adminshop (buy/sell)
+    default: true
+  ecotpqa.adminshop.admin:
+    description: Can add/remove items and set prices in /adminshop admin
+    default: op

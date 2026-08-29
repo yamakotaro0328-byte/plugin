@@ -44,6 +44,10 @@
     {
       "label": { "text": "Vote: Rain" },
       "action": { "type": "minecraft:run_command", "command": "weathervote rain" }
+    },
+    {
+      "label": { "text": "Admin Shop" },
+      "action": { "type": "minecraft:run_command", "command": "adminshop" }
     }
   ]
 }

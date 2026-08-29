@@ -3,6 +3,16 @@
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
 language: en
 
+admin-shop:
+  # Turn the whole admin shop feature on/off (/adminshop, /adminshop admin, and the
+  # "Admin Shop" Quick Actions button).
+  # (日本語) アドミンショップ機能全体のオン/オフ(/adminshop、/adminshop admin、
+  # Quick Actionsダイアログの「Admin Shop」ボタン)。
+  enabled: true
+  # Rows in the shop GUI (1-6, i.e. 9-54 slots).
+  # (日本語) ショップGUIの行数 (1〜6、9〜54スロット)。
+  rows: 3
+
 weather-vote:
   # How long (seconds) a vote stays open collecting votes before it fails for lack of support.
   # (日本語) 賛成が足りずに失敗するまで、投票を受け付け続ける秒数。
@@ -26,6 +36,27 @@ messages:
     usage: "&cUsage: /weathervote <clear|rain>"
     no-permission: "&cYou don't have permission to do that."
     players-only: "&cThis command can only be used by players."
+    adminshop:
+      title: "Admin Shop"
+      admin-title: "Admin Shop (edit mode)"
+      feature-disabled: "&cThe admin shop is disabled."
+      no-economy: "&cNo economy is available (install Vault + EcoTP)."
+      buy-disabled: "&cThis item isn't for sale."
+      sell-disabled: "&cThe shop isn't buying this item."
+      insufficient-funds: "&cYou need {price} to buy that."
+      insufficient-items: "&cYou don't have any {material} to sell."
+      inventory-full: "&cYour inventory is full."
+      bought: "&aBought {amount}x {material} for {price}."
+      sold: "&aSold {amount}x {material} for {price}."
+      empty-slot: "&7That slot is empty."
+      hold-item-to-add: "&cHold the item you want to add in your hand, then click an empty slot."
+      added: "&aAdded {material} to slot {slot}. Set a price with /adminshop price {slot} <buy|-> <sell|->."
+      removed: "&eRemoved the item in slot {slot}."
+      price-usage: "&cUsage: /adminshop price <slot> <buy price or -> <sell price or ->"
+      price-invalid-slot: "&cNo item in slot {slot}."
+      price-invalid-number: "&cPrices must be numbers (or - to disable)."
+      price-set: "&aSlot {slot}: buy={buy}, sell={sell}."
+      admin-usage: "&cUsage: /adminshop [admin|price <slot> <buy> <sell>]"
   ja:
     started: "&e{player} が天気を「{weather}」にする投票を開始しました。賛成するには &f/weathervote {weather} &eと入力してください！ ({votes}/{needed})"
     joined: "&e{player} が賛成しました。({votes}/{needed})"
@@ -37,6 +68,27 @@ messages:
     usage: "&c使い方: /weathervote <clear|rain>"
     no-permission: "&cこの操作を行う権限がありません。"
     players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
+    adminshop:
+      title: "アドミンショップ"
+      admin-title: "アドミンショップ (編集モード)"
+      feature-disabled: "&cアドミンショップは無効になっています。"
+      no-economy: "&c経済が利用できません(VaultとEcoTPを導入してください)。"
+      buy-disabled: "&cこのアイテムは購入できません。"
+      sell-disabled: "&cこのアイテムは売却できません。"
+      insufficient-funds: "&c購入には{price}必要です。"
+      insufficient-items: "&c売却できる{material}を持っていません。"
+      inventory-full: "&cインベントリがいっぱいです。"
+      bought: "&a{material}を{amount}個、{price}で購入しました。"
+      sold: "&a{material}を{amount}個、{price}で売却しました。"
+      empty-slot: "&7そのスロットは空です。"
+      hold-item-to-add: "&c追加したいアイテムを手に持ってから、空いているスロットをクリックしてください。"
+      added: "&a{material}をスロット{slot}に追加しました。/adminshop price {slot} <購入価格|-> <売却価格|-> で価格を設定してください。"
+      removed: "&eスロット{slot}のアイテムを削除しました。"
+      price-usage: "&c使い方: /adminshop price <スロット番号> <購入価格または-> <売却価格または->"
+      price-invalid-slot: "&cスロット{slot}にはアイテムがありません。"
+      price-invalid-number: "&c価格は数値(無効にする場合は-)で指定してください。"
+      price-set: "&aスロット{slot}: 購入={buy}、売却={sell}。"
+      admin-usage: "&c使い方: /adminshop [admin|price <スロット番号> <購入価格> <売却価格>]"
 
 weather-names:
   en:
