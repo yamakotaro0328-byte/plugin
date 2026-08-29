@@ -241,7 +241,6 @@ public class DragonArenaManager {
                 return null;
             }
             world.setAutoSave(false);
-            world.setKeepSpawnInMemory(false);
             world.setDifficulty(Difficulty.NORMAL);
             return world;
         } catch (RuntimeException e) {
