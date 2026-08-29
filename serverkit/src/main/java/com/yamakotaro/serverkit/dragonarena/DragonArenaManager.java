@@ -216,7 +216,17 @@ public class DragonArenaManager {
         instances.remove(instance);
         World world = instance.getWorld();
         String worldName = world.getName();
-        Bukkit.unloadWorld(world, false);
+        // Bukkit refuses to unload a world that still has players in it (e.g. a participant who
+        // died is still physically present until their PlayerRespawnEvent fires) - move any
+        // stragglers out first so the unload below actually succeeds.
+        for (Player straggler : new ArrayList<>(world.getPlayers())) {
+            straggler.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
+        }
+        if (!Bukkit.unloadWorld(world, false)) {
+            plugin.getLogger().log(Level.WARNING,
+                    "Could not unload dragon arena world " + worldName + "; leaving its files on disk to avoid corrupting a still-loaded world");
+            return;
+        }
         File worldFolder = new File(Bukkit.getWorldContainer(), worldName);
         deleteRecursively(worldFolder);
     }

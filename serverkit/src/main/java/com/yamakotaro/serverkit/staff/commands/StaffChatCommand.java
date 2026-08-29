@@ -25,6 +25,10 @@ public class StaffChatCommand implements CommandExecutor {
             sender.sendMessage(messages.get("general.players-only", Map.of()));
             return true;
         }
+        if (!player.hasPermission("serverkit.staff.staffchat")) {
+            player.sendMessage(messages.get("general.no-permission", Map.of()));
+            return true;
+        }
         if (args.length == 0) {
             boolean nowOn = staffChatManager.toggle(player.getUniqueId());
             player.sendMessage(messages.get(nowOn ? "staff.staffchat-mode-on" : "staff.staffchat-mode-off", Map.of()));

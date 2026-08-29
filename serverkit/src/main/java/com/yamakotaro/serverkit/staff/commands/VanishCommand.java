@@ -25,6 +25,10 @@ public class VanishCommand implements CommandExecutor {
             sender.sendMessage(messages.get("general.players-only", Map.of()));
             return true;
         }
+        if (!player.hasPermission("serverkit.staff.vanish")) {
+            player.sendMessage(messages.get("general.no-permission", Map.of()));
+            return true;
+        }
         boolean nowVanished = vanishManager.toggle(player);
         player.sendMessage(messages.get(nowVanished ? "staff.vanish-on" : "staff.vanish-off", Map.of()));
         return true;

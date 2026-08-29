@@ -48,7 +48,7 @@ public class ReferralManager {
         if (claimant.getUniqueId().equals(inviter.getUniqueId())) {
             return ClaimResult.CANNOT_TARGET_SELF;
         }
-        if (!inviter.hasPlayedBefore() && !inviter.isOnline()) {
+        if (!inviter.hasPlayedBefore()) {
             return ClaimResult.TARGET_NEVER_PLAYED;
         }
         if (claims.containsKey(claimant.getUniqueId())) {

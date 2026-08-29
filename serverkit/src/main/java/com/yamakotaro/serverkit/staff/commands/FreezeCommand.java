@@ -22,6 +22,10 @@ public class FreezeCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!sender.hasPermission("serverkit.staff.freeze")) {
+            sender.sendMessage(messages.get("general.no-permission", Map.of()));
+            return true;
+        }
         if (args.length != 1) {
             sender.sendMessage(messages.get("staff.freeze-usage", Map.of()));
             return true;

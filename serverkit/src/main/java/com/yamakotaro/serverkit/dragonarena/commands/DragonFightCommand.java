@@ -113,6 +113,10 @@ public class DragonFightCommand implements CommandExecutor {
     private void handlePartyAccept(Player player) {
         UUID leaderId = partyManager.acceptResult(player.getUniqueId());
         PartyManager.AcceptResult result = partyManager.accept(player.getUniqueId());
+        if (result == PartyManager.AcceptResult.EXPIRED) {
+            player.sendMessage(messages.get("dragonarena.party-invite-expired", Map.of()));
+            return;
+        }
         if (result != PartyManager.AcceptResult.SUCCESS) {
             player.sendMessage(messages.get("dragonarena.party-no-pending-invite", Map.of()));
             return;
