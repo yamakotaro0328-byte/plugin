@@ -13,7 +13,8 @@ import java.util.Map;
 
 /**
  * アドミンショップのチェストGUI。SHOPモードは購入/売却用、ADMINモードは商品の追加・削除・
- * 価格設定用。価格設定もPriceInputHolder(金床のリネーム欄)経由でGUI内で完結する。
+ * 価格設定用。価格設定もチャット入力(ChatInputManager)経由でGUI内で完結する。
+ * ロア(説明文)はすべてconfig.ymlのmessages.<language>から取得し、&カラーコードにも対応する。
  */
 public class AdminShopHolder implements InventoryHolder {
 
@@ -23,10 +24,12 @@ public class AdminShopHolder implements InventoryHolder {
     }
 
     private final Mode mode;
+    private final Messages messages;
     private final Inventory inventory;
 
-    public AdminShopHolder(Mode mode, AdminShopManager manager, Component title) {
+    public AdminShopHolder(Mode mode, AdminShopManager manager, Messages messages, Component title) {
         this.mode = mode;
+        this.messages = messages;
         this.inventory = Bukkit.createInventory(this, manager.size(), title);
         render(manager);
     }
@@ -46,18 +49,22 @@ public class AdminShopHolder implements InventoryHolder {
             ItemStack stack = new ItemStack(item.getMaterial());
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                List<String> lore = new ArrayList<>();
-                lore.add(item.getBuyPrice() != null ? "Buy: " + item.getBuyPrice() : "Buy: -");
-                lore.add(item.getSellPrice() != null ? "Sell: " + item.getSellPrice() : "Sell: -");
+                List<Component> lore = new ArrayList<>();
+                lore.add(item.getBuyPrice() != null
+                        ? messages.get("adminshop.lore.buy", Map.of("price", String.valueOf(item.getBuyPrice())))
+                        : messages.get("adminshop.lore.buy-disabled", Map.of()));
+                lore.add(item.getSellPrice() != null
+                        ? messages.get("adminshop.lore.sell", Map.of("price", String.valueOf(item.getSellPrice())))
+                        : messages.get("adminshop.lore.sell-disabled", Map.of()));
                 if (mode == Mode.SHOP) {
-                    lore.add("Left-click: buy 1 / Shift-left: buy stack");
-                    lore.add("Right-click: sell 1 / Shift-right: sell all");
+                    lore.add(messages.get("adminshop.lore.shop-hint-1", Map.of()));
+                    lore.add(messages.get("adminshop.lore.shop-hint-2", Map.of()));
                 } else {
-                    lore.add("Left-click: set buy price");
-                    lore.add("Right-click: set sell price");
-                    lore.add("Shift-click: remove this slot");
+                    lore.add(messages.get("adminshop.lore.admin-hint-1", Map.of()));
+                    lore.add(messages.get("adminshop.lore.admin-hint-2", Map.of()));
+                    lore.add(messages.get("adminshop.lore.admin-hint-3", Map.of()));
                 }
-                meta.setLore(lore);
+                meta.lore(lore);
                 stack.setItemMeta(meta);
             }
             inventory.setItem(slot, stack);

@@ -48,6 +48,14 @@
     {
       "label": { "text": "Admin Shop" },
       "action": { "type": "minecraft:run_command", "command": "adminshop" }
+    },
+    {
+      "label": { "text": "Player Shop" },
+      "action": { "type": "minecraft:run_command", "command": "pshop browse" }
+    },
+    {
+      "label": { "text": "My Shop" },
+      "action": { "type": "minecraft:run_command", "command": "pshop my" }
     }
   ]
 }

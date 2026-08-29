@@ -122,7 +122,7 @@ public class AdminShopListener implements Listener {
     private void reopenAdmin(Player player) {
         // チャット送信直後にインベントリを開くと不具合が起きることがあるため、次のtickにずらす。
         Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(
-                new AdminShopHolder(AdminShopHolder.Mode.ADMIN, manager,
+                new AdminShopHolder(AdminShopHolder.Mode.ADMIN, manager, messages,
                         messages.get("adminshop.admin-title", Map.of())).getInventory()));
     }
 }

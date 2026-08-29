@@ -45,3 +45,6 @@ permissions:
   ecotpqa.adminshop.admin:
     description: Can add/remove items and set prices in /adminshop admin
     default: op
+  ecotpqa.playershop:
+    description: Can use /pshop (browse, list your own items, buy, view your history)
+    default: true

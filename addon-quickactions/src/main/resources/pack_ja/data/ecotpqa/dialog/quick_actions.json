@@ -48,6 +48,14 @@
     {
       "label": { "text": "アドミンショップ" },
       "action": { "type": "minecraft:run_command", "command": "adminshop" }
+    },
+    {
+      "label": { "text": "プレイヤーショップ" },
+      "action": { "type": "minecraft:run_command", "command": "pshop browse" }
+    },
+    {
+      "label": { "text": "マイショップ" },
+      "action": { "type": "minecraft:run_command", "command": "pshop my" }
     }
   ]
 }

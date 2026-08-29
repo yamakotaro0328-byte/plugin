@@ -13,6 +13,18 @@ admin-shop:
   # (日本語) ショップGUIの行数 (1〜6、9〜54スロット)。
   rows: 3
 
+player-shop:
+  # Turn the whole player-to-player shop feature on/off (/pshop and its Quick Actions buttons).
+  # (日本語) プレイヤー間ショップ機能全体のオン/オフ(/pshopとQuick Actionsのボタン)。
+  enabled: true
+  # Rows in the /pshop browse GUI (1-6). If there are more active listings than this can show,
+  # only the newest ones are displayed.
+  # (日本語) /pshop browse画面の行数 (1〜6)。出品数がこれを超える場合、新しい出品から表示する。
+  browse-rows: 6
+  # How many of your own past trades /pshop history keeps and shows.
+  # (日本語) /pshop historyで保持・表示する、自分の取引履歴の件数。
+  history-limit: 20
+
 weather-vote:
   # How long (seconds) a vote stays open collecting votes before it fails for lack of support.
   # (日本語) 賛成が足りずに失敗するまで、投票を受け付け続ける秒数。
@@ -59,6 +71,49 @@ messages:
       buy-price-disabled: "&eBuying disabled for this item."
       sell-price-set: "&aSell price set to {price}."
       sell-price-disabled: "&eSelling disabled for this item."
+      lore:
+        buy: "&7Buy: &f{price}"
+        buy-disabled: "&8Buy: -"
+        sell: "&7Sell: &f{price}"
+        sell-disabled: "&8Sell: -"
+        shop-hint-1: "&eLeft-click: buy 1 / Shift-left: buy stack"
+        shop-hint-2: "&eRight-click: sell 1 / Shift-right: sell all"
+        admin-hint-1: "&eLeft-click: set buy price"
+        admin-hint-2: "&eRight-click: set sell price"
+        admin-hint-3: "&cShift-click: remove this slot"
+    playershop:
+      browse-title: "Player Shop"
+      my-title: "My Shop"
+      feature-disabled: "&cThe player shop is disabled."
+      no-economy: "&cNo economy is available (install Vault + EcoTP)."
+      not-found: "&cThat listing no longer exists."
+      cannot-buy-own: "&cYou can't buy your own listing."
+      insufficient-stock: "&cThat listing is out of stock."
+      insufficient-funds: "&cYou don't have enough money for that."
+      inventory-full: "&cYour inventory doesn't have enough space."
+      bought-generic: "&aPurchase complete."
+      hold-item-to-list: "&cHold the item you want to sell, then click an empty slot."
+      enter-amount: "&eHow many {material} do you want to list? (you have {have}) Type the amount in chat."
+      amount-invalid-number: "&cThat's not a number. Try again."
+      amount-invalid-range: "&cEnter a number between 1 and {have}."
+      enter-price: "&eWhat price per item? Type a number in chat."
+      price-invalid-number: "&cThat's not a number. Try again."
+      price-invalid-range: "&cPrice must be greater than 0."
+      listed: "&aListed {amount}x {material} for {price} each."
+      list-failed: "&cCouldn't create the listing (do you still have enough {material}?)."
+      removed: "&eListing removed and the items were returned to you."
+      remove-failed: "&cCouldn't remove that listing."
+      item-sold-notify: "&a{player} bought {amount}x {material} from your shop for {price}."
+      history-header: "&7--- Your trade history ---"
+      history-entry-bought: "&7[{time}] &aBought &f{amount}x {material} &7for &f{price} &7from {player}"
+      history-entry-sold: "&7[{time}] &eSold &f{amount}x {material} &7for &f{price} &7to {player}"
+      history-empty: "&7No trades yet."
+      lore:
+        price: "&7Price: &f{price} each"
+        stock: "&7Stock: &f{amount}"
+        seller: "&7Seller: &f{player}"
+        browse-hint: "&eLeft-click: buy 1 / Shift-left: buy all"
+        my-hint: "&cClick to remove this listing (items returned to you)"
   ja:
     started: "&e{player} が天気を「{weather}」にする投票を開始しました。賛成するには &f/weathervote {weather} &eと入力してください！ ({votes}/{needed})"
     joined: "&e{player} が賛成しました。({votes}/{needed})"
@@ -93,6 +148,49 @@ messages:
       buy-price-disabled: "&eこのアイテムの購入を無効にしました。"
       sell-price-set: "&a売却価格を{price}に設定しました。"
       sell-price-disabled: "&eこのアイテムの売却を無効にしました。"
+      lore:
+        buy: "&7購入: &f{price}"
+        buy-disabled: "&8購入: -"
+        sell: "&7売却: &f{price}"
+        sell-disabled: "&8売却: -"
+        shop-hint-1: "&e左クリック: 1個購入 / シフト+左: まとめ買い"
+        shop-hint-2: "&e右クリック: 1個売却 / シフト+右: 全て売却"
+        admin-hint-1: "&e左クリック: 購入価格を設定"
+        admin-hint-2: "&e右クリック: 売却価格を設定"
+        admin-hint-3: "&cシフトクリック: このスロットを削除"
+    playershop:
+      browse-title: "プレイヤーショップ"
+      my-title: "マイショップ"
+      feature-disabled: "&cプレイヤーショップは無効になっています。"
+      no-economy: "&c経済が利用できません(VaultとEcoTPを導入してください)。"
+      not-found: "&cその出品は既に存在しません。"
+      cannot-buy-own: "&c自分の出品は購入できません。"
+      insufficient-stock: "&cその出品は在庫切れです。"
+      insufficient-funds: "&c所持金が足りません。"
+      inventory-full: "&cインベントリの空きが足りません。"
+      bought-generic: "&a購入しました。"
+      hold-item-to-list: "&c出品したいアイテムを手に持ってから、空いているスロットをクリックしてください。"
+      enter-amount: "&e{material}を何個出品しますか?(所持数: {have}) チャットに数量を入力してください。"
+      amount-invalid-number: "&c数値ではありません。もう一度入力してください。"
+      amount-invalid-range: "&c1から{have}の間で入力してください。"
+      enter-price: "&e1個あたりの価格は? チャットに数値を入力してください。"
+      price-invalid-number: "&c数値ではありません。もう一度入力してください。"
+      price-invalid-range: "&c価格は0より大きい数値にしてください。"
+      listed: "&a{material}を{amount}個、1個あたり{price}で出品しました。"
+      list-failed: "&c出品に失敗しました({material}の所持数が足りているか確認してください)。"
+      removed: "&e出品を取り下げ、アイテムを返却しました。"
+      remove-failed: "&cその出品を削除できませんでした。"
+      item-sold-notify: "&a{player}があなたの出品した{material}を{amount}個、{price}で購入しました。"
+      history-header: "&7--- 取引履歴 ---"
+      history-entry-bought: "&7[{time}] &a購入 &f{amount}個の{material} &7を{price}で &7({player}から)"
+      history-entry-sold: "&7[{time}] &e売却 &f{amount}個の{material} &7を{price}で &7({player}へ)"
+      history-empty: "&7まだ取引はありません。"
+      lore:
+        price: "&7価格: &f{price} (1個あたり)"
+        stock: "&7在庫: &f{amount}"
+        seller: "&7出品者: &f{player}"
+        browse-hint: "&e左クリック: 1個購入 / シフト+左: まとめて購入"
+        my-hint: "&cクリックでこの出品を取り下げます(アイテムは返却されます)"
 
 weather-names:
   en:
