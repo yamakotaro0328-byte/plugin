@@ -66,13 +66,25 @@ public class AdminShopManager {
     /**
      * @return スロットにアイテムが設定されていれば true。
      */
-    public boolean setPrices(int slot, Double buyPrice, Double sellPrice) {
+    public boolean setBuyPrice(int slot, Double price) {
         ShopItem item = items.get(slot);
         if (item == null) {
             return false;
         }
-        item.setBuyPrice(buyPrice);
-        item.setSellPrice(sellPrice);
+        item.setBuyPrice(price);
+        save();
+        return true;
+    }
+
+    /**
+     * @return スロットにアイテムが設定されていれば true。
+     */
+    public boolean setSellPrice(int slot, Double price) {
+        ShopItem item = items.get(slot);
+        if (item == null) {
+            return false;
+        }
+        item.setSellPrice(price);
         save();
         return true;
     }

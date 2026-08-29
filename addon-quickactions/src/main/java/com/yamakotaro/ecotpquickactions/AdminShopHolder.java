@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * アドミンショップのチェストGUI。SHOPモードは購入/売却用、ADMINモードは商品の追加・削除用。
- * 価格の設定自体は /adminshop price コマンドで行う(GUI内でのテキスト入力は行わない)。
+ * アドミンショップのチェストGUI。SHOPモードは購入/売却用、ADMINモードは商品の追加・削除・
+ * 価格設定用。価格設定もPriceInputHolder(金床のリネーム欄)経由でGUI内で完結する。
  */
 public class AdminShopHolder implements InventoryHolder {
 
@@ -53,7 +53,9 @@ public class AdminShopHolder implements InventoryHolder {
                     lore.add("Left-click: buy 1 / Shift-left: buy stack");
                     lore.add("Right-click: sell 1 / Shift-right: sell all");
                 } else {
-                    lore.add("Click to remove this slot");
+                    lore.add("Left-click: set buy price");
+                    lore.add("Right-click: set sell price");
+                    lore.add("Shift-click: remove this slot");
                 }
                 meta.setLore(lore);
                 stack.setItemMeta(meta);
