@@ -1,16 +1,20 @@
 package com.yamakotaro.serverkit.dragonarena;
 
 import com.yamakotaro.serverkit.Messages;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -44,7 +48,6 @@ public class DragonArenaManager {
     private final Map<UUID, FightInstance> activeFights = new HashMap<>();
     private final List<FightInstance> instances = new ArrayList<>();
     private final Map<UUID, Long> cooldownUntil = new HashMap<>();
-    private final Map<UUID, Location> pendingRespawnReturn = new HashMap<>();
 
     public DragonArenaManager(Plugin plugin, Messages messages, PartyManager partyManager) {
         this.plugin = plugin;
@@ -54,6 +57,11 @@ public class DragonArenaManager {
 
     public boolean isFighting(UUID uuid) {
         return activeFights.containsKey(uuid);
+    }
+
+    public boolean isDefeated(UUID uuid) {
+        FightInstance instance = activeFights.get(uuid);
+        return instance != null && instance.isDefeated(uuid);
     }
 
     public StartOutcome start(Player initiator) {
@@ -116,57 +124,77 @@ public class DragonArenaManager {
     }
 
     public LeaveResult leave(Player player) {
-        FightInstance instance = activeFights.get(player.getUniqueId());
+        UUID uuid = player.getUniqueId();
+        FightInstance instance = activeFights.get(uuid);
         if (instance == null) {
             return LeaveResult.NOT_IN_FIGHT;
         }
-        Location back = instance.getReturnLocation(player.getUniqueId());
+        restoreIfDefeated(instance, player);
+        Location back = instance.getReturnLocation(uuid);
         if (back != null) {
             player.teleport(back);
         }
-        finishParticipant(instance, player.getUniqueId());
-        if (instance.isEmpty()) {
+        finishParticipant(instance, uuid);
+        if (instance.isEmpty() || instance.allDefeated()) {
             destroyInstance(instance);
         }
         return LeaveResult.SUCCESS;
     }
 
-    public void handleQuit(UUID uuid) {
+    public void handleQuit(Player player) {
+        UUID uuid = player.getUniqueId();
         FightInstance instance = activeFights.get(uuid);
         if (instance == null) {
             return;
         }
+        // Restore their gamemode before they fully disconnect, so a defeated (spectator)
+        // player who quits isn't stuck in spectator mode the next time they log in.
+        restoreIfDefeated(instance, player);
         finishParticipant(instance, uuid);
-        if (instance.isEmpty()) {
+        if (instance.isEmpty() || instance.allDefeated()) {
             destroyInstance(instance);
         }
     }
 
-    public void onParticipantDied(Player diedPlayer) {
-        FightInstance instance = activeFights.get(diedPlayer.getUniqueId());
-        if (instance == null) {
+    /**
+     * Instead of letting a participant actually die (vanilla death screen/respawn button), the
+     * fatal hit is cancelled by the listener and the player is switched to spectator mode with a
+     * "You Died"-style title, so they can keep watching their party's fight. Once every remaining
+     * participant has been defeated this way, the whole instance ends in failure.
+     */
+    public void onParticipantDefeated(Player player) {
+        UUID uuid = player.getUniqueId();
+        FightInstance instance = activeFights.get(uuid);
+        if (instance == null || instance.isDefeated(uuid)) {
             return;
         }
-        Set<UUID> participants = new HashSet<>(instance.getParticipants());
-        for (UUID uuid : participants) {
-            Location back = instance.getReturnLocation(uuid);
-            if (uuid.equals(diedPlayer.getUniqueId())) {
-                if (back != null) {
-                    pendingRespawnReturn.put(uuid, back);
-                }
-            } else {
-                Player p = Bukkit.getPlayer(uuid);
-                if (p != null && back != null) {
-                    p.teleport(back);
-                }
-            }
-            Player p = Bukkit.getPlayer(uuid);
-            if (p != null) {
-                p.sendMessage(messages.get("dragonarena.defeat", Map.of()));
-            }
-            finishParticipant(instance, uuid);
+        instance.markDefeated(uuid, player.getGameMode());
+        var maxHealth = player.getAttribute(Attribute.MAX_HEALTH);
+        if (maxHealth != null) {
+            player.setHealth(maxHealth.getValue());
         }
-        destroyInstance(instance);
+        player.setGameMode(GameMode.SPECTATOR);
+        player.showTitle(Title.title(
+                messages.get("dragonarena.defeat-title", Map.of()),
+                messages.get("dragonarena.defeat-subtitle", Map.of()),
+                Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(3), Duration.ofSeconds(1))));
+        player.sendMessage(messages.get("dragonarena.defeated-chat", Map.of()));
+
+        if (instance.allDefeated()) {
+            for (UUID member : new HashSet<>(instance.getParticipants())) {
+                Player p = Bukkit.getPlayer(member);
+                if (p != null) {
+                    restoreIfDefeated(instance, p);
+                    Location back = instance.getReturnLocation(member);
+                    if (back != null) {
+                        p.teleport(back);
+                    }
+                    p.sendMessage(messages.get("dragonarena.defeat", Map.of()));
+                }
+                finishParticipant(instance, member);
+            }
+            destroyInstance(instance);
+        }
     }
 
     public void onDragonDefeated(World world) {
@@ -177,6 +205,7 @@ public class DragonArenaManager {
         for (UUID uuid : new HashSet<>(instance.getParticipants())) {
             Player p = Bukkit.getPlayer(uuid);
             if (p != null) {
+                restoreIfDefeated(instance, p);
                 Location back = instance.getReturnLocation(uuid);
                 if (back != null) {
                     p.teleport(back);
@@ -188,12 +217,20 @@ public class DragonArenaManager {
         destroyInstance(instance);
     }
 
-    public Location consumePendingRespawn(UUID uuid) {
-        return pendingRespawnReturn.remove(uuid);
-    }
-
     public boolean isArenaWorld(World world) {
         return findInstance(world) != null;
+    }
+
+    private void restoreIfDefeated(FightInstance instance, Player player) {
+        UUID uuid = player.getUniqueId();
+        if (!instance.isDefeated(uuid)) {
+            return;
+        }
+        player.setGameMode(instance.getPreviousGameMode(uuid));
+        var maxHealth = player.getAttribute(Attribute.MAX_HEALTH);
+        if (maxHealth != null) {
+            player.setHealth(maxHealth.getValue());
+        }
     }
 
     private void finishParticipant(FightInstance instance, UUID uuid) {
@@ -216,9 +253,9 @@ public class DragonArenaManager {
         instances.remove(instance);
         World world = instance.getWorld();
         String worldName = world.getName();
-        // Bukkit refuses to unload a world that still has players in it (e.g. a participant who
-        // died is still physically present until their PlayerRespawnEvent fires) - move any
-        // stragglers out first so the unload below actually succeeds.
+        // Bukkit refuses to unload a world that still has players in it - move any stragglers
+        // out first (e.g. a spectating, defeated participant who hasn't been teleported back
+        // yet) so the unload below actually succeeds.
         for (Player straggler : new ArrayList<>(world.getPlayers())) {
             straggler.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
         }
