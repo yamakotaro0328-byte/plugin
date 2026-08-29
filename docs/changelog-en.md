@@ -7,12 +7,13 @@
 [*]Toggle the whole feature with [I]features.donate: true/false[/I] in config.yml, same as any other command.
 [/LIST]
 
-[B]New: Vote Rewards[/B]
+[B]New: Vote Rewards — no extra plugin required[/B]
 [LIST]
-[*]If you run [B]NuVotifier[/B] (or any Votifier-API-compatible plugin), EcoTP now detects it automatically — no extra dependency to install, nothing to configure beyond what you already have pointing your voting sites at Votifier.
-[*]When a player votes, they're rewarded with currency (default [B]1000[/B], set via [I]vote-reward.amount[/I] in config.yml) and a server-wide broadcast announces it.
+[*]EcoTP now ships its own built-in Votifier(V1)-protocol-compatible listener, so voting sites can point directly at your server — [B]no NuVotifier or any other vote plugin needed[/B]. On first startup it generates an RSA keypair under [I]plugins/EcoTP/votifier-rsa/[/I]; give voting sites the contents of [I]public.key[/I] plus your server's host and port ([I]votifier.port[/I], default [B]8192[/B]).
+[*]Already running NuVotifier for other plugins? EcoTP also auto-detects it (via [I]vote-reward[/I]) so you don't have to change anything — just set [I]votifier.enabled: false[/I] in config.yml to avoid a port conflict with it.
+[*]Either way, when a player votes they're rewarded with currency (default [B]1000[/B], set via [I]vote-reward.amount[/I]) and a server-wide broadcast announces it.
 [*]Voted while offline? The reward is queued and paid out automatically the next time that player joins — nothing is lost.
-[*]Turn it off entirely with [I]vote-reward.enabled: false[/I].
+[*]Turn off rewards entirely with [I]vote-reward.enabled: false[/I], or just the built-in listener with [I]votifier.enabled: false[/I].
 [/LIST]
 
 Both features work out of the box with the defaults above; nothing needs to be enabled manually beyond what's already set in config.yml.

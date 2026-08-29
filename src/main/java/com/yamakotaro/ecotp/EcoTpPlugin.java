@@ -58,6 +58,7 @@ public class EcoTpPlugin extends JavaPlugin {
     private ChatInputManager chatInputManager;
     private DonationManager donationManager;
     private VoteRewardManager voteRewardManager;
+    private VotifierServer votifierServer;
 
     @Override
     public void onEnable() {
@@ -113,6 +114,7 @@ public class EcoTpPlugin extends JavaPlugin {
         this.chatInputManager = new ChatInputManager(this);
         this.donationManager = new DonationManager(this);
         this.voteRewardManager = new VoteRewardManager(this);
+        this.votifierServer = new VotifierServer(this);
 
         HomeCommand homeCommand = new HomeCommand(this);
         getCommand("home").setExecutor(homeCommand);
@@ -161,6 +163,7 @@ public class EcoTpPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(chatInputManager, this);
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
         new VoteRewardListener(this).register();
+        votifierServer.start();
 
         if (ecoTpEconomy != null) {
             // 独自の経済を使っている場合のみ、Vault に登録して他のプラグインへ公開する。
@@ -207,6 +210,9 @@ public class EcoTpPlugin extends JavaPlugin {
         }
         if (mySqlConnectionProvider != null) {
             mySqlConnectionProvider.close();
+        }
+        if (votifierServer != null) {
+            votifierServer.stop();
         }
     }
 

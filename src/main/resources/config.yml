@@ -51,15 +51,37 @@ features:
 # (日本語) /donate が成功するたびにサーバー全体へお礼メッセージを流す。受け取った本人は
 # /donatemessage で自分専用の文言に変更できる(使えるプレースホルダー: {player}, {amount})。
 
-# Rewards a player for voting on a voting site, via any NuVotifier-compatible plugin
-# (detected automatically; no extra setup here beyond installing NuVotifier itself and
-# pointing your voting sites at it). If the player is offline when the vote arrives, the
-# reward is queued and given the next time they join.
-# (日本語) 投票サイトでの投票報酬(NuVotifier互換プラグインを自動検出)。投票時に
-# オフラインだった場合は保留され、次回ログイン時に付与される。
+# Rewards a player for voting on a voting site. If the player is offline when the vote
+# arrives, the reward is queued and given the next time they join.
+# (日本語) 投票サイトでの投票報酬。投票時にオフラインだった場合は保留され、
+# 次回ログイン時に付与される。
 vote-reward:
   enabled: true
   amount: 1000.0
+
+# EcoTP includes its OWN Votifier(V1)-protocol-compatible listener, so voting sites can
+# point directly at this server WITHOUT installing NuVotifier or any other vote plugin —
+# just start the server once, then give your voting sites the contents of
+# plugins/EcoTP/votifier-rsa/public.key (generated automatically on first run) and this
+# host:port. If you'd rather keep using an existing NuVotifier install instead (e.g. it's
+# already shared with other plugins), set enabled: false here; EcoTP will still pick up
+# NuVotifier's own vote events automatically via vote-reward above.
+# (日本語) EcoTPはVotifier(V1)プロトコル互換のリスナーを自前で内蔵しているため、
+# NuVotifier等を別途導入しなくても投票サイトから直接この設定を使えます。初回起動時に
+# 自動生成される plugins/EcoTP/votifier-rsa/public.key の中身と、このhost:portを
+# 投票サイト側に設定してください。既存のNuVotifierをそのまま使いたい場合はここを
+# enabled: falseにすれば、NuVotifierの投票イベントを自動検出する形で動作します
+# (上のvote-rewardの設定はどちらの方式でも共通で使われます)。
+votifier:
+  enabled: true
+  # "0.0.0.0" listens on every network interface. Change only if you know you need to.
+  # (日本語) "0.0.0.0" は全てのネットワークインターフェースで待ち受ける。理由がなければ変更不要。
+  host: "0.0.0.0"
+  # Default Votifier port. Change this (and tell your voting sites) if it conflicts with
+  # something else already using 8192, such as an existing NuVotifier install.
+  # (日本語) Votifierの標準ポート。既にNuVotifier等が8192を使っている場合は変更し、
+  # 投票サイト側にもそのポート番号を伝えること。
+  port: 8192
 
 # Starting balance for new players (used only when economy.enabled: true and
 # no matching Essentials data was found — see essentials-import below).

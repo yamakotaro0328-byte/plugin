@@ -7,12 +7,13 @@
 [*]他の機能と同様、config.ymlの[I]features.donate: true/false[/I]で機能全体のオン/オフができます。
 [/LIST]
 
-[B]新機能: 投票報酬[/B]
+[B]新機能: 投票報酬 — 別プラグイン不要[/B]
 [LIST]
-[*][B]NuVotifier[/B](または同等のVotifier互換プラグイン)を導入していれば、EcoTPが自動的に検出します。追加の依存関係のインストールや、投票サイト側の設定変更は不要です(既にVotifierに向けている設定のままで大丈夫です)。
-[*]プレイヤーが投票すると、通貨報酬(デフォルト[B]1000[/B]、config.ymlの[I]vote-reward.amount[/I]で変更可)が付与され、サーバー全体に通知が流れます。
+[*]EcoTPにVotifier(V1)プロトコル互換のリスナーを内蔵したため、[B]NuVotifier等の別プラグインを一切導入せず[/B]に投票サイトから直接この鯖に投票を送れます。初回起動時に[I]plugins/EcoTP/votifier-rsa/[/I]以下にRSA鍵ペアが自動生成されるので、[I]public.key[/I]の中身とサーバーのホスト・ポート([I]votifier.port[/I]、デフォルト[B]8192[/B])を投票サイト側に設定してください。
+[*]既に他プラグインのためにNuVotifierを使っている場合も、EcoTPが自動検出します([I]vote-reward[/I]設定で共通)。特に変更は不要ですが、ポート競合を避けるため[I]votifier.enabled: false[/I]にしておくと安全です。
+[*]どちらの方式でも、プレイヤーが投票すると通貨報酬(デフォルト[B]1000[/B]、[I]vote-reward.amount[/I]で変更可)が付与され、サーバー全体に通知が流れます。
 [*]オフライン中に投票された場合も報酬は保留され、次回ログイン時に自動で付与されます(取りこぼしはありません)。
-[*][I]vote-reward.enabled: false[/I]で機能全体を無効化できます。
+[*]報酬自体は[I]vote-reward.enabled: false[/I]、内蔵リスナーだけなら[I]votifier.enabled: false[/I]で無効化できます。
 [/LIST]
 
 どちらの機能も上記のデフォルト設定でそのまま動作します。config.ymlで既に有効になっている以上、追加の作業は不要です。

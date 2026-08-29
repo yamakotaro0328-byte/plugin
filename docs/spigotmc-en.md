@@ -16,7 +16,7 @@ No Essentials or any other economy plugin required — EcoTP manages balances it
 [*][B]Fully configurable[/B] — every message and the currency name/unit live in messages.yml (English by default; a Japanese translation is bundled too). Individual features and the built-in economy itself can each be toggled on/off.
 [*][B]PlaceholderAPI support[/B] — %ecotp_balance%, %ecotp_balance_formatted%, %ecotp_sethome_cost%.
 [*][B]/donate[/B] — send money to another player framed as a donation; on success it broadcasts a server-wide thank-you message. Recipients can personalize their own message with [I]/donatemessage <text>[/I] (placeholders: {player}, {amount}), or [I]/donatemessage reset[/I] to go back to the default.
-[*][B]Vote rewards[/B] — automatically detects NuVotifier (or any Votifier-API-compatible fork) and rewards players who vote for your server on a voting site: currency (1000 by default, configurable) plus a server-wide broadcast. A vote for a currently-offline player is queued and paid out the next time they join.
+[*][B]Vote rewards, no extra plugin needed[/B] — EcoTP ships its own built-in Votifier(V1)-compatible listener, so voting sites can point straight at your server (an RSA keypair is generated automatically). Already running NuVotifier for other plugins? EcoTP detects that too. Either way, voters get currency (1000 by default, configurable) plus a server-wide broadcast; a vote for a currently-offline player is queued and paid out the next time they join.
 [/LIST]
 
 [SIZE=5][B]Commands[/B][/SIZE]
@@ -29,7 +29,7 @@ No Essentials or any other economy plugin required — EcoTP manages balances it
 [*]Paper/Spigot 26.2, Java 25
 [*][B]Required:[/B] Vault (economy interoperability)
 [*][B]Optional:[/B] PlaceholderAPI (placeholders)
-[*][B]Optional:[/B] NuVotifier or another Votifier-compatible plugin (vote rewards) — nothing breaks without it, vote rewards just won't trigger
+[*]Vote rewards work out of the box (built-in listener) — NuVotifier is only needed if you'd rather keep using an existing install of it instead
 [/LIST]
 
 [SIZE=5][B]Configuration[/B][/SIZE]
