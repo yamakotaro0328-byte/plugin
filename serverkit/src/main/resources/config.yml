@@ -1,0 +1,133 @@
+# en / ja, same convention as EcoTP / EcoTP-QuickActions.
+language: en
+
+modules:
+  staff: true
+  referral: true
+  dragonarena: true
+
+staffchat:
+  # {player} / {message}
+  format: "&8[&bSTAFF&8]&7 {player}&8: &f{message}"
+
+referral:
+  # A claim (/referral claim <inviter>) is only accepted if the claimant's very first join
+  # was this recently - stops two long-established accounts from declaring each other
+  # "invited" after the fact just to farm the reward.
+  new-player-window-minutes: 60
+  # Vault reward paid to the inviter once, per (inviter, claimant) pair, on confirmation.
+  reward-amount: 500.0
+
+dragonarena:
+  # Seconds a player must wait after finishing a fight before starting another one.
+  cooldown-seconds: 300
+  # How many arena worlds can exist at the same time (each fight uses its own).
+  max-instances: 3
+  # Max players in one party/fight.
+  team-size-max: 4
+  # Seconds a party invite / fight party invite stays valid.
+  invite-timeout-seconds: 60
+
+messages:
+  en:
+    general:
+      players-only: "&cThis command can only be used by players."
+      no-permission: "&cYou don't have permission to do that."
+      player-not-found: "&cPlayer '{player}' not found."
+    staff:
+      vanish-on: "&7You are now vanished."
+      vanish-off: "&7You are now visible."
+      freeze-usage: "&cUsage: /freeze <player>"
+      freeze-on: "&7{player} is now frozen."
+      freeze-off: "&7{player} is no longer frozen."
+      you-were-frozen: "&cA staff member froze you in place."
+      you-were-unfrozen: "&7You have been unfrozen."
+      frozen-blocked: "&cYou can't do that while frozen."
+      staffchat-mode-on: "&bStaff chat mode ON &7(everything you type goes to staff chat; run /staffchat again to turn it off)"
+      staffchat-mode-off: "&7Staff chat mode off."
+    referral:
+      usage: "&cUsage: /referral <claim|confirm> <player>"
+      cannot-target-self: "&cYou can't refer yourself."
+      target-never-played: "&cThat player has never joined this server."
+      already-claimed: "&cYou've already used your one referral claim."
+      not-new-enough: "&cThis only works within {minutes} minutes of your very first join."
+      claim-sent: "&7Claim sent - if {player} confirms it with /referral confirm {you}, they'll get a reward."
+      claim-received: "&7{player} claims you invited them to the server. /referral confirm {player} to confirm and get rewarded."
+      no-pending-claim: "&cNo pending claim from {player} naming you."
+      already-rewarded: "&cThat pair has already been rewarded."
+      no-economy: "&cNo economy plugin is available, so no reward could be paid out."
+      confirmed-inviter: "&aConfirmed! You received {amount} for inviting {player}."
+      confirmed-claimant-notify: "&7{player} confirmed your claim."
+    dragonarena:
+      usage: "&cUsage: /dragonfight <start|leave|party invite <player>|party accept|party leave>"
+      on-cooldown: "&cYou need to wait {seconds}s before starting another dragon fight."
+      max-instances: "&cAll dragon arenas are in use right now, try again shortly."
+      already-in-fight: "&cYou're already in a dragon fight."
+      not-in-fight: "&cYou're not in a dragon fight."
+      party-invited: "&7Invited {player} to your dragon fight party."
+      party-invite-received: "&7{player} invited you to a dragon fight party. /dragonfight party accept to join."
+      party-no-pending-invite: "&cYou have no pending party invite."
+      party-joined: "&7You joined {player}'s party."
+      party-not-leader: "&cOnly the party leader can do that. Use /dragonfight party leave first if you want to lead your own."
+      party-target-is-self: "&cYou can't invite yourself."
+      party-target-in-party: "&cThat player is already in a party."
+      party-not-in-party: "&cYou're not in a party."
+      party-left: "&7You left your party."
+      party-full: "&cThat party is full."
+      starting: "&aOpening a dragon arena, teleporting your party..."
+      command-blocked: "&cCommands are disabled while fighting the dragon."
+      victory: "&a&lYou defeated the Ender Dragon!"
+      defeat: "&c&lYour dragon fight ended - you died."
+      left-fight: "&7You left the dragon fight and were returned to your last location."
+      world-error: "&cCouldn't create the dragon arena, please try again."
+  ja:
+    general:
+      players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
+      no-permission: "&cこの操作を行う権限がありません。"
+      player-not-found: "&cプレイヤー '{player}' が見つかりません。"
+    staff:
+      vanish-on: "&7バニッシュしました(透明化)。"
+      vanish-off: "&7バニッシュを解除しました。"
+      freeze-usage: "&c使い方: /freeze <プレイヤー名>"
+      freeze-on: "&7{player} を拘束しました。"
+      freeze-off: "&7{player} の拘束を解除しました。"
+      you-were-frozen: "&cスタッフによって拘束されました。"
+      you-were-unfrozen: "&7拘束が解除されました。"
+      frozen-blocked: "&c拘束中はその操作はできません。"
+      staffchat-mode-on: "&bスタッフチャットモードON &7(以後の発言はスタッフチャットに送られます。もう一度 /staffchat でOFF)"
+      staffchat-mode-off: "&7スタッフチャットモードを解除しました。"
+    referral:
+      usage: "&c使い方: /referral <claim|confirm> <プレイヤー名>"
+      cannot-target-self: "&c自分自身を紹介者にはできません。"
+      target-never-played: "&cそのプレイヤーはこのサーバーに参加したことがありません。"
+      already-claimed: "&c紹介申請は既に一度使用済みです。"
+      not-new-enough: "&cこれは初参加から{minutes}分以内でないと使用できません。"
+      claim-sent: "&7申請を送りました。{player} が /referral confirm {you} で承認すると報酬が支払われます。"
+      claim-received: "&7{player} があなたに招待されたと申請しています。/referral confirm {player} で承認すると報酬を受け取れます。"
+      no-pending-claim: "&c{player} からの、あなた宛ての保留中の申請はありません。"
+      already-rewarded: "&cそのペアは既に報酬を受け取っています。"
+      no-economy: "&c経済プラグインが利用できないため、報酬を支払えませんでした。"
+      confirmed-inviter: "&a承認しました! {player} を招待した報酬として {amount} を受け取りました。"
+      confirmed-claimant-notify: "&7{player} があなたの申請を承認しました。"
+    dragonarena:
+      usage: "&c使い方: /dragonfight <start|leave|party invite <プレイヤー名>|party accept|party leave>"
+      on-cooldown: "&c次のドラゴン討伐まであと{seconds}秒待ってください。"
+      max-instances: "&c現在すべてのドラゴンアリーナが使用中です。しばらくしてから再度お試しください。"
+      already-in-fight: "&c既にドラゴン討伐中です。"
+      not-in-fight: "&cドラゴン討伐中ではありません。"
+      party-invited: "&7{player} をパーティに招待しました。"
+      party-invite-received: "&7{player} からパーティへの招待が届きました。/dragonfight party accept で参加できます。"
+      party-no-pending-invite: "&c保留中のパーティ招待はありません。"
+      party-joined: "&7{player} のパーティに参加しました。"
+      party-not-leader: "&cパーティリーダーのみ実行できます。自分のパーティを作りたい場合は先に /dragonfight party leave してください。"
+      party-target-is-self: "&c自分自身を招待することはできません。"
+      party-target-in-party: "&cそのプレイヤーは既に別のパーティに参加しています。"
+      party-not-in-party: "&cパーティに参加していません。"
+      party-left: "&7パーティを抜けました。"
+      party-full: "&cそのパーティは満員です。"
+      starting: "&aドラゴンアリーナを準備しています。パーティ全員をテレポートします..."
+      command-blocked: "&cドラゴン討伐中はコマンドを使用できません。"
+      victory: "&a&lエンダードラゴンを討伐しました!"
+      defeat: "&c&lドラゴン討伐失敗 - 死亡しました。"
+      left-fight: "&7ドラゴン討伐から離脱し、元の場所に戻りました。"
+      world-error: "&cドラゴンアリーナの作成に失敗しました。もう一度お試しください。"

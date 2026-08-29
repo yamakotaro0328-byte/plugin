@@ -1,0 +1,45 @@
+name: ServerKit
+version: '${project.version}'
+main: com.yamakotaro.serverkit.ServerKitPlugin
+api-version: '26.2'
+author: yamakotaro0328
+# Vault is entirely optional: the referral module's reward just does nothing (and logs a
+# warning) if no economy is registered, so ServerKit works standalone without Vault too.
+softdepend: [Vault]
+
+commands:
+  vanish:
+    description: Toggle vanish (invisible + hidden from the player list)
+    usage: /vanish
+  freeze:
+    description: Freeze or unfreeze a player in place
+    usage: /freeze <player>
+  staffchat:
+    description: Send one message to staff chat, or with no args toggle staff chat mode
+    usage: /staffchat [message]
+    aliases: [sc]
+  referral:
+    description: Claim who invited you to the server, or confirm a claim naming you, for a one-time reward
+    usage: /referral <claim|confirm> <player>
+    aliases: [ref]
+  dragonfight:
+    description: Solo or team Ender Dragon arena fights
+    usage: /dragonfight <start|leave|party> [args]
+    aliases: [df]
+
+permissions:
+  serverkit.staff.vanish:
+    description: Can use /vanish
+    default: op
+  serverkit.staff.freeze:
+    description: Can use /freeze
+    default: op
+  serverkit.staff.staffchat:
+    description: Can use /staffchat
+    default: op
+  serverkit.referral:
+    description: Can use /referral claim and /referral confirm
+    default: true
+  serverkit.dragonfight:
+    description: Can start/join dragon arena fights
+    default: true
