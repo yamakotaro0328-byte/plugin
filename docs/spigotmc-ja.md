@@ -15,18 +15,21 @@ Essentials など他の経済プラグインは不要です。EcoTPが自前で�
 [*][B]GUIメニュー[/B] — [I]/menu[/I]でコマンドを覚えなくても操作できるクリック式メニューを開けます。
 [*][B]細かくカスタマイズ可能[/B] — メッセージ文言や通貨単位はすべてmessages.ymlにまとまっており(デフォルトは英語、日本語版も同梱)、各機能や独自経済そのもののオン/オフも個別に設定できます。
 [*][B]PlaceholderAPI対応[/B] — %ecotp_balance%、%ecotp_balance_formatted%、%ecotp_sethome_cost%。
+[*][B]/donate(寄付)[/B] — 他のプレイヤーへ「寄付」としてお金を送るコマンド。成功するとサーバー全体にお礼メッセージが流れます。受け取る側は[I]/donatemessage <メッセージ>[/I](使えるプレースホルダー: {player}, {amount})で自分専用の文言に変更でき、[I]/donatemessage reset[/I]でデフォルトに戻せます。
+[*][B]投票報酬[/B] — NuVotifier(または同等のVotifier互換プラグイン)を自動検出し、投票サイトで投票してくれたプレイヤーに報酬(デフォルト1000円、設定変更可)とサーバー全体への通知を付与します。投票時にオフラインだった場合は保留され、次回ログイン時に付与されます。
 [/LIST]
 
 [SIZE=5][B]コマンド一覧[/B][/SIZE]
 [CODE]/home, /sethome, /delhome, /homes, /spawn, /setspawn, /tpa, /tphere,
 /tpaccept, /tpdeny, /tpacancel, /accept (エイリアス /ok), /balance, /pay,
-/eco, /baltop, /menu, /ecotp reload[/CODE]
+/eco, /baltop, /menu, /ecotp reload, /donate, /donatemessage[/CODE]
 
 [SIZE=5][B]動作環境[/B][/SIZE]
 [LIST]
 [*]Paper/Spigot 26.2、Java 25
 [*][B]必須:[/B] Vault(他プラグインとの経済連携)
 [*][B]任意:[/B] PlaceholderAPI(プレースホルダー)
+[*][B]任意:[/B] NuVotifierまたは同等のVotifier互換プラグイン(投票報酬) — 無くても他の機能には影響せず、投票報酬が発生しないだけです
 [/LIST]
 
 [SIZE=5][B]設定[/B][/SIZE]

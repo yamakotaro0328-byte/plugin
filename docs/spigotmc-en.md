@@ -15,18 +15,21 @@ No Essentials or any other economy plugin required — EcoTP manages balances it
 [*][B]GUI menu[/B] — [I]/menu[/I] opens a click-through menu for players who'd rather not memorize commands.
 [*][B]Fully configurable[/B] — every message and the currency name/unit live in messages.yml (English by default; a Japanese translation is bundled too). Individual features and the built-in economy itself can each be toggled on/off.
 [*][B]PlaceholderAPI support[/B] — %ecotp_balance%, %ecotp_balance_formatted%, %ecotp_sethome_cost%.
+[*][B]/donate[/B] — send money to another player framed as a donation; on success it broadcasts a server-wide thank-you message. Recipients can personalize their own message with [I]/donatemessage <text>[/I] (placeholders: {player}, {amount}), or [I]/donatemessage reset[/I] to go back to the default.
+[*][B]Vote rewards[/B] — automatically detects NuVotifier (or any Votifier-API-compatible fork) and rewards players who vote for your server on a voting site: currency (1000 by default, configurable) plus a server-wide broadcast. A vote for a currently-offline player is queued and paid out the next time they join.
 [/LIST]
 
 [SIZE=5][B]Commands[/B][/SIZE]
 [CODE]/home, /sethome, /delhome, /homes, /spawn, /setspawn, /tpa, /tphere,
 /tpaccept, /tpdeny, /tpacancel, /accept (alias /ok), /balance, /pay,
-/eco, /baltop, /menu, /ecotp reload[/CODE]
+/eco, /baltop, /menu, /ecotp reload, /donate, /donatemessage[/CODE]
 
 [SIZE=5][B]Requirements[/B][/SIZE]
 [LIST]
 [*]Paper/Spigot 26.2, Java 25
 [*][B]Required:[/B] Vault (economy interoperability)
 [*][B]Optional:[/B] PlaceholderAPI (placeholders)
+[*][B]Optional:[/B] NuVotifier or another Votifier-compatible plugin (vote rewards) — nothing breaks without it, vote rewards just won't trigger
 [/LIST]
 
 [SIZE=5][B]Configuration[/B][/SIZE]
