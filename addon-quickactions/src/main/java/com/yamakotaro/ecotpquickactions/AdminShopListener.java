@@ -8,6 +8,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
+import java.text.Normalizer;
 import java.util.Map;
 
 /**
@@ -85,7 +86,10 @@ public class AdminShopListener implements Listener {
     }
 
     private void applyPrice(Player player, int slot, boolean buy, String rawInput) {
-        String raw = rawInput.trim();
+        // Japanese IME often defaults to full-width digits (１２３) unless switched to direct
+        // input, which Double.parseDouble rejects outright; NFKC normalization folds those
+        // (and full-width "－"/"．") down to their standard ASCII equivalents first.
+        String raw = Normalizer.normalize(rawInput.trim(), Normalizer.Form.NFKC);
         Double parsed;
         if (raw.equals("-")) {
             parsed = null;
