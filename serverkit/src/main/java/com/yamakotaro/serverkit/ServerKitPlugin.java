@@ -1,5 +1,10 @@
 package com.yamakotaro.serverkit;
 
+import com.yamakotaro.serverkit.claims.ClaimListener;
+import com.yamakotaro.serverkit.claims.ClaimManager;
+import com.yamakotaro.serverkit.claims.ClaimSelectionManager;
+import com.yamakotaro.serverkit.claims.TerritoryGuard;
+import com.yamakotaro.serverkit.claims.commands.ClaimCommand;
 import com.yamakotaro.serverkit.dragonarena.DragonArenaListener;
 import com.yamakotaro.serverkit.dragonarena.DragonArenaManager;
 import com.yamakotaro.serverkit.dragonarena.PartyManager;
@@ -62,6 +67,24 @@ public class ServerKitPlugin extends JavaPlugin {
             DragonFightCommand dragonFightCommand = new DragonFightCommand(this, arenaManager, partyManager, messages);
             getCommand("dragonfight").setExecutor(dragonFightCommand);
             getCommand("dragonfight").setTabCompleter(dragonFightCommand);
+        }
+
+        if (getConfig().getBoolean("modules.claims", true)) {
+            TerritoryGuard territoryGuard = new TerritoryGuard(this);
+            ClaimManager claimManager = new ClaimManager(this, territoryGuard);
+            ClaimSelectionManager selectionManager = new ClaimSelectionManager(this, messages);
+            getServer().getPluginManager().registerEvents(new ClaimListener(this, claimManager, selectionManager, messages), this);
+            ClaimCommand claimCommand = new ClaimCommand(claimManager, selectionManager, messages);
+            getCommand("claim").setExecutor(claimCommand);
+            getCommand("claim").setTabCompleter(claimCommand);
+
+            long accrualAmount = claimManager.accrualAmount();
+            long intervalTicks = claimManager.accrualIntervalMinutes() * 60L * 20L;
+            getServer().getScheduler().runTaskTimer(this, () -> {
+                for (var player : getServer().getOnlinePlayers()) {
+                    claimManager.addBlocks(player.getUniqueId(), accrualAmount);
+                }
+            }, intervalTicks, intervalTicks);
         }
     }
 

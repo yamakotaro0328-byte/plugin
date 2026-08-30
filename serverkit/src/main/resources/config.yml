@@ -5,6 +5,7 @@ modules:
   staff: true
   referral: true
   dragonarena: true
+  claims: true
 
 staffchat:
   # {player} / {message}
@@ -27,6 +28,26 @@ dragonarena:
   team-size-max: 4
   # Seconds a party invite / fight party invite stays valid.
   invite-timeout-seconds: 60
+
+claims:
+  enabled: true
+  # Claim blocks every player starts with (a claim's area in blocks must fit within their balance).
+  starting-blocks: 100
+  # Claim blocks earned automatically per interval below, for every online player.
+  accrual-amount: 100
+  accrual-interval-minutes: 60
+  # 0 = no cap on how many claim blocks a player can bank up.
+  max-blocks: 0
+  # Which actions are protected inside a claim for non-owners/non-trusted players.
+  protect:
+    blocks: true
+    containers: true
+    pvp: true
+    mob-spawning: true
+  # If Towny and/or Lands is installed (detected automatically, no extra setup needed),
+  # refuse to create a ServerKit claim that overlaps their territory.
+  respect-towny: true
+  respect-lands: true
 
 messages:
   en:
@@ -86,6 +107,31 @@ messages:
       defeated-chat: "&cYou were defeated and are now spectating the rest of the fight."
       left-fight: "&7You left the dragon fight and were returned to your last location."
       world-error: "&cCouldn't create the dragon arena, please try again."
+    claims:
+      usage: "&cUsage: /claim <wand|create|remove|list|info|trust|untrust> [args]"
+      feature-disabled: "&cClaims are disabled."
+      wand-name: "&6Claim Wand"
+      wand-given: "&7You received a claim wand. Left-click a block for corner 1, right-click a block for corner 2, then /claim create <name>."
+      pos1-set: "&7Corner 1 set to ({x}, {z})."
+      pos2-set: "&7Corner 2 set to ({x}, {z})."
+      need-both-points: "&cSelect both corners with the claim wand first."
+      different-worlds: "&cBoth corners must be in the same world."
+      name-taken: "&cYou already have a claim named '{name}'."
+      insufficient-blocks: "&cThat area is too large - you only have {available} claim blocks available."
+      overlaps-claim: "&cThat area overlaps an existing claim."
+      overlaps-external: "&cThat area overlaps Towny or Lands territory."
+      created: "&aClaim '{name}' created."
+      not-found: "&cNo claim named '{name}' found."
+      removed: "&7Claim '{name}' removed; the area is no longer protected."
+      list-empty: "&7You have no claims yet. Use /claim wand to get started."
+      list-header: "&7--- Your claims ---"
+      list-entry: "&f{name} &7({world}, {area} blocks)"
+      info: "&7Claim blocks: &f{balance} &7| Used: &f{used} &7| Available: &f{available}"
+      already-trusted: "&c{player} is already trusted on that claim."
+      not-trusted: "&c{player} isn't trusted on that claim."
+      trusted: "&a{player} can now build/use/fight in that claim."
+      untrusted: "&e{player} is no longer trusted on that claim."
+      protected: "&cThis area is claimed by {owner}."
   ja:
     general:
       players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
@@ -143,3 +189,28 @@ messages:
       defeated-chat: "&c討伐失敗 - 観戦モードに移行しました。"
       left-fight: "&7ドラゴン討伐から離脱し、元の場所に戻りました。"
       world-error: "&cドラゴンアリーナの作成に失敗しました。もう一度お試しください。"
+    claims:
+      usage: "&c使い方: /claim <wand|create|remove|list|info|trust|untrust> [引数]"
+      feature-disabled: "&cクレーム機能は無効になっています。"
+      wand-name: "&6クレームの杖"
+      wand-given: "&7クレームの杖を渡しました。左クリックで1つ目の角、右クリックで2つ目の角を指定してから /claim create <名前> を実行してください。"
+      pos1-set: "&71つ目の角を({x}, {z})に設定しました。"
+      pos2-set: "&72つ目の角を({x}, {z})に設定しました。"
+      need-both-points: "&c先にクレームの杖で両方の角を選択してください。"
+      different-worlds: "&c両方の角は同じワールド内である必要があります。"
+      name-taken: "&cその名前('{name}')のクレームは既にあります。"
+      insufficient-blocks: "&cその範囲は大きすぎます。現在使えるクレームブロックは{available}です。"
+      overlaps-claim: "&cその範囲は既存のクレームと重なっています。"
+      overlaps-external: "&cその範囲はTownyまたはLandsの領地と重なっています。"
+      created: "&aクレーム'{name}'を作成しました。"
+      not-found: "&c'{name}'という名前のクレームが見つかりません。"
+      removed: "&7クレーム'{name}'を削除しました。この範囲はもう保護されません。"
+      list-empty: "&7クレームはまだありません。/claim wand から始めてください。"
+      list-header: "&7--- あなたのクレーム ---"
+      list-entry: "&f{name} &7({world}、{area}ブロック)"
+      info: "&7クレームブロック: &f{balance} &7| 使用中: &f{used} &7| 残り: &f{available}"
+      already-trusted: "&c{player}は既にそのクレームで信頼済みです。"
+      not-trusted: "&c{player}はそのクレームで信頼されていません。"
+      trusted: "&a{player}はそのクレーム内で建築・使用・戦闘ができるようになりました。"
+      untrusted: "&e{player}の信頼を解除しました。"
+      protected: "&cこの場所は{owner}のクレームです。"

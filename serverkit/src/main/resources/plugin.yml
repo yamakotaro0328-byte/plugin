@@ -5,7 +5,9 @@ api-version: '26.2'
 author: yamakotaro0328
 # Vault is entirely optional: the referral module's reward just does nothing (and logs a
 # warning) if no economy is registered, so ServerKit works standalone without Vault too.
-softdepend: [Vault]
+# Towny/Lands are likewise optional (detected via reflection, no compile dependency) - listed
+# here only so that, when present, they're guaranteed enabled before ServerKit's own onEnable.
+softdepend: [Vault, Towny, Lands]
 
 commands:
   vanish:
@@ -29,6 +31,9 @@ commands:
   serverkit:
     description: Reload ServerKit's config.yml (e.g. after changing language)
     usage: /serverkit reload
+  claim:
+    description: Claim a rectangular area of land (protects it from other players)
+    usage: /claim <wand|create|remove|list|info|trust|untrust> [args]
 
 permissions:
   serverkit.admin:
@@ -49,3 +54,9 @@ permissions:
   serverkit.dragonfight:
     description: Can start/join dragon arena fights
     default: true
+  serverkit.claims:
+    description: Can use /claim
+    default: true
+  serverkit.claims.admin:
+    description: Bypasses claim protection (can build/use containers/PvP/etc. anywhere)
+    default: op
