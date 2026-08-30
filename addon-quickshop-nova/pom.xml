@@ -32,7 +32,7 @@
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
         <repository>
-            <!-- Publishes com.ghostchu:quickshop-api (QuickShop-Hikari's developer API). -->
+            <!-- Publishes com.ghostchu:quickshop-bukkit (QuickShop-Hikari's developer API jar). -->
             <id>codemc-public</id>
             <url>https://repo.codemc.io/repository/maven-public/</url>
         </repository>
@@ -50,10 +50,14 @@
             <version>[26.2.build,)</version>
             <scope>provided</scope>
         </dependency>
+        <!-- QuickShop-Hikari's README documents quickshop-bukkit (classifier "shaded", which
+             bundles quickshop-api's classes) as the artifact third-party addons should depend
+             on - quickshop-api is not published as its own standalone Maven artifact. -->
         <dependency>
             <groupId>com.ghostchu</groupId>
-            <artifactId>quickshop-api</artifactId>
+            <artifactId>quickshop-bukkit</artifactId>
             <version>6.3.0.1</version>
+            <classifier>shaded</classifier>
             <scope>provided</scope>
         </dependency>
         <dependency>
