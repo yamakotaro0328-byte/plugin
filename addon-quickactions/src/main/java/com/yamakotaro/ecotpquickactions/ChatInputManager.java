@@ -5,6 +5,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
@@ -31,7 +32,10 @@ public class ChatInputManager implements Listener {
         pending.put(player.getUniqueId(), callback);
     }
 
-    @EventHandler
+    // LOWEST so this runs before any chat-formatting plugin (LunaChat, DiscordSRV, etc.) can
+    // rewrite event.message() into a fully-formatted line; ignoreCancelled so a message another
+    // plugin already blocked (e.g. a mute) isn't misread as the expected input either.
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
         Consumer<String> callback = pending.remove(event.getPlayer().getUniqueId());
         if (callback == null) {
