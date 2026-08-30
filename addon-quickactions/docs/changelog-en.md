@@ -19,4 +19,9 @@
 [*]Both the admin shop and the player shop used to ask for prices/quantities in chat. On servers with another chat-formatting plugin installed (LunaChat, DiscordSRV, etc.), that plugin could rewrite the message before it was read, so a perfectly valid number was sometimes rejected. Chat input has been removed entirely for prices and quantities — you now set them with +1/+10/+100/+1000/+10000 (and matching -) buttons in a GUI, so this class of bug can no longer happen.
 [/LIST]
 
+[B]Fixed: custom items (Nova, ItemsAdder, Oraxen, ...) turned back into their base item[/B]
+[LIST]
+[*]Both shops used to remember and hand back items by their vanilla Material only, throwing away everything else. A custom item built on top of a vanilla base item via ItemMeta (Nova's is the example that got reported — a custom food item that used a shulker box as its base) came back as a plain vanilla item of that base type once listed or bought/sold. Both shops now store and match the real ItemStack (comparing full ItemMeta, not just Material), so the exact custom item is preserved — no plugin-specific code was needed for this, so it isn't limited to Nova. Existing shop.yml/playershop.yml data from before this update still loads fine.
+[/LIST]
+
 Both are on by default; toggle the player shop with [I]player-shop.enabled: false[/I] in config.yml if you'd rather not have it.
