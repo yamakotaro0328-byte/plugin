@@ -46,10 +46,12 @@ public class AdminShopHolder implements InventoryHolder {
                 continue;
             }
             ShopItem item = entry.getValue();
-            ItemStack stack = new ItemStack(item.getMaterial());
+            ItemStack stack = item.getTemplate();
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                List<Component> lore = new ArrayList<>();
+                // Keep whatever lore the item already has (e.g. Nova's own item description)
+                // and just append the shop-specific lines below it, instead of replacing it.
+                List<Component> lore = new ArrayList<>(meta.hasLore() ? meta.lore() : List.of());
                 lore.add(item.getBuyPrice() != null
                         ? messages.get("adminshop.lore.buy", Map.of("price", String.valueOf(item.getBuyPrice())))
                         : messages.get("adminshop.lore.buy-disabled", Map.of()));

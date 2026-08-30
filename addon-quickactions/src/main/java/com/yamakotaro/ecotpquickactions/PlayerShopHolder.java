@@ -57,10 +57,13 @@ public class PlayerShopHolder implements InventoryHolder {
             if (slot >= inventory.getSize()) {
                 break;
             }
-            ItemStack stack = new ItemStack(listing.material(), Math.min(listing.amount(), listing.material().getMaxStackSize()));
+            ItemStack stack = listing.item().clone();
+            stack.setAmount(Math.min(listing.amount(), stack.getMaxStackSize()));
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                List<Component> lore = new ArrayList<>();
+                // Keep whatever lore the item already has (e.g. Nova's own item description)
+                // and just append the shop-specific lines below it, instead of replacing it.
+                List<Component> lore = new ArrayList<>(meta.hasLore() ? meta.lore() : List.of());
                 lore.add(messages.get("playershop.lore.price", Map.of("price", PlayerShopManager.formatMoney(listing.pricePerUnit()))));
                 lore.add(messages.get("playershop.lore.stock", Map.of("amount", String.valueOf(listing.amount()))));
                 if (mode == Mode.BROWSE) {

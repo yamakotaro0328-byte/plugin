@@ -216,7 +216,7 @@ public class EcoTpQuickActionsPlugin extends JavaPlugin {
             player.sendMessage(messages.get(key, Map.of(
                     "time", format.format(new Date(entry.timestamp())),
                     "amount", String.valueOf(entry.amount()),
-                    "material", entry.material().name(),
+                    "material", entry.item().getType().name(),
                     "price", PlayerShopManager.formatMoney(entry.total()),
                     "player", entry.counterpartyName())));
         }

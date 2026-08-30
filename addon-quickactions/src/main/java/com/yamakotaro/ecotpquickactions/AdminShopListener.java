@@ -61,7 +61,7 @@ public class AdminShopListener implements Listener {
                 player.sendMessage(messages.get("adminshop.hold-item-to-add", Map.of()));
                 return;
             }
-            manager.setItem(slot, hand.getType());
+            manager.setItem(slot, hand);
             player.sendMessage(messages.get("adminshop.added", Map.of(
                     "material", hand.getType().name(),
                     "slot", String.valueOf(slot))));

@@ -15,6 +15,9 @@ import java.util.TreeMap;
 /**
  * アドミンショップの設定(スロットごとのアイテム・価格)の読み書きと、購入/売却の処理。
  * 在庫は持たない(サーバー側が無限に売買する、いわゆる"admin shop")。
+ * スロットに置かれたアイテムはMaterialだけでなく完全なItemStack(ItemMeta込み)として
+ * 保存・比較するため、NovaやItemsAdderなど見た目や中身をItemMetaで変えるプラグインの
+ * アイテムでも、素材(例: シュルカーボックス)に化けずに正しく売買できる。
  */
 public class AdminShopManager {
 
@@ -53,8 +56,8 @@ public class AdminShopManager {
         return items.get(slot);
     }
 
-    public void setItem(int slot, Material material) {
-        items.put(slot, new ShopItem(material, null, null));
+    public void setItem(int slot, ItemStack item) {
+        items.put(slot, new ShopItem(item, null, null));
         save();
     }
 
@@ -108,13 +111,16 @@ public class AdminShopManager {
             player.sendMessage(messages.get("adminshop.no-economy", Map.of()));
             return;
         }
-        int amount = fullStack ? item.getMaterial().getMaxStackSize() : 1;
+        ItemStack template = item.getTemplate();
+        int amount = fullStack ? template.getMaxStackSize() : 1;
         double cost = item.getBuyPrice() * amount;
         if (!economy.has(player, cost)) {
             player.sendMessage(messages.get("adminshop.insufficient-funds", Map.of("price", formatMoney(cost))));
             return;
         }
-        Map<Integer, ItemStack> leftover = player.getInventory().addItem(new ItemStack(item.getMaterial(), amount));
+        ItemStack toGive = template.clone();
+        toGive.setAmount(amount);
+        Map<Integer, ItemStack> leftover = player.getInventory().addItem(toGive);
         if (!leftover.isEmpty()) {
             player.sendMessage(messages.get("adminshop.inventory-full", Map.of()));
             return;
@@ -122,7 +128,7 @@ public class AdminShopManager {
         economy.withdrawPlayer(player, cost);
         player.sendMessage(messages.get("adminshop.bought", Map.of(
                 "amount", String.valueOf(amount),
-                "material", item.getMaterial().name(),
+                "material", template.getType().name(),
                 "price", formatMoney(cost))));
     }
 
@@ -145,19 +151,20 @@ public class AdminShopManager {
             player.sendMessage(messages.get("adminshop.no-economy", Map.of()));
             return;
         }
+        ItemStack template = item.getTemplate();
         PlayerInventory inventory = player.getInventory();
-        int have = countMatching(inventory, item.getMaterial());
+        int have = countMatching(inventory, template);
         int amount = all ? have : Math.min(1, have);
         if (amount <= 0) {
-            player.sendMessage(messages.get("adminshop.insufficient-items", Map.of("material", item.getMaterial().name())));
+            player.sendMessage(messages.get("adminshop.insufficient-items", Map.of("material", template.getType().name())));
             return;
         }
-        removeMatching(inventory, item.getMaterial(), amount);
+        removeMatching(inventory, template, amount);
         double total = item.getSellPrice() * amount;
         economy.depositPlayer(player, total);
         player.sendMessage(messages.get("adminshop.sold", Map.of(
                 "amount", String.valueOf(amount),
-                "material", item.getMaterial().name(),
+                "material", template.getType().name(),
                 "price", formatMoney(total))));
     }
 
@@ -165,22 +172,27 @@ public class AdminShopManager {
         return String.format("%.2f", amount);
     }
 
-    private static int countMatching(PlayerInventory inventory, Material material) {
+    /**
+     * isSimilar()はMaterialに加えてItemMeta(表示名・カスタムモデルデータ・PersistentDataContainer
+     * など)も比較するため、NovaやItemsAdderのような見た目や識別をItemMetaで行うプラグインの
+     * アイテムも、数量違いだけを無視して正しく同一アイテムとして数えられる。
+     */
+    private static int countMatching(PlayerInventory inventory, ItemStack template) {
         int count = 0;
         for (ItemStack stack : inventory.getStorageContents()) {
-            if (stack != null && stack.getType() == material) {
+            if (stack != null && stack.isSimilar(template)) {
                 count += stack.getAmount();
             }
         }
         return count;
     }
 
-    private static void removeMatching(PlayerInventory inventory, Material material, int amount) {
+    private static void removeMatching(PlayerInventory inventory, ItemStack template, int amount) {
         ItemStack[] contents = inventory.getStorageContents();
         int remaining = amount;
         for (int i = 0; i < contents.length && remaining > 0; i++) {
             ItemStack stack = contents[i];
-            if (stack == null || stack.getType() != material) {
+            if (stack == null || !stack.isSimilar(template)) {
                 continue;
             }
             int take = Math.min(remaining, stack.getAmount());
@@ -210,17 +222,20 @@ public class AdminShopManager {
             } catch (NumberFormatException e) {
                 continue;
             }
-            String materialName = itemsSection.getString(key + ".material");
-            if (materialName == null) {
-                continue;
-            }
-            Material material = Material.matchMaterial(materialName);
-            if (material == null) {
-                continue;
+            ItemStack template = itemsSection.getItemStack(key + ".item");
+            if (template == null) {
+                // shop.yml written before Nova/ItemMeta support only stored the material name;
+                // fall back to a plain vanilla item so upgrading doesn't wipe existing shops.
+                String materialName = itemsSection.getString(key + ".material");
+                Material material = materialName != null ? Material.matchMaterial(materialName) : null;
+                if (material == null) {
+                    continue;
+                }
+                template = new ItemStack(material);
             }
             Double buyPrice = itemsSection.contains(key + ".buy-price") ? itemsSection.getDouble(key + ".buy-price") : null;
             Double sellPrice = itemsSection.contains(key + ".sell-price") ? itemsSection.getDouble(key + ".sell-price") : null;
-            items.put(slot, new ShopItem(material, buyPrice, sellPrice));
+            items.put(slot, new ShopItem(template, buyPrice, sellPrice));
         }
     }
 
@@ -229,7 +244,7 @@ public class AdminShopManager {
         for (Map.Entry<Integer, ShopItem> entry : items.entrySet()) {
             ShopItem item = entry.getValue();
             String base = "items." + entry.getKey();
-            data.set(base + ".material", item.getMaterial().name());
+            data.set(base + ".item", item.getTemplate());
             if (item.getBuyPrice() != null) {
                 data.set(base + ".buy-price", item.getBuyPrice());
             }
