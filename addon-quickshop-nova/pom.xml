@@ -32,11 +32,6 @@
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
         <repository>
-            <!-- Publishes com.ghostchu:quickshop-bukkit (QuickShop-Hikari's developer API jar). -->
-            <id>codemc-public</id>
-            <url>https://repo.codemc.io/repository/maven-public/</url>
-        </repository>
-        <repository>
             <!-- Publishes xyz.xenondevs.nova:nova-api (Nova's developer API). -->
             <id>xenondevs</id>
             <url>https://repo.xenondevs.xyz/releases/</url>
@@ -50,15 +45,19 @@
             <version>[26.2.build,)</version>
             <scope>provided</scope>
         </dependency>
-        <!-- QuickShop-Hikari's README documents quickshop-bukkit (classifier "shaded", which
-             bundles quickshop-api's classes) as the artifact third-party addons should depend
-             on - quickshop-api is not published as its own standalone Maven artifact. -->
+        <!-- QuickShop-Hikari's README documents com.ghostchu:quickshop-bukkit:shaded as the
+             artifact third-party addons should depend on, but despite that, it (and
+             quickshop-api) are not actually published to any public Maven repository - their
+             own CI only publishes the plugin jar to Hangar/Modrinth, never to Maven. The
+             official 6.3.0.1 release jar is committed at libs/ instead and used as a
+             compile-only local dependency (never repackaged into this addon's own jar, since
+             it's "provided" scope and this module isn't shaded). -->
         <dependency>
             <groupId>com.ghostchu</groupId>
             <artifactId>quickshop-bukkit</artifactId>
             <version>6.3.0.1</version>
-            <classifier>shaded</classifier>
-            <scope>provided</scope>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/quickshop-bukkit-6.3.0.1.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>xyz.xenondevs.nova</groupId>
