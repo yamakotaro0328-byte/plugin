@@ -1,0 +1,10 @@
+name: QuickShop-Nova-Compat
+version: '${project.version}'
+main: com.yamakotaro.quickshopnovacompat.QuickShopNovaCompatPlugin
+api-version: '1.20'
+author: yamakotaro0328
+description: Lets QuickShop-Hikari's item-expression features (price rules, blacklists, etc.) refer to Nova custom items by their Nova item id.
+website: https://github.com/yamakotaro0328-byte/plugin
+# Both are hard dependencies: this plugin's only purpose is bridging the two, so there is
+# nothing useful for it to do if either is missing.
+depend: [Nova, QuickShop-Hikari]

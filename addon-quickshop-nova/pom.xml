@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.yamakotaro</groupId>
+    <artifactId>quickshop-nova-compat</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>QuickShop-Nova-Compat</name>
+    <description>Bridge add-on: lets QuickShop-Hikari's item-expression features (price rules,
+        blacklists, etc.) refer to Nova custom items by their Nova item id.</description>
+
+    <!-- Independent Maven project, not a module of ecotp-plugin's pom.xml, so a build failure
+         here never blocks or reflects on EcoTP, EcoTP-QuickActions, or ServerKit. Both Nova and
+         QuickShop-Hikari are hard dependencies (see plugin.yml) since this plugin's only purpose
+         is bridging the two - unlike EcoTP/ServerKit's genuinely optional soft-dependencies. -->
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Paper 26.2's API is compiled for Java 25 (class file version 69); compiling
+             against it with an older release flag rejects its class files outright. -->
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>papermc</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <!-- Publishes com.ghostchu:quickshop-api (QuickShop-Hikari's developer API). -->
+            <id>codemc-public</id>
+            <url>https://repo.codemc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <!-- Publishes xyz.xenondevs.nova:nova-api (Nova's developer API). -->
+            <id>xenondevs</id>
+            <url>https://repo.xenondevs.xyz/releases/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>[26.2.build,)</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.ghostchu</groupId>
+            <artifactId>quickshop-api</artifactId>
+            <version>6.3.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>xyz.xenondevs.nova</groupId>
+            <artifactId>nova-api</artifactId>
+            <version>0.24.0</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}-${project.version}</finalName>
+        <defaultGoal>package</defaultGoal>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>25</release>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
