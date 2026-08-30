@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.attribute.Attribute;
@@ -114,11 +113,11 @@ public class DragonArenaManager {
         FightInstance instance = new FightInstance(arenaWorld, participantIds);
         instances.add(instance);
 
-        Location platform = buildArrivalPlatform(arenaWorld);
+        Location arrival = findArrivalLocation(arenaWorld);
         for (Player p : onlineMembers) {
             instance.setReturnLocation(p.getUniqueId(), p.getLocation());
             activeFights.put(p.getUniqueId(), instance);
-            p.teleport(platform);
+            p.teleport(arrival);
         }
         return StartOutcome.of(StartResult.SUCCESS);
     }
@@ -297,21 +296,18 @@ public class DragonArenaManager {
     }
 
     /**
-     * Fresh End worlds don't have the small arrival platform (vanilla only places that when a
-     * player exits a real End portal); we build one ourselves at the same coordinates vanilla
-     * uses for that platform, which generation always leaves as void.
+     * The vanilla "arrival platform" at (100, 49, 0) is only meant for entering the End through a
+     * real End portal, and it's deliberately isolated: reaching the main island (and the dragon)
+     * from there needs an elytra or a bridge across ~100 blocks of void, which made fights
+     * unreachable when we teleported participants there directly. The main island itself is part
+     * of the vanilla End chunk generator's terrain around world spawn, so we drop participants
+     * straight onto it instead, a few blocks off-center so nobody lands inside the small exit
+     * portal frame that generates right at (0, y, 0).
      */
-    private Location buildArrivalPlatform(World world) {
-        int baseX = 100;
-        int baseY = 49;
-        int baseZ = 0;
-        for (int x = baseX - 2; x <= baseX + 2; x++) {
-            for (int z = baseZ - 2; z <= baseZ + 2; z++) {
-                world.getBlockAt(x, baseY, z).setType(Material.OBSIDIAN);
-                world.getBlockAt(x, baseY + 1, z).setType(Material.AIR);
-                world.getBlockAt(x, baseY + 2, z).setType(Material.AIR);
-            }
-        }
-        return new Location(world, baseX + 0.5, baseY + 1, baseZ + 0.5);
+    private Location findArrivalLocation(World world) {
+        int x = 8;
+        int z = 0;
+        int highestY = world.getHighestBlockYAt(x, z);
+        return new Location(world, x + 0.5, highestY + 1, z + 0.5);
     }
 }
