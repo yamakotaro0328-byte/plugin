@@ -88,8 +88,12 @@ public class AdminShopListener implements Listener {
     private void applyPrice(Player player, int slot, boolean buy, String rawInput) {
         // Japanese IME often defaults to full-width digits (１２３) unless switched to direct
         // input, which Double.parseDouble rejects outright; NFKC normalization folds those
-        // (and full-width "－"/"．") down to their standard ASCII equivalents first.
-        String raw = Normalizer.normalize(rawInput.trim(), Normalizer.Form.NFKC);
+        // (and full-width "－"/"．"/"，") down to their standard ASCII equivalents first. People
+        // also very naturally type prices with thousands separators (1,000) which
+        // Double.parseDouble rejects outright too, so strip commas (and any stray whitespace)
+        // after normalizing.
+        String raw = Normalizer.normalize(rawInput.trim(), Normalizer.Form.NFKC)
+                .replaceAll("[,\\s]", "");
         Double parsed;
         if (raw.equals("-")) {
             parsed = null;

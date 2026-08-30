@@ -101,7 +101,9 @@ public class PlayerShopListener implements Listener {
     }
 
     private void handleAmountInput(Player player, Material material, int have, String rawInput) {
-        String raw = Normalizer.normalize(rawInput.trim(), Normalizer.Form.NFKC);
+        // Full-width digits (NFKC) and thousands-separator commas/spaces (e.g. "1,000") are both
+        // natural things to type here and both make parseInt/parseDouble reject valid input outright.
+        String raw = Normalizer.normalize(rawInput.trim(), Normalizer.Form.NFKC).replaceAll("[,\\s]", "");
         int amount;
         try {
             amount = Integer.parseInt(raw);
@@ -120,7 +122,7 @@ public class PlayerShopListener implements Listener {
     }
 
     private void handlePriceInput(Player player, Material material, int amount, String rawInput) {
-        String raw = Normalizer.normalize(rawInput.trim(), Normalizer.Form.NFKC);
+        String raw = Normalizer.normalize(rawInput.trim(), Normalizer.Form.NFKC).replaceAll("[,\\s]", "");
         double price;
         try {
             price = Double.parseDouble(raw);
