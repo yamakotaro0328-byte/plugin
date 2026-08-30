@@ -10,25 +10,22 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 
-import java.text.Normalizer;
 import java.util.Map;
 
 /**
- * プレイヤー間ショップのGUI操作。出品(数量・価格)はチャット入力(EcoTP本体の/pay金額入力や
- * アドミンショップの価格入力と同じ方式)、購入はBROWSE画面のクリックだけで完結する。
+ * プレイヤー間ショップのGUI操作。出品(数量・価格)も購入もチャット入力を一切使わず、
+ * GUI内のクリックだけで完結する(数量・価格は+/-ボタンで決めるNumberInputHolder経由)。
  */
 public class PlayerShopListener implements Listener {
 
     private final Plugin plugin;
     private final PlayerShopManager manager;
     private final Messages messages;
-    private final ChatInputManager chatInputManager;
 
-    public PlayerShopListener(Plugin plugin, PlayerShopManager manager, Messages messages, ChatInputManager chatInputManager) {
+    public PlayerShopListener(Plugin plugin, PlayerShopManager manager, Messages messages) {
         this.plugin = plugin;
         this.manager = manager;
         this.messages = messages;
-        this.chatInputManager = chatInputManager;
     }
 
     @EventHandler
@@ -95,45 +92,32 @@ public class PlayerShopListener implements Listener {
         Material material = hand.getType();
         int have = countHeld(player.getInventory(), material);
         player.closeInventory();
-        player.sendMessage(messages.get("playershop.enter-amount", Map.of(
-                "material", material.name(), "have", String.valueOf(have))));
-        chatInputManager.request(player, input -> handleAmountInput(player, material, have, input));
+        Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(new NumberInputHolder(
+                messages,
+                messages.get("playershop.amount-title", Map.of("material", material.name(), "have", String.valueOf(have))),
+                Math.min(1, have), 1, (double) have, false,
+                amount -> openPriceInput(player, material, have, amount.intValue()),
+                null,
+                () -> reopenMy(player)
+        ).getInventory()));
     }
 
-    private void handleAmountInput(Player player, Material material, int have, String rawInput) {
-        // Full-width digits (NFKC) and thousands-separator commas/spaces (e.g. "1,000") are both
-        // natural things to type here and both make parseInt/parseDouble reject valid input outright.
-        String raw = Normalizer.normalize(rawInput.trim(), Normalizer.Form.NFKC).replaceAll("[,\\s]", "");
-        int amount;
-        try {
-            amount = Integer.parseInt(raw);
-        } catch (NumberFormatException e) {
-            player.sendMessage(messages.get("playershop.amount-invalid-number", Map.of()));
-            chatInputManager.request(player, input -> handleAmountInput(player, material, have, input));
-            return;
-        }
+    private void openPriceInput(Player player, Material material, int have, int amount) {
+        Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(new NumberInputHolder(
+                messages,
+                messages.get("playershop.price-title", Map.of("amount", String.valueOf(amount), "material", material.name())),
+                1.0, 0.0, null, false,
+                price -> finishListing(player, material, amount, price),
+                null,
+                () -> reopenMy(player)
+        ).getInventory()));
+    }
+
+    private void finishListing(Player player, Material material, int amount, double price) {
+        int have = countHeld(player.getInventory(), material);
         if (amount <= 0 || amount > have) {
             player.sendMessage(messages.get("playershop.amount-invalid-range", Map.of("have", String.valueOf(have))));
-            chatInputManager.request(player, input -> handleAmountInput(player, material, have, input));
-            return;
-        }
-        player.sendMessage(messages.get("playershop.enter-price", Map.of()));
-        chatInputManager.request(player, input -> handlePriceInput(player, material, amount, input));
-    }
-
-    private void handlePriceInput(Player player, Material material, int amount, String rawInput) {
-        String raw = Normalizer.normalize(rawInput.trim(), Normalizer.Form.NFKC).replaceAll("[,\\s]", "");
-        double price;
-        try {
-            price = Double.parseDouble(raw);
-        } catch (NumberFormatException e) {
-            player.sendMessage(messages.get("playershop.price-invalid-number", Map.of()));
-            chatInputManager.request(player, input -> handlePriceInput(player, material, amount, input));
-            return;
-        }
-        if (price <= 0) {
-            player.sendMessage(messages.get("playershop.price-invalid-range", Map.of()));
-            chatInputManager.request(player, input -> handlePriceInput(player, material, amount, input));
+            reopenMy(player);
             return;
         }
         PlayerShopManager.ListResult result = manager.createListing(player, material, amount, price);
@@ -149,7 +133,7 @@ public class PlayerShopListener implements Listener {
     }
 
     private void reopenMy(Player player) {
-        // チャット送信直後にインベントリを開くと不具合が起きることがあるため、次のtickにずらす。
+        // インベントリ切り替え直後の不具合を避けるため、次のtickにずらす。
         Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(
                 new PlayerShopHolder(PlayerShopHolder.Mode.MY, manager, messages,
                         messages.get("playershop.my-title", Map.of()), player.getUniqueId()).getInventory()));

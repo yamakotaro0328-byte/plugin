@@ -13,7 +13,7 @@ import java.util.Map;
 
 /**
  * アドミンショップのチェストGUI。SHOPモードは購入/売却用、ADMINモードは商品の追加・削除・
- * 価格設定用。価格設定もチャット入力(ChatInputManager)経由でGUI内で完結する。
+ * 価格設定用。価格設定もチャット入力を使わずNumberInputHolder(+/-ボタン)でGUI内で完結する。
  * ロア(説明文)はすべてconfig.ymlのmessages.<language>から取得し、&カラーコードにも対応する。
  */
 public class AdminShopHolder implements InventoryHolder {

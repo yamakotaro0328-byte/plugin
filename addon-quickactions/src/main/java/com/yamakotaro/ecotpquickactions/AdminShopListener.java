@@ -8,25 +8,22 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
-import java.text.Normalizer;
 import java.util.Map;
 
 /**
- * アドミンショップのGUI操作。出品(アイテムの追加・削除)はGUI内のクリックだけで完結し、
- * 価格の入力だけはチャットで行う(EcoTP本体の/pay金額入力と同じ方式)。
+ * アドミンショップのGUI操作。出品(アイテムの追加・削除)も価格の設定も、チャット入力を
+ * 一切使わずGUI内のクリックだけで完結する(+/-ボタンで金額を決めるNumberInputHolder経由)。
  */
 public class AdminShopListener implements Listener {
 
     private final Plugin plugin;
     private final AdminShopManager manager;
     private final Messages messages;
-    private final ChatInputManager chatInputManager;
 
-    public AdminShopListener(Plugin plugin, AdminShopManager manager, Messages messages, ChatInputManager chatInputManager) {
+    public AdminShopListener(Plugin plugin, AdminShopManager manager, Messages messages) {
         this.plugin = plugin;
         this.manager = manager;
         this.messages = messages;
-        this.chatInputManager = chatInputManager;
     }
 
     @EventHandler
@@ -80,43 +77,30 @@ public class AdminShopListener implements Listener {
         }
 
         boolean buy = !event.isRightClick();
+        Double current = buy ? existing.getBuyPrice() : existing.getSellPrice();
         player.closeInventory();
-        player.sendMessage(messages.get(buy ? "adminshop.enter-buy-price" : "adminshop.enter-sell-price", Map.of()));
-        chatInputManager.request(player, input -> applyPrice(player, slot, buy, input));
+        Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(new NumberInputHolder(
+                messages,
+                messages.get(buy ? "adminshop.buy-price-title" : "adminshop.sell-price-title", Map.of()),
+                current != null ? current : 0.0,
+                0.0, null, true,
+                value -> applyPrice(player, slot, buy, value),
+                () -> applyPrice(player, slot, buy, null),
+                () -> reopenAdmin(player)
+        ).getInventory()));
     }
 
-    private void applyPrice(Player player, int slot, boolean buy, String rawInput) {
-        // Japanese IME often defaults to full-width digits (１２３) unless switched to direct
-        // input, which Double.parseDouble rejects outright; NFKC normalization folds those
-        // (and full-width "－"/"．"/"，") down to their standard ASCII equivalents first. People
-        // also very naturally type prices with thousands separators (1,000) which
-        // Double.parseDouble rejects outright too, so strip commas (and any stray whitespace)
-        // after normalizing.
-        String raw = Normalizer.normalize(rawInput.trim(), Normalizer.Form.NFKC)
-                .replaceAll("[,\\s]", "");
-        Double parsed;
-        if (raw.equals("-")) {
-            parsed = null;
-        } else {
-            try {
-                parsed = Double.parseDouble(raw);
-            } catch (NumberFormatException e) {
-                player.sendMessage(messages.get("adminshop.price-invalid-number", Map.of()));
-                chatInputManager.request(player, input -> applyPrice(player, slot, buy, input));
-                return;
-            }
-        }
-
-        boolean updated = buy ? manager.setBuyPrice(slot, parsed) : manager.setSellPrice(slot, parsed);
+    private void applyPrice(Player player, int slot, boolean buy, Double price) {
+        boolean updated = buy ? manager.setBuyPrice(slot, price) : manager.setSellPrice(slot, price);
         if (updated) {
             String messageKey;
             Map<String, String> placeholders;
-            if (parsed == null) {
+            if (price == null) {
                 messageKey = buy ? "adminshop.buy-price-disabled" : "adminshop.sell-price-disabled";
                 placeholders = Map.of();
             } else {
                 messageKey = buy ? "adminshop.buy-price-set" : "adminshop.sell-price-set";
-                placeholders = Map.of("price", String.valueOf(parsed));
+                placeholders = Map.of("price", String.valueOf(price));
             }
             player.sendMessage(messages.get(messageKey, placeholders));
         }
@@ -124,7 +108,7 @@ public class AdminShopListener implements Listener {
     }
 
     private void reopenAdmin(Player player) {
-        // チャット送信直後にインベントリを開くと不具合が起きることがあるため、次のtickにずらす。
+        // 直前のインベントリを閉じた直後に開くと不具合が起きることがあるため、次のtickにずらす。
         Bukkit.getScheduler().runTask(plugin, () -> player.openInventory(
                 new AdminShopHolder(AdminShopHolder.Mode.ADMIN, manager, messages,
                         messages.get("adminshop.admin-title", Map.of())).getInventory()));

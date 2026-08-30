@@ -27,7 +27,6 @@ public class EcoTpQuickActionsPlugin extends JavaPlugin {
     private EconomyHolder economyHolder;
     private AdminShopManager adminShopManager;
     private PlayerShopManager playerShopManager;
-    private ChatInputManager chatInputManager;
 
     @Override
     public void onEnable() {
@@ -38,12 +37,11 @@ public class EcoTpQuickActionsPlugin extends JavaPlugin {
         economyHolder.setup();
         this.adminShopManager = new AdminShopManager(this, economyHolder, messages);
         this.playerShopManager = new PlayerShopManager(this, economyHolder, messages);
-        this.chatInputManager = new ChatInputManager(this);
-        getServer().getPluginManager().registerEvents(chatInputManager, this);
+        getServer().getPluginManager().registerEvents(new NumberInputListener(), this);
         getServer().getPluginManager().registerEvents(
-                new AdminShopListener(this, adminShopManager, messages, chatInputManager), this);
+                new AdminShopListener(this, adminShopManager, messages), this);
         getServer().getPluginManager().registerEvents(
-                new PlayerShopListener(this, playerShopManager, messages, chatInputManager), this);
+                new PlayerShopListener(this, playerShopManager, messages), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             var registrar = event.registrar();
