@@ -29,8 +29,8 @@ commands:
     usage: /dragonfight <start|leave|party> [args]
     aliases: [df]
   serverkit:
-    description: Reload ServerKit's config.yml (e.g. after changing language)
-    usage: /serverkit reload
+    description: Reload ServerKit's config.yml (admin), or open the ServerKit menu
+    usage: /serverkit <reload|menu>
   claim:
     description: Claim a rectangular area of land (protects it from other players)
     usage: /claim <wand|create|remove|list|info|trust|untrust> [args]
@@ -39,6 +39,9 @@ permissions:
   serverkit.admin:
     description: Can use /serverkit reload
     default: op
+  serverkit.menu:
+    description: Can use /serverkit menu
+    default: true
   serverkit.staff.vanish:
     description: Can use /vanish
     default: op
