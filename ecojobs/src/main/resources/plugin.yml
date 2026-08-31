@@ -1,0 +1,24 @@
+name: EcoJobs
+version: '${project.version}'
+main: com.yamakotaro.ecojobs.EcoJobsPlugin
+api-version: '1.20'
+author: yamakotaro0328
+description: 20 jobs that pay players for everyday survival actions, with per-job levels.
+softdepend: [Vault]
+
+commands:
+  jobs:
+    description: Join/leave jobs, see your stats, and browse leaderboards
+    usage: /jobs <join|leave|list|stats|top|menu|reload> [args]
+    aliases: [job]
+
+permissions:
+  ecojobs.use:
+    description: Can join/leave jobs and see your own stats
+    default: true
+  ecojobs.top:
+    description: Can view job leaderboards
+    default: true
+  ecojobs.admin:
+    description: Can use /jobs reload
+    default: op

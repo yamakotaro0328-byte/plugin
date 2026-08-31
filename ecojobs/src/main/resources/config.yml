@@ -1,0 +1,362 @@
+# EcoJobs configuration
+# Language for messages below: "en" or "ja".
+# (日本語) 以下のメッセージの言語。"en" または "ja"。
+language: en
+
+# How many jobs a single player can be in at the same time.
+# (日本語) 1人のプレイヤーが同時に加入できるジョブ数。
+max-concurrent-jobs: 3
+
+leveling:
+  # xp required to go from level N to N+1 = base-xp-to-level * N ^ growth-exponent
+  # (日本語) レベルNからN+1に必要な経験値 = base-xp-to-level * N ^ growth-exponent
+  base-xp-to-level: 50
+  growth-exponent: 1.35
+  # Money earned per action is multiplied by (1 + level * pay-bonus-per-level), so a level 40
+  # miner earns 20% more per action than a level 0 miner at the default 0.005 (0.5%/level).
+  # (日本語) 1回の行動で得るお金は (1 + レベル * pay-bonus-per-level) 倍される。デフォルトの
+  # 0.005 (レベルごとに0.5%) だとレベル40で+20%になる。
+  pay-bonus-per-level: 0.005
+  max-level: 100
+
+# The "explorer" job doesn't have a block/entity/item action list like the others below - it
+# pays out every time a player reaches a new farthest distance (in blocks, ignoring height) from
+# their world's spawn point.
+# (日本語) 「探検家」ジョブだけは下のjobsのactionsを使わず、ワールドスポーンから
+# (高さを無視した)最も遠い距離を更新するたびに支払われる。
+explorer:
+  distance-per-milestone: 250
+  money-per-milestone: 100
+  xp-per-milestone: 60
+
+# Every other job: a map of action-type -> (material/entity name, or "default") -> {money, xp}.
+# Material/entity names are the same names used in Java's Material/EntityType enums (as shown in
+# the Bukkit/Paper API docs), case-insensitive. Add or remove entries freely; anything not listed
+# for a job (and with no "default" entry) simply doesn't pay out for that job.
+# (日本語) 他のジョブはすべて action-type -> (素材名/エンティティ名、または"default") ->
+# {money, xp} の対応表になっている。名前はJavaのMaterial/EntityType列挙型と同じ表記
+# (大文字小文字は区別しない)。自由に追加・削除でき、載っていない("default"も無い)ものは
+# そのジョブでは何ももらえないだけ。
+jobs:
+  miner:
+    actions:
+      break-block:
+        COAL_ORE: { money: 4, xp: 3 }
+        DEEPSLATE_COAL_ORE: { money: 4, xp: 3 }
+        COPPER_ORE: { money: 4, xp: 3 }
+        DEEPSLATE_COPPER_ORE: { money: 4, xp: 3 }
+        IRON_ORE: { money: 7, xp: 5 }
+        DEEPSLATE_IRON_ORE: { money: 7, xp: 5 }
+        GOLD_ORE: { money: 10, xp: 6 }
+        DEEPSLATE_GOLD_ORE: { money: 10, xp: 6 }
+        NETHER_GOLD_ORE: { money: 8, xp: 5 }
+        REDSTONE_ORE: { money: 6, xp: 4 }
+        DEEPSLATE_REDSTONE_ORE: { money: 6, xp: 4 }
+        LAPIS_ORE: { money: 6, xp: 4 }
+        DEEPSLATE_LAPIS_ORE: { money: 6, xp: 4 }
+        DIAMOND_ORE: { money: 40, xp: 20 }
+        DEEPSLATE_DIAMOND_ORE: { money: 40, xp: 20 }
+        EMERALD_ORE: { money: 45, xp: 22 }
+        DEEPSLATE_EMERALD_ORE: { money: 45, xp: 22 }
+        NETHER_QUARTZ_ORE: { money: 5, xp: 3 }
+        ANCIENT_DEBRIS: { money: 120, xp: 60 }
+
+  digger:
+    actions:
+      break-block:
+        DIRT: { money: 0.2, xp: 0.2 }
+        GRASS_BLOCK: { money: 0.2, xp: 0.2 }
+        SAND: { money: 0.2, xp: 0.2 }
+        RED_SAND: { money: 0.2, xp: 0.2 }
+        GRAVEL: { money: 0.3, xp: 0.3 }
+        CLAY: { money: 0.5, xp: 0.4 }
+        STONE: { money: 0.3, xp: 0.3 }
+        COBBLESTONE: { money: 0.3, xp: 0.3 }
+        DEEPSLATE: { money: 0.3, xp: 0.3 }
+        COBBLED_DEEPSLATE: { money: 0.3, xp: 0.3 }
+        NETHERRACK: { money: 0.2, xp: 0.2 }
+        SOUL_SAND: { money: 0.4, xp: 0.3 }
+        SOUL_SOIL: { money: 0.4, xp: 0.3 }
+        END_STONE: { money: 0.4, xp: 0.3 }
+
+  woodcutter:
+    actions:
+      break-block:
+        OAK_LOG: { money: 2, xp: 1.5 }
+        SPRUCE_LOG: { money: 2, xp: 1.5 }
+        BIRCH_LOG: { money: 2, xp: 1.5 }
+        JUNGLE_LOG: { money: 2.5, xp: 1.8 }
+        ACACIA_LOG: { money: 2.5, xp: 1.8 }
+        DARK_OAK_LOG: { money: 2.5, xp: 1.8 }
+        MANGROVE_LOG: { money: 2.5, xp: 1.8 }
+        CHERRY_LOG: { money: 3, xp: 2 }
+        CRIMSON_STEM: { money: 3, xp: 2 }
+        WARPED_STEM: { money: 3, xp: 2 }
+
+  farmer:
+    actions:
+      # Crops must grow to their maximum age (which always takes real time) before they pay out,
+      # so - unlike miner/digger/woodcutter - a farmer is never checked against the placed-block
+      # tracker: replanting is the normal way to earn this money, not an exploit.
+      harvest-crop:
+        WHEAT: { money: 3, xp: 2 }
+        CARROTS: { money: 3, xp: 2 }
+        POTATOES: { money: 3, xp: 2 }
+        BEETROOTS: { money: 3, xp: 2 }
+        NETHER_WART: { money: 4, xp: 2.5 }
+        COCOA: { money: 5, xp: 3 }
+      harvest-tall-plant:
+        MELON: { money: 4, xp: 2 }
+        PUMPKIN: { money: 4, xp: 2 }
+
+  builder:
+    actions:
+      place-block:
+        default: { money: 0.15, xp: 0.1 }
+
+  fisherman:
+    actions:
+      catch-fish:
+        COD: { money: 5, xp: 3 }
+        SALMON: { money: 6, xp: 3 }
+        PUFFERFISH: { money: 8, xp: 4 }
+        TROPICAL_FISH: { money: 9, xp: 5 }
+
+  treasurehunter:
+    actions:
+      catch-treasure:
+        default: { money: 40, xp: 25 }
+
+  hunter:
+    actions:
+      kill-mob:
+        ZOMBIE: { money: 4, xp: 3 }
+        HUSK: { money: 4, xp: 3 }
+        DROWNED: { money: 5, xp: 3 }
+        SKELETON: { money: 4, xp: 3 }
+        STRAY: { money: 5, xp: 3 }
+        SPIDER: { money: 4, xp: 3 }
+        CAVE_SPIDER: { money: 5, xp: 3 }
+        CREEPER: { money: 6, xp: 4 }
+        ENDERMAN: { money: 8, xp: 5 }
+        WITCH: { money: 10, xp: 6 }
+        PILLAGER: { money: 7, xp: 4 }
+        VINDICATOR: { money: 10, xp: 6 }
+        RAVAGER: { money: 30, xp: 15 }
+        PHANTOM: { money: 8, xp: 5 }
+        SLIME: { money: 3, xp: 2 }
+        MAGMA_CUBE: { money: 3, xp: 2 }
+        BLAZE: { money: 12, xp: 7 }
+        GHAST: { money: 15, xp: 8 }
+        SHULKER: { money: 20, xp: 10 }
+        GUARDIAN: { money: 12, xp: 7 }
+
+  archer:
+    actions:
+      # Any hostile-mob kill (from hunter's list above) where the fatal blow was a projectile,
+      # instead of melee, pays this flat rate on top of - not instead of - the hunter payout.
+      kill-mob-ranged:
+        default: { money: 6, xp: 4 }
+
+  slayer:
+    actions:
+      kill-boss:
+        ENDER_DRAGON: { money: 5000, xp: 2000 }
+        WITHER: { money: 2500, xp: 1000 }
+        ELDER_GUARDIAN: { money: 300, xp: 150 }
+        WARDEN: { money: 4000, xp: 1800 }
+
+  warrior:
+    actions:
+      kill-player:
+        default: { money: 50, xp: 25 }
+
+  breeder:
+    actions:
+      breed-entity:
+        COW: { money: 8, xp: 5 }
+        MUSHROOM_COW: { money: 8, xp: 5 }
+        SHEEP: { money: 8, xp: 5 }
+        PIG: { money: 8, xp: 5 }
+        CHICKEN: { money: 6, xp: 4 }
+        RABBIT: { money: 8, xp: 5 }
+        HORSE: { money: 15, xp: 8 }
+        DONKEY: { money: 12, xp: 7 }
+        MULE: { money: 12, xp: 7 }
+        LLAMA: { money: 10, xp: 6 }
+        WOLF: { money: 10, xp: 6 }
+        CAT: { money: 10, xp: 6 }
+        TURTLE: { money: 10, xp: 6 }
+        BEE: { money: 10, xp: 6 }
+        AXOLOTL: { money: 10, xp: 6 }
+        default: { money: 8, xp: 5 }
+
+  tamer:
+    actions:
+      tame-entity:
+        WOLF: { money: 12, xp: 8 }
+        CAT: { money: 12, xp: 8 }
+        HORSE: { money: 15, xp: 9 }
+        DONKEY: { money: 12, xp: 7 }
+        PARROT: { money: 10, xp: 6 }
+        LLAMA: { money: 12, xp: 7 }
+        default: { money: 10, xp: 6 }
+
+  shearer:
+    actions:
+      shear-entity:
+        SHEEP: { money: 3, xp: 2 }
+        MUSHROOM_COW: { money: 5, xp: 3 }
+        SNOWMAN: { money: 2, xp: 1 }
+        default: { money: 3, xp: 2 }
+
+  beekeeper:
+    actions:
+      harvest-block:
+        BEEHIVE: { money: 8, xp: 5 }
+        BEE_NEST: { money: 8, xp: 5 }
+
+  enchanter:
+    actions:
+      # Scaled by the enchant's XP-level cost (a natural difficulty proxy), not a flat rate.
+      enchant-item:
+        default: { money-per-level: 4, xp-per-level: 3 }
+
+  smelter:
+    actions:
+      smelt-item:
+        IRON_INGOT: { money: 3, xp: 2 }
+        GOLD_INGOT: { money: 4, xp: 2.5 }
+        COPPER_INGOT: { money: 2, xp: 1.5 }
+        GLASS: { money: 1, xp: 0.5 }
+        BRICK: { money: 1.5, xp: 1 }
+        COOKED_BEEF: { money: 1.5, xp: 1 }
+        COOKED_PORKCHOP: { money: 1.5, xp: 1 }
+        COOKED_CHICKEN: { money: 1.5, xp: 1 }
+        COOKED_MUTTON: { money: 1.5, xp: 1 }
+        COOKED_RABBIT: { money: 1.5, xp: 1 }
+        COOKED_COD: { money: 1.5, xp: 1 }
+        COOKED_SALMON: { money: 1.5, xp: 1 }
+        BAKED_POTATO: { money: 1.5, xp: 1 }
+        default: { money: 1, xp: 0.5 }
+
+  crafter:
+    actions:
+      craft-item:
+        default: { money: 0.3, xp: 0.2 }
+
+  merchant:
+    actions:
+      trade-villager:
+        default: { money: 8, xp: 5 }
+
+messages:
+  en:
+    general:
+      players-only: "&cThis command can only be used by players."
+      no-permission: "&cYou don't have permission to do that."
+      player-not-found: "&cPlayer '{player}' not found."
+      reloaded: "&aEcoJobs config reloaded."
+    jobs:
+      usage: "&cUsage: /jobs <join|leave|list|stats|top|menu> [job]"
+      unknown-job: "&cUnknown job '{job}'. Use /jobs list to see available jobs."
+      already-joined: "&cYou're already in the {job} job."
+      not-joined: "&cYou're not in the {job} job."
+      max-jobs-reached: "&cYou can only be in {max} jobs at once. Leave one first with /jobs leave <job>."
+      joined: "&aJoined the {job} job!"
+      left: "&eLeft the {job} job."
+      list-header: "&7--- Jobs ---"
+      list-entry-joined: "&a{job} &7- Level {level} ({xp}/{next_xp} xp) &a[joined]"
+      list-entry-not-joined: "&f{job} &7- not joined"
+      stats-header: "&7--- Your jobs ---"
+      stats-entry: "&f{job}: &7Level {level} ({xp}/{next_xp} xp)"
+      stats-none: "&7You haven't joined any jobs yet. Use /jobs list to see what's available."
+      level-up: "&a&l{job} leveled up! &aYou're now level {level}."
+      top-header: "&7--- Top {job} ---"
+      top-entry: "&7#{rank} &f{player} &7- Level {level} ({xp} xp)"
+      top-empty: "&7Nobody has joined {job} yet."
+      earned: "&a+{money} &7{job}"
+    menu:
+      title: "EcoJobs"
+      job-title: "{job}"
+      lore-level: "&7Level {level} ({xp}/{next_xp} xp)"
+      lore-not-joined: "&7Not joined"
+      lore-click-join: "&aClick to join"
+      lore-click-leave: "&cClick to leave"
+  ja:
+    general:
+      players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
+      no-permission: "&cこの操作を行う権限がありません。"
+      player-not-found: "&cプレイヤー「{player}」が見つかりません。"
+      reloaded: "&aEcoJobsの設定を再読み込みしました。"
+    jobs:
+      usage: "&c使い方: /jobs <join|leave|list|stats|top|menu> [ジョブ名]"
+      unknown-job: "&c不明なジョブ「{job}」です。/jobs list で一覧を確認してください。"
+      already-joined: "&cすでに{job}に加入しています。"
+      not-joined: "&c{job}に加入していません。"
+      max-jobs-reached: "&c同時に加入できるのは{max}個までです。/jobs leave <ジョブ名> で1つ脱退してください。"
+      joined: "&a{job}に加入しました！"
+      left: "&e{job}を脱退しました。"
+      list-header: "&7--- ジョブ一覧 ---"
+      list-entry-joined: "&a{job} &7- レベル{level} ({xp}/{next_xp} xp) &a[加入中]"
+      list-entry-not-joined: "&f{job} &7- 未加入"
+      stats-header: "&7--- 自分のジョブ ---"
+      stats-entry: "&f{job}: &7レベル{level} ({xp}/{next_xp} xp)"
+      stats-none: "&7まだどのジョブにも加入していません。/jobs list で一覧を確認してください。"
+      level-up: "&a&l{job}のレベルが上がりました！ &a現在レベル{level}。"
+      top-header: "&7--- {job} ランキング ---"
+      top-entry: "&7#{rank} &f{player} &7- レベル{level} ({xp} xp)"
+      top-empty: "&7まだ誰も{job}に加入していません。"
+      earned: "&a+{money} &7{job}"
+    menu:
+      title: "EcoJobs"
+      job-title: "{job}"
+      lore-level: "&7レベル{level} ({xp}/{next_xp} xp)"
+      lore-not-joined: "&7未加入"
+      lore-click-join: "&aクリックで加入"
+      lore-click-leave: "&cクリックで脱退"
+
+# Display names for each job id, shown in /jobs list, /jobs stats, /jobs top, and the GUI menu.
+job-names:
+  en:
+    miner: "Miner"
+    digger: "Digger"
+    woodcutter: "Woodcutter"
+    farmer: "Farmer"
+    builder: "Builder"
+    fisherman: "Fisherman"
+    treasurehunter: "Treasure Hunter"
+    hunter: "Hunter"
+    archer: "Archer"
+    slayer: "Slayer"
+    warrior: "Warrior"
+    breeder: "Breeder"
+    tamer: "Tamer"
+    shearer: "Shearer"
+    beekeeper: "Beekeeper"
+    enchanter: "Enchanter"
+    smelter: "Smelter"
+    crafter: "Crafter"
+    merchant: "Merchant"
+    explorer: "Explorer"
+  ja:
+    miner: "採掘工"
+    digger: "穴掘り師"
+    woodcutter: "木こり"
+    farmer: "農家"
+    builder: "建築士"
+    fisherman: "漁師"
+    treasurehunter: "お宝ハンター"
+    hunter: "ハンター"
+    archer: "弓術師"
+    slayer: "討伐者"
+    warrior: "戦士"
+    breeder: "繁殖家"
+    tamer: "調教師"
+    shearer: "毛刈り師"
+    beekeeper: "養蜂家"
+    enchanter: "魔道士"
+    smelter: "製錬工"
+    crafter: "職人"
+    merchant: "商人"
+    explorer: "探検家"
