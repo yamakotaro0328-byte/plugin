@@ -6,6 +6,7 @@ import com.yamakotaro.ecojobs.JobOverrides;
 import com.yamakotaro.ecojobs.Messages;
 import com.yamakotaro.ecojobs.PlayerJobManager;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -67,6 +68,7 @@ public class AdminMenuListener implements Listener {
                     "xp", String.format("%.2f", AdminMenuHolder.QUICK_BOOSTER_MULTIPLIER),
                     "minutes", String.valueOf(AdminMenuHolder.QUICK_BOOSTER_MINUTES),
                     "player", player.getName())));
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.6f, 1.2f);
             holder.render(jobManager, jobOverrides, boosterManager);
             return;
         }
@@ -75,6 +77,7 @@ public class AdminMenuListener implements Listener {
             if (stopped > 0) {
                 Bukkit.getServer().sendMessage(messages.get("jobs.booster-stopped-all", Map.of("player", player.getName())));
             }
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 0.8f);
             holder.render(jobManager, jobOverrides, boosterManager);
             return;
         }
@@ -88,6 +91,7 @@ public class AdminMenuListener implements Listener {
             LeaderboardMenuHolder leaderboard = new LeaderboardMenuHolder(messages, jobId);
             leaderboard.render(playerJobManager);
             player.openInventory(leaderboard.getInventory());
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.4f);
             return;
         }
         if (event.isShiftClick() && event.isRightClick()) {
@@ -97,6 +101,7 @@ public class AdminMenuListener implements Listener {
         } else {
             jobOverrides.setEnabled(jobId, !jobOverrides.isEnabled(jobId));
         }
+        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.4f);
         holder.render(jobManager, jobOverrides, boosterManager);
     }
 }

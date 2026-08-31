@@ -8,20 +8,28 @@ import com.yamakotaro.ecojobs.PlayerJobProgress;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+/**
+ * The player-facing /jobs menu: a bordered 54-slot GUI (not a bare item list) with a player
+ * summary head, a visual XP progress bar per job, and shift-click-to-view-leaderboard - the same
+ * visual language as the admin GUI (see AdminMenuHolder), just aimed at players instead of ops.
+ */
 public class JobsMenuHolder implements InventoryHolder {
 
-    public static final int CLOSE_SLOT = 31;
+    public static final int SUMMARY_SLOT = 4;
+    public static final int CLOSE_SLOT = 49;
+    private static final int PROGRESS_BAR_LENGTH = 10;
 
     // Package-private so AdminMenuHolder can reuse the same icons for its job list.
     static final Map<String, Material> ICONS = Map.ofEntries(
@@ -46,50 +54,115 @@ public class JobsMenuHolder implements InventoryHolder {
             Map.entry("merchant", Material.EMERALD),
             Map.entry("explorer", Material.COMPASS));
 
+    private static final List<Integer> JOB_SLOTS = buildJobSlots();
+
+    private static List<Integer> buildJobSlots() {
+        // Rows 1-4, columns 1-7 (columns 0 and 8 are the border) - 28 slots, comfortably more
+        // than the 20 jobs that exist today, with room to add more later.
+        List<Integer> slots = new ArrayList<>();
+        for (int row = 1; row <= 4; row++) {
+            for (int col = 1; col <= 7; col++) {
+                slots.add(row * 9 + col);
+            }
+        }
+        return slots;
+    }
+
     private final Messages messages;
     private final Inventory inventory;
     private final Map<Integer, String> slotToJobId = new HashMap<>();
 
     public JobsMenuHolder(Messages messages) {
         this.messages = messages;
-        this.inventory = Bukkit.createInventory(this, 36, messages.get("menu.title", Map.of()));
+        this.inventory = Bukkit.createInventory(this, 54, messages.get("menu.title", Map.of()));
     }
 
     public String jobIdAt(int slot) {
         return slotToJobId.get(slot);
     }
 
-    public void render(JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides, UUID viewer) {
+    public void render(JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides, Player viewer) {
         inventory.clear();
         slotToJobId.clear();
-        Map<String, PlayerJobProgress> allProgress = playerJobManager.allProgress(viewer);
-        int slot = 0;
+        fillBorder();
+
+        Map<String, PlayerJobProgress> allProgress = playerJobManager.allProgress(viewer.getUniqueId());
+        boolean canViewLeaderboard = viewer.hasPermission("ecojobs.top");
+        inventory.setItem(SUMMARY_SLOT, summaryItem(viewer, jobManager, playerJobManager, allProgress));
+
+        int index = 0;
         for (String jobId : jobManager.all().keySet()) {
-            if (slot >= CLOSE_SLOT) {
+            if (index >= JOB_SLOTS.size()) {
                 break;
             }
-            boolean active = playerJobManager.isJoined(viewer, jobId);
+            boolean active = playerJobManager.isJoined(viewer.getUniqueId(), jobId);
             boolean enabled = jobOverrides.isEnabled(jobId);
-            inventory.setItem(slot, buildJobItem(jobId, allProgress.get(jobId), active, enabled, playerJobManager));
+            int slot = JOB_SLOTS.get(index++);
+            inventory.setItem(slot, buildJobItem(jobId, allProgress.get(jobId), active, enabled, canViewLeaderboard, jobManager, playerJobManager));
             slotToJobId.put(slot, jobId);
-            slot++;
         }
-        inventory.setItem(CLOSE_SLOT, closeItem());
+        inventory.setItem(CLOSE_SLOT, closeItem(messages));
     }
 
-    private ItemStack buildJobItem(String jobId, PlayerJobProgress progress, boolean active, boolean enabled, PlayerJobManager playerJobManager) {
+    private void fillBorder() {
+        ItemStack filler = fillerItem();
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            int row = slot / 9;
+            int col = slot % 9;
+            if (row == 0 || row == 5 || col == 0 || col == 8) {
+                inventory.setItem(slot, filler);
+            }
+        }
+    }
+
+    private ItemStack summaryItem(Player viewer, JobManager jobManager, PlayerJobManager playerJobManager, Map<String, PlayerJobProgress> allProgress) {
+        ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta instanceof SkullMeta skullMeta) {
+            skullMeta.setOwningPlayer(viewer);
+            skullMeta.displayName(messages.get("menu.summary-title", Map.of("player", viewer.getName())));
+            int totalLevel = 0;
+            int joinedCount = 0;
+            for (String jobId : jobManager.all().keySet()) {
+                PlayerJobProgress progress = allProgress.get(jobId);
+                if (progress != null) {
+                    totalLevel += progress.getLevel();
+                }
+                if (playerJobManager.isJoined(viewer.getUniqueId(), jobId)) {
+                    joinedCount++;
+                }
+            }
+            skullMeta.lore(List.of(messages.get("menu.summary-lore", Map.of(
+                    "total_level", String.valueOf(totalLevel),
+                    "joined", String.valueOf(joinedCount),
+                    "max", String.valueOf(jobManager.maxConcurrentJobs())))));
+            stack.setItemMeta(skullMeta);
+        }
+        return stack;
+    }
+
+    private ItemStack buildJobItem(String jobId, PlayerJobProgress progress, boolean active, boolean enabled, boolean canViewLeaderboard,
+                                    JobManager jobManager, PlayerJobManager playerJobManager) {
         Material material = ICONS.getOrDefault(jobId, Material.PAPER);
         ItemStack stack = new ItemStack(material);
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             meta.displayName(messages.get("menu.job-title", Map.of("job", messages.jobName(jobId))));
             List<Component> lore = new ArrayList<>();
+            boolean maxed = false;
             if (progress != null) {
                 lore.add(messages.get("menu.lore-level", Map.of(
                         "level", String.valueOf(progress.getLevel()),
                         "prestige", String.valueOf(progress.getPrestige()),
                         "xp", String.format("%.0f", progress.getXp()),
                         "next_xp", String.format("%.0f", playerJobManager.xpToNextLevel(progress.getLevel())))));
+                maxed = progress.getLevel() >= jobManager.maxLevel();
+                if (!maxed) {
+                    double nextXp = playerJobManager.xpToNextLevel(progress.getLevel());
+                    lore.add(messages.get("menu.lore-progress", Map.of(
+                            "bar", progressBar(progress.getXp(), nextXp),
+                            "percent", String.valueOf(progressPercent(progress.getXp(), nextXp)))));
+                }
             } else {
                 lore.add(messages.get("menu.lore-not-joined", Map.of()));
             }
@@ -105,17 +178,45 @@ public class JobsMenuHolder implements InventoryHolder {
             } else {
                 lore.add(messages.get("menu.lore-click-join", Map.of()));
             }
+            if (canViewLeaderboard) {
+                lore.add(messages.get("menu.lore-click-leaderboard", Map.of()));
+            }
             meta.lore(lore);
+            // A maxed-out job gets a subtle glint as a small trophy, distinguishing genuine
+            // mastery from simply having joined - Paper's override skips needing a fake
+            // enchantment (and the tooltip line it would otherwise force onto the item).
+            meta.setEnchantmentGlintOverride(maxed);
             stack.setItemMeta(meta);
         }
         return stack;
     }
 
-    private static ItemStack closeItem() {
+    private static String progressBar(double xp, double nextXp) {
+        double ratio = nextXp > 0 ? Math.min(1.0, xp / nextXp) : 0;
+        int filled = (int) Math.round(PROGRESS_BAR_LENGTH * ratio);
+        return "&a" + "■".repeat(filled) + "&7" + "□".repeat(PROGRESS_BAR_LENGTH - filled);
+    }
+
+    private static int progressPercent(double xp, double nextXp) {
+        double ratio = nextXp > 0 ? Math.min(1.0, xp / nextXp) : 0;
+        return (int) Math.round(ratio * 100);
+    }
+
+    private static ItemStack fillerItem() {
+        ItemStack stack = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.displayName(Component.empty());
+            stack.setItemMeta(meta);
+        }
+        return stack;
+    }
+
+    private static ItemStack closeItem(Messages messages) {
         ItemStack stack = new ItemStack(Material.BARRIER);
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text("Close"));
+            meta.displayName(messages.get("menu.close", Map.of()));
             stack.setItemMeta(meta);
         }
         return stack;

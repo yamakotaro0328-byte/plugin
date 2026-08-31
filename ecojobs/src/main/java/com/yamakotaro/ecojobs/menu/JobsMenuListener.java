@@ -4,6 +4,7 @@ import com.yamakotaro.ecojobs.JobManager;
 import com.yamakotaro.ecojobs.JobOverrides;
 import com.yamakotaro.ecojobs.Messages;
 import com.yamakotaro.ecojobs.PlayerJobManager;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -46,21 +47,54 @@ public class JobsMenuListener implements Listener {
         if (jobId == null) {
             return;
         }
+
+        if (event.isShiftClick()) {
+            if (!player.hasPermission("ecojobs.top")) {
+                player.sendMessage(messages.get("general.no-permission", Map.of()));
+                playDenied(player);
+                return;
+            }
+            player.closeInventory();
+            LeaderboardMenuHolder leaderboard = new LeaderboardMenuHolder(messages, jobId);
+            leaderboard.render(playerJobManager);
+            player.openInventory(leaderboard.getInventory());
+            playSuccess(player);
+            return;
+        }
+
         if (playerJobManager.isJoined(player.getUniqueId(), jobId)) {
             playerJobManager.leave(player.getUniqueId(), jobId);
             player.sendMessage(messages.get("jobs.left", Map.of("job", messages.jobName(jobId))));
+            playSuccess(player);
         } else {
             switch (playerJobManager.join(player, jobId)) {
-                case MAX_JOBS_REACHED -> player.sendMessage(messages.get("jobs.max-jobs-reached",
-                        Map.of("max", String.valueOf(jobManager.maxConcurrentJobs()))));
-                case JOB_DISABLED -> player.sendMessage(messages.get("jobs.job-disabled", Map.of("job", messages.jobName(jobId))));
-                case SUCCESS -> player.sendMessage(messages.get("jobs.joined", Map.of("job", messages.jobName(jobId))));
+                case MAX_JOBS_REACHED -> {
+                    player.sendMessage(messages.get("jobs.max-jobs-reached",
+                            Map.of("max", String.valueOf(jobManager.maxConcurrentJobs()))));
+                    playDenied(player);
+                }
+                case JOB_DISABLED -> {
+                    player.sendMessage(messages.get("jobs.job-disabled", Map.of("job", messages.jobName(jobId))));
+                    playDenied(player);
+                }
+                case SUCCESS -> {
+                    player.sendMessage(messages.get("jobs.joined", Map.of("job", messages.jobName(jobId))));
+                    playSuccess(player);
+                }
                 default -> {
                     // ALREADY_JOINED/UNKNOWN_JOB can't happen here: the menu only lists real,
                     // not-yet-joined jobs by construction.
                 }
             }
         }
-        holder.render(jobManager, playerJobManager, jobOverrides, player.getUniqueId());
+        holder.render(jobManager, playerJobManager, jobOverrides, player);
+    }
+
+    private static void playSuccess(Player player) {
+        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.4f);
+    }
+
+    private static void playDenied(Player player) {
+        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.6f, 1f);
     }
 }

@@ -283,7 +283,7 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             return;
         }
         JobsMenuHolder holder = new JobsMenuHolder(messages);
-        holder.render(jobManager, playerJobManager, jobOverrides, player.getUniqueId());
+        holder.render(jobManager, playerJobManager, jobOverrides, player);
         player.openInventory(holder.getInventory());
     }
 
