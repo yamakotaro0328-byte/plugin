@@ -60,21 +60,21 @@ public class JobsMenuHolder implements InventoryHolder {
     public void render(JobManager jobManager, PlayerJobManager playerJobManager, UUID viewer) {
         inventory.clear();
         slotToJobId.clear();
-        Map<String, PlayerJobProgress> joined = playerJobManager.joinedJobs(viewer);
+        Map<String, PlayerJobProgress> allProgress = playerJobManager.allProgress(viewer);
         int slot = 0;
         for (String jobId : jobManager.all().keySet()) {
             if (slot >= CLOSE_SLOT) {
                 break;
             }
-            PlayerJobProgress progress = joined.get(jobId);
-            inventory.setItem(slot, buildJobItem(jobId, progress, playerJobManager));
+            boolean active = playerJobManager.isJoined(viewer, jobId);
+            inventory.setItem(slot, buildJobItem(jobId, allProgress.get(jobId), active, playerJobManager));
             slotToJobId.put(slot, jobId);
             slot++;
         }
         inventory.setItem(CLOSE_SLOT, closeItem());
     }
 
-    private ItemStack buildJobItem(String jobId, PlayerJobProgress progress, PlayerJobManager playerJobManager) {
+    private ItemStack buildJobItem(String jobId, PlayerJobProgress progress, boolean active, PlayerJobManager playerJobManager) {
         Material material = ICONS.getOrDefault(jobId, Material.PAPER);
         ItemStack stack = new ItemStack(material);
         ItemMeta meta = stack.getItemMeta();
@@ -84,9 +84,13 @@ public class JobsMenuHolder implements InventoryHolder {
             if (progress != null) {
                 lore.add(messages.get("menu.lore-level", Map.of(
                         "level", String.valueOf(progress.getLevel()),
+                        "prestige", String.valueOf(progress.getPrestige()),
                         "xp", String.format("%.0f", progress.getXp()),
                         "next_xp", String.format("%.0f", playerJobManager.xpToNextLevel(progress.getLevel())))));
-                lore.add(messages.get("menu.lore-click-leave", Map.of()));
+                // A job with progress but not currently active was left, not never-joined - the
+                // level/xp/prestige above is retained, so clicking resumes it rather than
+                // restarting at level 1 (see PlayerJobManager#join).
+                lore.add(messages.get(active ? "menu.lore-click-leave" : "menu.lore-click-rejoin", Map.of()));
             } else {
                 lore.add(messages.get("menu.lore-not-joined", Map.of()));
                 lore.add(messages.get("menu.lore-click-join", Map.of()));

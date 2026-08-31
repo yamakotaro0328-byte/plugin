@@ -8,17 +8,20 @@ softdepend: [Vault]
 
 commands:
   jobs:
-    description: Join/leave jobs, see your stats, and browse leaderboards
-    usage: /jobs <join|leave|list|stats|top|menu|reload> [args]
+    description: Join/leave jobs, see your stats, browse leaderboards, and prestige
+    usage: /jobs <join|leave|list|stats|top|menu|info|prestige|reload> [args]
     aliases: [job]
 
 permissions:
   ecojobs.use:
-    description: Can join/leave jobs and see your own stats
+    description: Can join/leave/prestige jobs and see your own stats
     default: true
   ecojobs.top:
     description: Can view job leaderboards
     default: true
+  ecojobs.bypass.maxjobs:
+    description: Not limited by max-concurrent-jobs in config.yml
+    default: false
   ecojobs.admin:
     description: Can use /jobs reload
     default: op

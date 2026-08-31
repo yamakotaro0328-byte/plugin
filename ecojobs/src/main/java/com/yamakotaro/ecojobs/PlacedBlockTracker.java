@@ -36,4 +36,16 @@ public class PlacedBlockTracker {
     public boolean wasPlaced(Block block) {
         return placed.remove(BlockKey.of(block));
     }
+
+    /**
+     * A placed block only ever leaves this set via {@link #wasPlaced}, i.e. an actual
+     * BlockBreakEvent - a block removed any other way (explosion, piston, water/lava flow, world
+     * edit, ...) leaves a stale entry behind forever. Since the tracker only needs to catch a
+     * place-then-immediately-rebreak within roughly the same play session anyway, EcoJobsPlugin
+     * calls this on a timer to bound memory growth on long-uptime servers instead of tracking
+     * every possible block-removal event.
+     */
+    public void clear() {
+        placed.clear();
+    }
 }

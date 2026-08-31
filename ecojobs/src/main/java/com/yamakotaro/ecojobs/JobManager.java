@@ -93,6 +93,14 @@ public class JobManager {
         return plugin.getConfig().getInt("leveling.max-level", 100);
     }
 
+    /**
+     * Extra permanent pay-bonus multiplier per prestige (stacks additively with
+     * payBonusPerLevel*level - see PlayerJobManager#applyReward).
+     */
+    public double prestigeBonusPerPrestige() {
+        return plugin.getConfig().getDouble("leveling.prestige-bonus-per-prestige", 0.02);
+    }
+
     public double explorerDistancePerMilestone() {
         return plugin.getConfig().getDouble("explorer.distance-per-milestone", 250);
     }

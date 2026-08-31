@@ -1,6 +1,8 @@
 package com.yamakotaro.ecojobs.commands;
 
+import com.yamakotaro.ecojobs.ActionReward;
 import com.yamakotaro.ecojobs.EcoJobsPlugin;
+import com.yamakotaro.ecojobs.JobDefinition;
 import com.yamakotaro.ecojobs.JobManager;
 import com.yamakotaro.ecojobs.Messages;
 import com.yamakotaro.ecojobs.PlayerJobManager;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class JobsCommand implements CommandExecutor, TabCompleter {
 
@@ -45,6 +48,8 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             case "stats" -> handleStats(sender, args);
             case "top" -> handleTop(sender, args);
             case "menu" -> handleMenu(sender);
+            case "info" -> handleInfo(sender, args);
+            case "prestige" -> handlePrestige(sender, args);
             case "reload" -> handleReload(sender);
             default -> sender.sendMessage(messages.get("jobs.usage", Map.of()));
         }
@@ -100,20 +105,24 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(messages.get("general.no-permission", Map.of()));
             return;
         }
-        Map<String, PlayerJobProgress> joined = sender instanceof Player player
-                ? playerJobManager.joinedJobs(player.getUniqueId()) : Map.of();
+        Player player = sender instanceof Player p ? p : null;
+        Map<String, PlayerJobProgress> allProgress = player != null
+                ? playerJobManager.allProgress(player.getUniqueId()) : Map.of();
         sender.sendMessage(messages.get("jobs.list-header", Map.of()));
         for (String jobId : jobManager.all().keySet()) {
-            PlayerJobProgress progress = joined.get(jobId);
-            if (progress != null) {
-                sender.sendMessage(messages.get("jobs.list-entry-joined", Map.of(
-                        "job", messages.jobName(jobId),
-                        "level", String.valueOf(progress.getLevel()),
-                        "xp", String.format("%.0f", progress.getXp()),
-                        "next_xp", String.format("%.0f", playerJobManager.xpToNextLevel(progress.getLevel())))));
-            } else {
+            PlayerJobProgress progress = allProgress.get(jobId);
+            if (progress == null) {
                 sender.sendMessage(messages.get("jobs.list-entry-not-joined", Map.of("job", messages.jobName(jobId))));
+                continue;
             }
+            String key = player != null && playerJobManager.isJoined(player.getUniqueId(), jobId)
+                    ? "jobs.list-entry-joined" : "jobs.list-entry-left";
+            sender.sendMessage(messages.get(key, Map.of(
+                    "job", messages.jobName(jobId),
+                    "level", String.valueOf(progress.getLevel()),
+                    "prestige", String.valueOf(progress.getPrestige()),
+                    "xp", String.format("%.0f", progress.getXp()),
+                    "next_xp", String.format("%.0f", playerJobManager.xpToNextLevel(progress.getLevel())))));
         }
     }
 
@@ -135,17 +144,19 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(messages.get("general.players-only", Map.of()));
             return;
         }
-        Map<String, PlayerJobProgress> joined = playerJobManager.joinedJobs(target.getUniqueId());
-        if (joined.isEmpty()) {
+        Map<String, PlayerJobProgress> allProgress = playerJobManager.allProgress(target.getUniqueId());
+        if (allProgress.isEmpty()) {
             sender.sendMessage(messages.get("jobs.stats-none", Map.of()));
             return;
         }
         sender.sendMessage(messages.get("jobs.stats-header", Map.of()));
-        for (Map.Entry<String, PlayerJobProgress> entry : joined.entrySet()) {
+        for (Map.Entry<String, PlayerJobProgress> entry : allProgress.entrySet()) {
             PlayerJobProgress progress = entry.getValue();
-            sender.sendMessage(messages.get("jobs.stats-entry", Map.of(
+            boolean active = playerJobManager.isJoined(target.getUniqueId(), entry.getKey());
+            sender.sendMessage(messages.get(active ? "jobs.stats-entry" : "jobs.stats-entry-inactive", Map.of(
                     "job", messages.jobName(entry.getKey()),
                     "level", String.valueOf(progress.getLevel()),
+                    "prestige", String.valueOf(progress.getPrestige()),
                     "xp", String.format("%.0f", progress.getXp()),
                     "next_xp", String.format("%.0f", playerJobManager.xpToNextLevel(progress.getLevel())))));
         }
@@ -177,7 +188,75 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
                     "rank", String.valueOf(rank++),
                     "player", entry.name(),
                     "level", String.valueOf(entry.level()),
+                    "prestige", String.valueOf(entry.prestige()),
                     "xp", String.format("%.0f", entry.xp()))));
+        }
+    }
+
+    private void handleInfo(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("ecojobs.use")) {
+            sender.sendMessage(messages.get("general.no-permission", Map.of()));
+            return;
+        }
+        if (args.length != 2) {
+            sender.sendMessage(messages.get("jobs.usage", Map.of()));
+            return;
+        }
+        String jobId = args[1].toLowerCase();
+        JobDefinition job = jobManager.get(jobId);
+        if (job == null) {
+            sender.sendMessage(messages.get("jobs.unknown-job", Map.of("job", jobId)));
+            return;
+        }
+        sender.sendMessage(messages.get("jobs.info-header", Map.of("job", messages.jobName(jobId))));
+        // TreeMap for a stable, alphabetical order regardless of the underlying HashMap's order.
+        Map<String, Map<String, ActionReward>> actions = new TreeMap<>(job.getActionsByType());
+        boolean any = false;
+        for (Map.Entry<String, Map<String, ActionReward>> actionType : actions.entrySet()) {
+            for (Map.Entry<String, ActionReward> rewardEntry : new TreeMap<>(actionType.getValue()).entrySet()) {
+                any = true;
+                ActionReward reward = rewardEntry.getValue();
+                sender.sendMessage(messages.get("jobs.info-entry", Map.of(
+                        "key", rewardEntry.getKey(),
+                        "money", formatReward(reward.money(), reward.moneyPerLevel()),
+                        "xp", formatReward(reward.xp(), reward.xpPerLevel()))));
+            }
+        }
+        if (!any) {
+            sender.sendMessage(messages.get("jobs.info-empty", Map.of()));
+        }
+    }
+
+    private static String formatReward(double flat, double perLevel) {
+        if (perLevel > 0) {
+            return String.format("%.2f/enchant-level", perLevel);
+        }
+        return String.format("%.2f", flat);
+    }
+
+    private void handlePrestige(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(messages.get("general.players-only", Map.of()));
+            return;
+        }
+        if (!player.hasPermission("ecojobs.use")) {
+            player.sendMessage(messages.get("general.no-permission", Map.of()));
+            return;
+        }
+        if (args.length != 2) {
+            player.sendMessage(messages.get("jobs.usage", Map.of()));
+            return;
+        }
+        String jobId = args[1].toLowerCase();
+        switch (playerJobManager.prestige(player, jobId)) {
+            case UNKNOWN_JOB -> player.sendMessage(messages.get("jobs.unknown-job", Map.of("job", jobId)));
+            case NOT_JOINED -> player.sendMessage(messages.get("jobs.not-joined", Map.of("job", messages.jobName(jobId))));
+            case NOT_MAX_LEVEL -> player.sendMessage(messages.get("jobs.prestige-not-max-level",
+                    Map.of("job", messages.jobName(jobId), "max", String.valueOf(jobManager.maxLevel()))));
+            case SUCCESS -> {
+                // The broadcast (sent by PlayerJobManager.prestige itself) already tells everyone,
+                // this player included, so there's nothing more to send here.
+            }
         }
     }
 
@@ -208,11 +287,13 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return TabCompleteUtil.filterPrefix(List.of("join", "leave", "list", "stats", "top", "menu", "reload"), args[0]);
+            return TabCompleteUtil.filterPrefix(
+                    List.of("join", "leave", "list", "stats", "top", "menu", "info", "prestige", "reload"), args[0]);
         }
         if (args.length == 2) {
             return switch (args[0].toLowerCase()) {
-                case "join", "leave", "top" -> TabCompleteUtil.filterPrefix(new ArrayList<>(jobManager.all().keySet()), args[1]);
+                case "join", "leave", "top", "info", "prestige" ->
+                        TabCompleteUtil.filterPrefix(new ArrayList<>(jobManager.all().keySet()), args[1]);
                 case "stats" -> TabCompleteUtil.onlinePlayerNames(args[1], null);
                 default -> Collections.emptyList();
             };

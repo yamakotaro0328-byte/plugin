@@ -17,6 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class EcoJobsPlugin extends JavaPlugin {
 
     private static final long SAVE_INTERVAL_TICKS = 20L * 60 * 5; // every 5 minutes
+    private static final long PLACED_BLOCK_CLEAR_INTERVAL_TICKS = 20L * 60 * 30; // every 30 minutes
 
     private PlayerJobManager playerJobManager;
 
@@ -44,6 +45,11 @@ public class EcoJobsPlugin extends JavaPlugin {
         // Actions fire far more often than the rare admin edits other EcoTP-family plugins save
         // on, so this batches saves on a timer instead of writing to disk on every single action.
         getServer().getScheduler().runTaskTimer(this, playerJobManager::save, SAVE_INTERVAL_TICKS, SAVE_INTERVAL_TICKS);
+        // Bounds the placed-block tracker's memory growth from blocks removed by anything other
+        // than a player break (explosions, pistons, liquid flow, ...), which never clear their
+        // entry otherwise - see PlacedBlockTracker#clear.
+        getServer().getScheduler().runTaskTimer(this, placedBlockTracker::clear,
+                PLACED_BLOCK_CLEAR_INTERVAL_TICKS, PLACED_BLOCK_CLEAR_INTERVAL_TICKS);
     }
 
     @Override

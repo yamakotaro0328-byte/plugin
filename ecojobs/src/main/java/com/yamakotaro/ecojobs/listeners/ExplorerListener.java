@@ -35,6 +35,6 @@ public class ExplorerListener implements Listener {
         Location spawn = player.getWorld().getSpawnLocation();
         double dx = to.getX() - spawn.getX();
         double dz = to.getZ() - spawn.getZ();
-        jobs.checkExplorerMilestones(player, Math.sqrt(dx * dx + dz * dz));
+        jobs.checkExplorerMilestones(player, player.getWorld().getName(), Math.sqrt(dx * dx + dz * dz));
     }
 }

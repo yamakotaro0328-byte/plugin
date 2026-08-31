@@ -18,6 +18,12 @@ leveling:
   # 0.005 (レベルごとに0.5%) だとレベル40で+20%になる。
   pay-bonus-per-level: 0.005
   max-level: 100
+  # Once a job hits max-level, /jobs prestige <job> resets it to level 1 (and 0 xp) in exchange
+  # for one permanent stack of this bonus, which stacks additively with pay-bonus-per-level - so
+  # at the defaults, a prestige-3 level-40 miner earns (1 + 40*0.005 + 3*0.02) = +26% per action.
+  # (日本語) ジョブが最大レベルに達すると、/jobs prestige <ジョブ名> でレベル1(経験値0)に
+  # 戻す代わりに、この永続ボーナスが1つ蓄積される(pay-bonus-per-levelと加算される)。
+  prestige-bonus-per-prestige: 0.02
 
 # The "explorer" job doesn't have a block/entity/item action list like the others below - it
 # pays out every time a player reaches a new farthest distance (in blocks, ignoring height) from
@@ -258,7 +264,7 @@ messages:
       player-not-found: "&cPlayer '{player}' not found."
       reloaded: "&aEcoJobs config reloaded."
     jobs:
-      usage: "&cUsage: /jobs <join|leave|list|stats|top|menu> [job]"
+      usage: "&cUsage: /jobs <join|leave|list|stats|top|menu|info|prestige> [job]"
       unknown-job: "&cUnknown job '{job}'. Use /jobs list to see available jobs."
       already-joined: "&cYou're already in the {job} job."
       not-joined: "&cYou're not in the {job} job."
@@ -266,23 +272,32 @@ messages:
       joined: "&aJoined the {job} job!"
       left: "&eLeft the {job} job."
       list-header: "&7--- Jobs ---"
-      list-entry-joined: "&a{job} &7- Level {level} ({xp}/{next_xp} xp) &a[joined]"
+      list-entry-joined: "&a{job} &7- Level {level} (P{prestige}) ({xp}/{next_xp} xp) &a[joined]"
+      list-entry-left: "&e{job} &7- Level {level} (P{prestige}) ({xp}/{next_xp} xp) &7[not active]"
       list-entry-not-joined: "&f{job} &7- not joined"
       stats-header: "&7--- Your jobs ---"
-      stats-entry: "&f{job}: &7Level {level} ({xp}/{next_xp} xp)"
+      stats-entry: "&f{job}: &7Level {level} (Prestige {prestige}) ({xp}/{next_xp} xp)"
+      stats-entry-inactive: "&7{job} (not active): &7Level {level} (Prestige {prestige}) ({xp}/{next_xp} xp)"
       stats-none: "&7You haven't joined any jobs yet. Use /jobs list to see what's available."
       level-up: "&a&l{job} leveled up! &aYou're now level {level}."
+      max-level-reached: "&6{job} is at max level! Use &e/jobs prestige {job} &6to reset it to level 1 for a permanent pay bonus."
       top-header: "&7--- Top {job} ---"
-      top-entry: "&7#{rank} &f{player} &7- Level {level} ({xp} xp)"
+      top-entry: "&7#{rank} &f{player} &7- Level {level} (P{prestige}) ({xp} xp)"
       top-empty: "&7Nobody has joined {job} yet."
       earned: "&a+{money} &7{job}"
+      info-header: "&7--- {job} rewards ---"
+      info-entry: "&f{key}: &a+{money} money &7/ &b+{xp} xp"
+      info-empty: "&7This job has no configured action rewards (see config.yml)."
+      prestige-not-max-level: "&cYou must reach level {max} in {job} before you can prestige."
+      prestige-broadcast: "&d★ &f{player} &dprestiged &f{job} &dto Prestige {prestige}!"
     menu:
       title: "EcoJobs"
       job-title: "{job}"
-      lore-level: "&7Level {level} ({xp}/{next_xp} xp)"
+      lore-level: "&7Level {level} (P{prestige}) ({xp}/{next_xp} xp)"
       lore-not-joined: "&7Not joined"
       lore-click-join: "&aClick to join"
       lore-click-leave: "&cClick to leave"
+      lore-click-rejoin: "&7Not active - &aclick to resume"
   ja:
     general:
       players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
@@ -290,7 +305,7 @@ messages:
       player-not-found: "&cプレイヤー「{player}」が見つかりません。"
       reloaded: "&aEcoJobsの設定を再読み込みしました。"
     jobs:
-      usage: "&c使い方: /jobs <join|leave|list|stats|top|menu> [ジョブ名]"
+      usage: "&c使い方: /jobs <join|leave|list|stats|top|menu|info|prestige> [ジョブ名]"
       unknown-job: "&c不明なジョブ「{job}」です。/jobs list で一覧を確認してください。"
       already-joined: "&cすでに{job}に加入しています。"
       not-joined: "&c{job}に加入していません。"
@@ -298,23 +313,32 @@ messages:
       joined: "&a{job}に加入しました！"
       left: "&e{job}を脱退しました。"
       list-header: "&7--- ジョブ一覧 ---"
-      list-entry-joined: "&a{job} &7- レベル{level} ({xp}/{next_xp} xp) &a[加入中]"
+      list-entry-joined: "&a{job} &7- レベル{level} (P{prestige}) ({xp}/{next_xp} xp) &a[加入中]"
+      list-entry-left: "&e{job} &7- レベル{level} (P{prestige}) ({xp}/{next_xp} xp) &7[非稼働]"
       list-entry-not-joined: "&f{job} &7- 未加入"
       stats-header: "&7--- 自分のジョブ ---"
-      stats-entry: "&f{job}: &7レベル{level} ({xp}/{next_xp} xp)"
+      stats-entry: "&f{job}: &7レベル{level} (プレステージ{prestige}) ({xp}/{next_xp} xp)"
+      stats-entry-inactive: "&7{job}(非稼働): &7レベル{level} (プレステージ{prestige}) ({xp}/{next_xp} xp)"
       stats-none: "&7まだどのジョブにも加入していません。/jobs list で一覧を確認してください。"
       level-up: "&a&l{job}のレベルが上がりました！ &a現在レベル{level}。"
+      max-level-reached: "&6{job}が最大レベルに到達しました！ &e/jobs prestige {job} &6でレベル1に戻すと永続ボーナスが得られます。"
       top-header: "&7--- {job} ランキング ---"
-      top-entry: "&7#{rank} &f{player} &7- レベル{level} ({xp} xp)"
+      top-entry: "&7#{rank} &f{player} &7- レベル{level} (P{prestige}) ({xp} xp)"
       top-empty: "&7まだ誰も{job}に加入していません。"
       earned: "&a+{money} &7{job}"
+      info-header: "&7--- {job} の報酬一覧 ---"
+      info-entry: "&f{key}: &a+{money} 円 &7/ &b+{xp} xp"
+      info-empty: "&7このジョブには設定された報酬がありません(config.ymlを確認してください)。"
+      prestige-not-max-level: "&c{job}をプレステージするにはレベル{max}に到達する必要があります。"
+      prestige-broadcast: "&d★ &f{player} &dが{job}をプレステージ{prestige}にしました！"
     menu:
       title: "EcoJobs"
       job-title: "{job}"
-      lore-level: "&7レベル{level} ({xp}/{next_xp} xp)"
+      lore-level: "&7レベル{level} (P{prestige}) ({xp}/{next_xp} xp)"
       lore-not-joined: "&7未加入"
       lore-click-join: "&aクリックで加入"
       lore-click-leave: "&cクリックで脱退"
+      lore-click-rejoin: "&7非稼働 - &aクリックで再開"
 
 # Display names for each job id, shown in /jobs list, /jobs stats, /jobs top, and the GUI menu.
 job-names:

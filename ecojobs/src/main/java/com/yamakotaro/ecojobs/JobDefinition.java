@@ -35,4 +35,12 @@ public class JobDefinition {
         }
         return rewards.get("DEFAULT");
     }
+
+    /**
+     * Read-only view of every action type this job pays out for, and each one's reward table -
+     * used by /jobs info to show players a job's payouts without needing to open config.yml.
+     */
+    public Map<String, Map<String, ActionReward>> getActionsByType() {
+        return actionsByType;
+    }
 }
