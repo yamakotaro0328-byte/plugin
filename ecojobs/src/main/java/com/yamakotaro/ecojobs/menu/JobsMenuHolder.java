@@ -1,6 +1,7 @@
 package com.yamakotaro.ecojobs.menu;
 
 import com.yamakotaro.ecojobs.JobManager;
+import com.yamakotaro.ecojobs.JobOverrides;
 import com.yamakotaro.ecojobs.Messages;
 import com.yamakotaro.ecojobs.PlayerJobManager;
 import com.yamakotaro.ecojobs.PlayerJobProgress;
@@ -22,7 +23,8 @@ public class JobsMenuHolder implements InventoryHolder {
 
     public static final int CLOSE_SLOT = 31;
 
-    private static final Map<String, Material> ICONS = Map.ofEntries(
+    // Package-private so AdminMenuHolder can reuse the same icons for its job list.
+    static final Map<String, Material> ICONS = Map.ofEntries(
             Map.entry("miner", Material.IRON_PICKAXE),
             Map.entry("digger", Material.IRON_SHOVEL),
             Map.entry("woodcutter", Material.DIAMOND_AXE),
@@ -57,7 +59,7 @@ public class JobsMenuHolder implements InventoryHolder {
         return slotToJobId.get(slot);
     }
 
-    public void render(JobManager jobManager, PlayerJobManager playerJobManager, UUID viewer) {
+    public void render(JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides, UUID viewer) {
         inventory.clear();
         slotToJobId.clear();
         Map<String, PlayerJobProgress> allProgress = playerJobManager.allProgress(viewer);
@@ -67,14 +69,15 @@ public class JobsMenuHolder implements InventoryHolder {
                 break;
             }
             boolean active = playerJobManager.isJoined(viewer, jobId);
-            inventory.setItem(slot, buildJobItem(jobId, allProgress.get(jobId), active, playerJobManager));
+            boolean enabled = jobOverrides.isEnabled(jobId);
+            inventory.setItem(slot, buildJobItem(jobId, allProgress.get(jobId), active, enabled, playerJobManager));
             slotToJobId.put(slot, jobId);
             slot++;
         }
         inventory.setItem(CLOSE_SLOT, closeItem());
     }
 
-    private ItemStack buildJobItem(String jobId, PlayerJobProgress progress, boolean active, PlayerJobManager playerJobManager) {
+    private ItemStack buildJobItem(String jobId, PlayerJobProgress progress, boolean active, boolean enabled, PlayerJobManager playerJobManager) {
         Material material = ICONS.getOrDefault(jobId, Material.PAPER);
         ItemStack stack = new ItemStack(material);
         ItemMeta meta = stack.getItemMeta();
@@ -87,12 +90,19 @@ public class JobsMenuHolder implements InventoryHolder {
                         "prestige", String.valueOf(progress.getPrestige()),
                         "xp", String.format("%.0f", progress.getXp()),
                         "next_xp", String.format("%.0f", playerJobManager.xpToNextLevel(progress.getLevel())))));
+            } else {
+                lore.add(messages.get("menu.lore-not-joined", Map.of()));
+            }
+            if (!enabled) {
+                // Disabled jobs (see /jobs admin) never show a click prompt - join() would just
+                // reject it anyway, so there's nothing productive to invite the player to do.
+                lore.add(messages.get("menu.lore-disabled", Map.of()));
+            } else if (progress != null) {
                 // A job with progress but not currently active was left, not never-joined - the
                 // level/xp/prestige above is retained, so clicking resumes it rather than
                 // restarting at level 1 (see PlayerJobManager#join).
                 lore.add(messages.get(active ? "menu.lore-click-leave" : "menu.lore-click-rejoin", Map.of()));
             } else {
-                lore.add(messages.get("menu.lore-not-joined", Map.of()));
                 lore.add(messages.get("menu.lore-click-join", Map.of()));
             }
             meta.lore(lore);

@@ -6,7 +6,11 @@ import com.yamakotaro.ecojobs.listeners.CraftingJobListener;
 import com.yamakotaro.ecojobs.listeners.EntityJobListener;
 import com.yamakotaro.ecojobs.listeners.ExplorerListener;
 import com.yamakotaro.ecojobs.listeners.TradeJobListener;
+import com.yamakotaro.ecojobs.menu.AdminMenuListener;
 import com.yamakotaro.ecojobs.menu.JobsMenuListener;
+import com.yamakotaro.ecojobs.storage.JobStorage;
+import com.yamakotaro.ecojobs.storage.MySqlJobStorage;
+import com.yamakotaro.ecojobs.storage.YamlJobStorage;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -28,7 +32,11 @@ public class EcoJobsPlugin extends JavaPlugin {
         JobManager jobManager = new JobManager(this);
         EconomyHolder economyHolder = new EconomyHolder(this);
         economyHolder.setup();
-        this.playerJobManager = new PlayerJobManager(this, jobManager, economyHolder, messages);
+        JobOverrides jobOverrides = new JobOverrides(this);
+        BoosterManager boosterManager = new BoosterManager();
+        JobStorage storage = "mysql".equalsIgnoreCase(getConfig().getString("storage.type", "yaml"))
+                ? new MySqlJobStorage(this) : new YamlJobStorage(this);
+        this.playerJobManager = new PlayerJobManager(this, jobManager, economyHolder, messages, storage, jobOverrides, boosterManager);
         PlacedBlockTracker placedBlockTracker = new PlacedBlockTracker();
 
         getServer().getPluginManager().registerEvents(new BlockJobListener(playerJobManager, placedBlockTracker), this);
@@ -36,11 +44,17 @@ public class EcoJobsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CraftingJobListener(playerJobManager), this);
         getServer().getPluginManager().registerEvents(new TradeJobListener(playerJobManager), this);
         getServer().getPluginManager().registerEvents(new ExplorerListener(playerJobManager), this);
-        getServer().getPluginManager().registerEvents(new JobsMenuListener(jobManager, playerJobManager, messages), this);
+        getServer().getPluginManager().registerEvents(new JobsMenuListener(jobManager, playerJobManager, jobOverrides, messages), this);
+        getServer().getPluginManager().registerEvents(
+                new AdminMenuListener(jobManager, playerJobManager, jobOverrides, boosterManager, messages), this);
 
-        JobsCommand jobsCommand = new JobsCommand(this, jobManager, playerJobManager, messages);
+        JobsCommand jobsCommand = new JobsCommand(this, jobManager, playerJobManager, jobOverrides, boosterManager, messages);
         getCommand("jobs").setExecutor(jobsCommand);
         getCommand("jobs").setTabCompleter(jobsCommand);
+
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new EcoJobsPlaceholders(this, playerJobManager).register();
+        }
 
         // Actions fire far more often than the rare admin edits other EcoTP-family plugins save
         // on, so this batches saves on a timer instead of writing to disk on every single action.
@@ -55,7 +69,7 @@ public class EcoJobsPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         if (playerJobManager != null) {
-            playerJobManager.save();
+            playerJobManager.close();
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.yamakotaro.ecojobs.menu;
 
 import com.yamakotaro.ecojobs.JobManager;
+import com.yamakotaro.ecojobs.JobOverrides;
 import com.yamakotaro.ecojobs.Messages;
 import com.yamakotaro.ecojobs.PlayerJobManager;
 import org.bukkit.entity.Player;
@@ -14,11 +15,13 @@ public class JobsMenuListener implements Listener {
 
     private final JobManager jobManager;
     private final PlayerJobManager playerJobManager;
+    private final JobOverrides jobOverrides;
     private final Messages messages;
 
-    public JobsMenuListener(JobManager jobManager, PlayerJobManager playerJobManager, Messages messages) {
+    public JobsMenuListener(JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides, Messages messages) {
         this.jobManager = jobManager;
         this.playerJobManager = playerJobManager;
+        this.jobOverrides = jobOverrides;
         this.messages = messages;
     }
 
@@ -50,6 +53,7 @@ public class JobsMenuListener implements Listener {
             switch (playerJobManager.join(player, jobId)) {
                 case MAX_JOBS_REACHED -> player.sendMessage(messages.get("jobs.max-jobs-reached",
                         Map.of("max", String.valueOf(jobManager.maxConcurrentJobs()))));
+                case JOB_DISABLED -> player.sendMessage(messages.get("jobs.job-disabled", Map.of("job", messages.jobName(jobId))));
                 case SUCCESS -> player.sendMessage(messages.get("jobs.joined", Map.of("job", messages.jobName(jobId))));
                 default -> {
                     // ALREADY_JOINED/UNKNOWN_JOB can't happen here: the menu only lists real,
@@ -57,6 +61,6 @@ public class JobsMenuListener implements Listener {
                 }
             }
         }
-        holder.render(jobManager, playerJobManager, player.getUniqueId());
+        holder.render(jobManager, playerJobManager, jobOverrides, player.getUniqueId());
     }
 }

@@ -34,6 +34,10 @@
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+        <repository>
+            <id>placeholderapi</id>
+            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -50,6 +54,21 @@
             <artifactId>VaultAPI</artifactId>
             <version>1.7</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- PlaceholderAPI is optional (soft-dependency, only used if installed). -->
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+            <version>2.11.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- For storage.type: mysql, bundled so server admins don't need to install a
+             driver separately (see the shade plugin below). -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>8.3.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -70,6 +89,21 @@
                 <configuration>
                     <release>25</release>
                 </configuration>
+            </plugin>
+            <!-- Bundles the MySQL JDBC driver into the plugin jar so storage.type: mysql works
+                 out of the box (Vault and PlaceholderAPI stay provided, so they're not shaded). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

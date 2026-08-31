@@ -1,14 +1,18 @@
 package com.yamakotaro.ecojobs.commands;
 
 import com.yamakotaro.ecojobs.ActionReward;
+import com.yamakotaro.ecojobs.BoosterManager;
 import com.yamakotaro.ecojobs.EcoJobsPlugin;
 import com.yamakotaro.ecojobs.JobDefinition;
 import com.yamakotaro.ecojobs.JobManager;
+import com.yamakotaro.ecojobs.JobOverrides;
 import com.yamakotaro.ecojobs.Messages;
 import com.yamakotaro.ecojobs.PlayerJobManager;
 import com.yamakotaro.ecojobs.PlayerJobProgress;
 import com.yamakotaro.ecojobs.TabCompleteUtil;
+import com.yamakotaro.ecojobs.menu.AdminMenuHolder;
 import com.yamakotaro.ecojobs.menu.JobsMenuHolder;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -16,6 +20,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -26,12 +31,17 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
     private final EcoJobsPlugin plugin;
     private final JobManager jobManager;
     private final PlayerJobManager playerJobManager;
+    private final JobOverrides jobOverrides;
+    private final BoosterManager boosterManager;
     private final Messages messages;
 
-    public JobsCommand(EcoJobsPlugin plugin, JobManager jobManager, PlayerJobManager playerJobManager, Messages messages) {
+    public JobsCommand(EcoJobsPlugin plugin, JobManager jobManager, PlayerJobManager playerJobManager,
+                        JobOverrides jobOverrides, BoosterManager boosterManager, Messages messages) {
         this.plugin = plugin;
         this.jobManager = jobManager;
         this.playerJobManager = playerJobManager;
+        this.jobOverrides = jobOverrides;
+        this.boosterManager = boosterManager;
         this.messages = messages;
     }
 
@@ -50,6 +60,8 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             case "menu" -> handleMenu(sender);
             case "info" -> handleInfo(sender, args);
             case "prestige" -> handlePrestige(sender, args);
+            case "admin" -> handleAdmin(sender);
+            case "booster" -> handleBooster(sender, args);
             case "reload" -> handleReload(sender);
             default -> sender.sendMessage(messages.get("jobs.usage", Map.of()));
         }
@@ -72,6 +84,7 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
         String jobId = args[1].toLowerCase();
         switch (playerJobManager.join(player, jobId)) {
             case UNKNOWN_JOB -> player.sendMessage(messages.get("jobs.unknown-job", Map.of("job", jobId)));
+            case JOB_DISABLED -> player.sendMessage(messages.get("jobs.job-disabled", Map.of("job", messages.jobName(jobId))));
             case ALREADY_JOINED -> player.sendMessage(messages.get("jobs.already-joined", Map.of("job", messages.jobName(jobId))));
             case MAX_JOBS_REACHED -> player.sendMessage(messages.get("jobs.max-jobs-reached",
                     Map.of("max", String.valueOf(jobManager.maxConcurrentJobs()))));
@@ -270,8 +283,116 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             return;
         }
         JobsMenuHolder holder = new JobsMenuHolder(messages);
-        holder.render(jobManager, playerJobManager, player.getUniqueId());
+        holder.render(jobManager, playerJobManager, jobOverrides, player.getUniqueId());
         player.openInventory(holder.getInventory());
+    }
+
+    private void handleAdmin(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(messages.get("general.players-only", Map.of()));
+            return;
+        }
+        if (!player.hasPermission("ecojobs.admin")) {
+            player.sendMessage(messages.get("general.no-permission", Map.of()));
+            return;
+        }
+        AdminMenuHolder holder = new AdminMenuHolder(messages);
+        holder.render(jobManager, jobOverrides, boosterManager);
+        player.openInventory(holder.getInventory());
+    }
+
+    private void handleBooster(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("ecojobs.admin")) {
+            sender.sendMessage(messages.get("general.no-permission", Map.of()));
+            return;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(messages.get("jobs.booster-usage", Map.of()));
+            return;
+        }
+        switch (args[1].toLowerCase()) {
+            case "start" -> handleBoosterStart(sender, args);
+            case "stop" -> handleBoosterStop(sender, args);
+            case "list" -> handleBoosterList(sender);
+            default -> sender.sendMessage(messages.get("jobs.booster-usage", Map.of()));
+        }
+    }
+
+    private void handleBoosterStart(CommandSender sender, String[] args) {
+        if (args.length != 6) {
+            sender.sendMessage(messages.get("jobs.booster-usage", Map.of()));
+            return;
+        }
+        String scope = resolveBoosterScope(args[2]);
+        if (scope == null) {
+            sender.sendMessage(messages.get("jobs.unknown-job", Map.of("job", args[2])));
+            return;
+        }
+        double moneyMultiplier;
+        double xpMultiplier;
+        int minutes;
+        try {
+            moneyMultiplier = Double.parseDouble(args[3]);
+            xpMultiplier = Double.parseDouble(args[4]);
+            minutes = Integer.parseInt(args[5]);
+        } catch (NumberFormatException e) {
+            sender.sendMessage(messages.get("jobs.booster-invalid-number", Map.of()));
+            return;
+        }
+        boosterManager.start(scope, moneyMultiplier, xpMultiplier, minutes * 60_000L, sender.getName());
+        Bukkit.getServer().sendMessage(messages.get("jobs.booster-started", Map.of(
+                "scope", boosterScopeLabel(scope),
+                "money", String.format("%.2f", moneyMultiplier),
+                "xp", String.format("%.2f", xpMultiplier),
+                "minutes", String.valueOf(minutes),
+                "player", sender.getName())));
+    }
+
+    private void handleBoosterStop(CommandSender sender, String[] args) {
+        if (args.length != 3) {
+            sender.sendMessage(messages.get("jobs.booster-usage", Map.of()));
+            return;
+        }
+        String scope = resolveBoosterScope(args[2]);
+        if (scope == null) {
+            sender.sendMessage(messages.get("jobs.unknown-job", Map.of("job", args[2])));
+            return;
+        }
+        if (boosterManager.stop(scope)) {
+            Bukkit.getServer().sendMessage(messages.get("jobs.booster-stopped",
+                    Map.of("scope", boosterScopeLabel(scope), "player", sender.getName())));
+        } else {
+            sender.sendMessage(messages.get("jobs.booster-not-active", Map.of("scope", boosterScopeLabel(scope))));
+        }
+    }
+
+    private void handleBoosterList(CommandSender sender) {
+        Collection<BoosterManager.ActiveBooster> active = boosterManager.active();
+        sender.sendMessage(messages.get("jobs.booster-list-header", Map.of()));
+        if (active.isEmpty()) {
+            sender.sendMessage(messages.get("jobs.booster-list-empty", Map.of()));
+            return;
+        }
+        for (BoosterManager.ActiveBooster booster : active) {
+            long minutesLeft = Math.max(0, (booster.expiresAtMillis() - System.currentTimeMillis()) / 60_000);
+            sender.sendMessage(messages.get("jobs.booster-list-entry", Map.of(
+                    "scope", boosterScopeLabel(booster.scope()),
+                    "money", String.format("%.2f", booster.moneyMultiplier()),
+                    "xp", String.format("%.2f", booster.xpMultiplier()),
+                    "minutes", String.valueOf(minutesLeft))));
+        }
+    }
+
+    private String resolveBoosterScope(String arg) {
+        if (arg.equalsIgnoreCase(BoosterManager.GLOBAL_SCOPE)) {
+            return BoosterManager.GLOBAL_SCOPE;
+        }
+        String jobId = arg.toLowerCase();
+        return jobManager.get(jobId) != null ? jobId : null;
+    }
+
+    private String boosterScopeLabel(String scope) {
+        return scope.equals(BoosterManager.GLOBAL_SCOPE) ? messages.raw("jobs.booster-scope-all", Map.of()) : messages.jobName(scope);
     }
 
     private void handleReload(CommandSender sender) {
@@ -288,15 +409,22 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             return TabCompleteUtil.filterPrefix(
-                    List.of("join", "leave", "list", "stats", "top", "menu", "info", "prestige", "reload"), args[0]);
+                    List.of("join", "leave", "list", "stats", "top", "menu", "info", "prestige", "admin", "booster", "reload"), args[0]);
         }
         if (args.length == 2) {
             return switch (args[0].toLowerCase()) {
                 case "join", "leave", "top", "info", "prestige" ->
                         TabCompleteUtil.filterPrefix(new ArrayList<>(jobManager.all().keySet()), args[1]);
                 case "stats" -> TabCompleteUtil.onlinePlayerNames(args[1], null);
+                case "booster" -> TabCompleteUtil.filterPrefix(List.of("start", "stop", "list"), args[1]);
                 default -> Collections.emptyList();
             };
+        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("booster")
+                && (args[1].equalsIgnoreCase("start") || args[1].equalsIgnoreCase("stop"))) {
+            List<String> scopes = new ArrayList<>(jobManager.all().keySet());
+            scopes.add(BoosterManager.GLOBAL_SCOPE);
+            return TabCompleteUtil.filterPrefix(scopes, args[2]);
         }
         return Collections.emptyList();
     }

@@ -7,6 +7,20 @@ language: en
 # (日本語) 1人のプレイヤーが同時に加入できるジョブ数。
 max-concurrent-jobs: 3
 
+# Where job progress is saved. "yaml" (default) needs no setup. "mysql" shares progress across
+# multiple servers pointed at the same database - fill in storage.mysql below.
+# (日本語) ジョブの進行状況の保存先。"yaml"(デフォルト)は設定不要。"mysql"にすると、
+# 同じデータベースを指す複数サーバー間で進行状況を共有できる(下のstorage.mysqlを設定)。
+storage:
+  type: yaml
+  mysql:
+    host: localhost
+    port: 3306
+    database: ecojobs
+    username: root
+    password: ""
+    table-prefix: "ecojobs_"
+
 leveling:
   # xp required to go from level N to N+1 = base-xp-to-level * N ^ growth-exponent
   # (日本語) レベルNからN+1に必要な経験値 = base-xp-to-level * N ^ growth-exponent
@@ -264,8 +278,9 @@ messages:
       player-not-found: "&cPlayer '{player}' not found."
       reloaded: "&aEcoJobs config reloaded."
     jobs:
-      usage: "&cUsage: /jobs <join|leave|list|stats|top|menu|info|prestige> [job]"
+      usage: "&cUsage: /jobs <join|leave|list|stats|top|menu|info|prestige|admin|booster> [args]"
       unknown-job: "&cUnknown job '{job}'. Use /jobs list to see available jobs."
+      job-disabled: "&cThe {job} job is currently disabled by an admin."
       already-joined: "&cYou're already in the {job} job."
       not-joined: "&cYou're not in the {job} job."
       max-jobs-reached: "&cYou can only be in {max} jobs at once. Leave one first with /jobs leave <job>."
@@ -290,14 +305,43 @@ messages:
       info-empty: "&7This job has no configured action rewards (see config.yml)."
       prestige-not-max-level: "&cYou must reach level {max} in {job} before you can prestige."
       prestige-broadcast: "&d★ &f{player} &dprestiged &f{job} &dto Prestige {prestige}!"
+      booster-usage: "&cUsage: /jobs booster <start <job|all> <money multiplier> <xp multiplier> <minutes> | stop <job|all> | list>"
+      booster-invalid-number: "&cInvalid number."
+      booster-scope-all: "All jobs"
+      booster-started: "&d★ &f{player} &dstarted a &f{money}x money / {xp}x xp &dbooster for &f{scope} &dfor &f{minutes} &dminutes!"
+      booster-stopped: "&e{scope} booster stopped by {player}."
+      booster-stopped-all: "&eAll active boosters were stopped by {player}."
+      booster-not-active: "&cNo active booster for {scope}."
+      booster-list-header: "&7--- Active boosters ---"
+      booster-list-entry: "&f{scope}: &ax{money} money &7/ &bx{xp} xp &7({minutes} min left)"
+      booster-list-empty: "&7No boosters are currently active."
     menu:
       title: "EcoJobs"
       job-title: "{job}"
       lore-level: "&7Level {level} (P{prestige}) ({xp}/{next_xp} xp)"
       lore-not-joined: "&7Not joined"
+      lore-disabled: "&c(Disabled by an admin)"
       lore-click-join: "&aClick to join"
       lore-click-leave: "&cClick to leave"
       lore-click-rejoin: "&7Not active - &aclick to resume"
+    admin:
+      title: "EcoJobs Admin"
+      close: "&cClose"
+      lore-enabled-yes: "&7Enabled: &aYes"
+      lore-enabled-no: "&7Enabled: &cNo"
+      lore-multiplier: "&7Pay multiplier: &f{multiplier}x"
+      lore-job-booster: "&d★ Booster: x{money} money / x{xp} xp &7({minutes} min left)"
+      lore-controls-toggle: "&eLeft-click: &7toggle enabled"
+      lore-controls-multiplier-up: "&eRight-click: &7+0.1x pay multiplier"
+      lore-controls-multiplier-down: "&eShift-right-click: &7-0.1x pay multiplier"
+      lore-controls-leaderboard: "&eShift-left-click: &7view leaderboard"
+      booster-start-title: "&dStart 2x global booster"
+      booster-start-lore: "&7Click to boost &fmoney and xp x{multiplier} &7for all jobs for &f{minutes} &7minutes"
+      booster-stop-title: "&cStop all boosters"
+      booster-stop-lore: "&7{count} booster(s) currently active"
+      leaderboard-title: "{job} Leaderboard"
+      leaderboard-entry: "&7#{rank} &f{player}"
+      leaderboard-lore: "&7Level {level} (P{prestige}) &7- {xp} xp"
   ja:
     general:
       players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
@@ -305,8 +349,9 @@ messages:
       player-not-found: "&cプレイヤー「{player}」が見つかりません。"
       reloaded: "&aEcoJobsの設定を再読み込みしました。"
     jobs:
-      usage: "&c使い方: /jobs <join|leave|list|stats|top|menu|info|prestige> [ジョブ名]"
+      usage: "&c使い方: /jobs <join|leave|list|stats|top|menu|info|prestige|admin|booster> [引数]"
       unknown-job: "&c不明なジョブ「{job}」です。/jobs list で一覧を確認してください。"
+      job-disabled: "&c{job}は現在、管理者により無効化されています。"
       already-joined: "&cすでに{job}に加入しています。"
       not-joined: "&c{job}に加入していません。"
       max-jobs-reached: "&c同時に加入できるのは{max}個までです。/jobs leave <ジョブ名> で1つ脱退してください。"
@@ -331,14 +376,43 @@ messages:
       info-empty: "&7このジョブには設定された報酬がありません(config.ymlを確認してください)。"
       prestige-not-max-level: "&c{job}をプレステージするにはレベル{max}に到達する必要があります。"
       prestige-broadcast: "&d★ &f{player} &dが{job}をプレステージ{prestige}にしました！"
+      booster-usage: "&c使い方: /jobs booster <start <ジョブ名|all> <お金倍率> <経験値倍率> <分数> | stop <ジョブ名|all> | list>"
+      booster-invalid-number: "&c数値が不正です。"
+      booster-scope-all: "全ジョブ"
+      booster-started: "&d★ &f{player} &dが&f{scope}&dに &f{money}倍のお金 / {xp}倍の経験値 &dのブースターを&f{minutes}分間&d発動しました！"
+      booster-stopped: "&e{scope}のブースターを{player}が停止しました。"
+      booster-stopped-all: "&e有効なブースターをすべて{player}が停止しました。"
+      booster-not-active: "&c{scope}に有効なブースターはありません。"
+      booster-list-header: "&7--- 有効なブースター ---"
+      booster-list-entry: "&f{scope}: &ax{money}倍のお金 &7/ &bx{xp}倍の経験値 &7(残り{minutes}分)"
+      booster-list-empty: "&7現在、有効なブースターはありません。"
     menu:
       title: "EcoJobs"
       job-title: "{job}"
       lore-level: "&7レベル{level} (P{prestige}) ({xp}/{next_xp} xp)"
       lore-not-joined: "&7未加入"
+      lore-disabled: "&c(管理者により無効化)"
       lore-click-join: "&aクリックで加入"
       lore-click-leave: "&cクリックで脱退"
       lore-click-rejoin: "&7非稼働 - &aクリックで再開"
+    admin:
+      title: "EcoJobs 管理"
+      close: "&c閉じる"
+      lore-enabled-yes: "&7有効: &aはい"
+      lore-enabled-no: "&7有効: &cいいえ"
+      lore-multiplier: "&7報酬倍率: &f{multiplier}倍"
+      lore-job-booster: "&d★ ブースター: x{money}倍のお金 / x{xp}倍の経験値 &7(残り{minutes}分)"
+      lore-controls-toggle: "&e左クリック: &7有効/無効を切り替え"
+      lore-controls-multiplier-up: "&e右クリック: &7報酬倍率+0.1倍"
+      lore-controls-multiplier-down: "&eシフト+右クリック: &7報酬倍率-0.1倍"
+      lore-controls-leaderboard: "&eシフト+左クリック: &7ランキングを表示"
+      booster-start-title: "&d全体2倍ブースター開始"
+      booster-start-lore: "&7クリックで全ジョブの&fお金と経験値をx{multiplier}倍&7に&f{minutes}分間&7ブースト"
+      booster-stop-title: "&c全ブースター停止"
+      booster-stop-lore: "&7現在{count}個のブースターが有効"
+      leaderboard-title: "{job} ランキング"
+      leaderboard-entry: "&7#{rank} &f{player}"
+      leaderboard-lore: "&7レベル{level} (P{prestige}) &7- {xp} xp"
 
 # Display names for each job id, shown in /jobs list, /jobs stats, /jobs top, and the GUI menu.
 job-names:

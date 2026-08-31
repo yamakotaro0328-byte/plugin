@@ -4,12 +4,12 @@ main: com.yamakotaro.ecojobs.EcoJobsPlugin
 api-version: '1.20'
 author: yamakotaro0328
 description: 20 jobs that pay players for everyday survival actions, with per-job levels.
-softdepend: [Vault]
+softdepend: [Vault, PlaceholderAPI]
 
 commands:
   jobs:
     description: Join/leave jobs, see your stats, browse leaderboards, and prestige
-    usage: /jobs <join|leave|list|stats|top|menu|info|prestige|reload> [args]
+    usage: /jobs <join|leave|list|stats|top|menu|info|prestige|admin|booster|reload> [args]
     aliases: [job]
 
 permissions:
@@ -23,5 +23,5 @@ permissions:
     description: Not limited by max-concurrent-jobs in config.yml
     default: false
   ecojobs.admin:
-    description: Can use /jobs reload
+    description: Can use /jobs reload, /jobs admin, and /jobs booster
     default: op
