@@ -1,0 +1,180 @@
+# EcoBan configuration
+# Language for messages below: "en" or "ja".
+# (日本語) 以下のメッセージの言語。"en" または "ja"。
+language: en
+
+# Where punishments are stored. "sqlite" (default) needs no setup but only works for a single
+# process. Use "mysql" if EcoBan also runs on a Velocity proxy (see ecoban-velocity) alongside
+# backend servers - every process must point at the same database.
+# (日本語) 処罰の保存先。"sqlite"(デフォルト)は設定不要だが単一プロセスでのみ使用可能。
+# Velocityプロキシ(ecoban-velocity)とバックエンドサーバーを併用する場合は"mysql"にし、
+# すべてのプロセスから同じデータベースを指すこと。
+storage:
+  type: sqlite
+  mysql:
+    host: localhost
+    port: 3306
+    database: ecoban
+    username: root
+    password: ""
+
+# The built-in web dashboard: http://<this server's address>:<port>/
+# Change username/password before exposing this port to the internet.
+# (日本語) 内蔵Webダッシュボード: http://<このサーバーのアドレス>:<port>/
+# インターネットに公開する前に、必ずusername/passwordを変更してください。
+web:
+  enabled: true
+  port: 8123
+  username: admin
+  password: "changeme"
+
+# Used only by /ecoban import <advancedban|litebans> - point these at the OTHER plugin's
+# EXISTING database so its punishment history can be copied into EcoBan. Never needed if you're
+# not migrating from that plugin.
+# (日本語) /ecoban import <advancedban|litebans> でのみ使用。移行元プラグインの
+# 既存データベースを指定すると、処罰履歴をEcoBanへコピーできる。移行しないプラグインの
+# 設定は不要。
+import:
+  advancedban:
+    host: localhost
+    port: 3306
+    database: advancedban
+    username: root
+    password: ""
+  litebans:
+    host: localhost
+    port: 3306
+    database: litebans
+    username: root
+    password: ""
+    table-prefix: "litebans_"
+
+messages:
+  en:
+    general:
+      no-permission: "&cYou don't have permission to do that."
+      player-not-found: "&cPlayer '{player}' not found."
+      invalid-duration: "&cInvalid duration. Use a number with s/m/h/d/w (e.g. 1d12h), or 'permanent'."
+    ban:
+      usage: "&cUsage: /ban <player> [reason]"
+      issued: "&aBanned {player}."
+      kick-message-permanent: "&cYou are permanently banned.\n&7Reason: &f{reason}\n&7By: &f{operator}"
+      kick-message-temporary: "&cYou are temporarily banned.\n&7Reason: &f{reason}\n&7By: &f{operator}"
+    tempban:
+      usage: "&cUsage: /tempban <player> <duration> [reason]"
+      issued: "&aTemporarily banned {player}."
+    unban:
+      usage: "&cUsage: /unban <player> [reason]"
+      success: "&aUnbanned {player}."
+      not-banned: "&c{player} is not currently banned."
+    ipban:
+      usage: "&cUsage: /ipban <ip|online player> [reason]"
+      issued: "&aBanned IP {ip}."
+      kick-message: "&cYour IP address has been banned."
+    unbanip:
+      usage: "&cUsage: /unbanip <ip> [reason]"
+      success: "&aUnbanned IP {ip}."
+      not-banned: "&cIP {ip} is not currently banned."
+    mute:
+      usage: "&cUsage: /mute <player> [reason]"
+      issued: "&aMuted {player}."
+      blocked-permanent: "&cYou are permanently muted.\n&7Reason: &f{reason}"
+      blocked-temporary: "&cYou are temporarily muted.\n&7Reason: &f{reason}"
+    tempmute:
+      usage: "&cUsage: /tempmute <player> <duration> [reason]"
+      issued: "&aTemporarily muted {player}."
+    unmute:
+      usage: "&cUsage: /unmute <player> [reason]"
+      success: "&aUnmuted {player}."
+      not-muted: "&c{player} is not currently muted."
+    kick:
+      usage: "&cUsage: /kick <player> [reason]"
+      issued: "&aKicked {player}."
+      message: "&cYou have been kicked.\n&7Reason: &f{reason}"
+    warn:
+      usage: "&cUsage: /warn <player> [reason]"
+      issued: "&aWarned {player}."
+      notice: "&eYou have been warned.\n&7Reason: &f{reason}"
+    history:
+      usage: "&cUsage: /history <player>"
+      header: "&7--- Punishment history: {player} ---"
+      empty: "&7No punishments on record."
+      entry: "&f[{type}] &7{date} &7by &f{operator}&7: &f{reason} &7({status})"
+      status-active: "active"
+      status-inactive: "inactive"
+    banlist:
+      header: "&7--- Active bans/mutes ---"
+      empty: "&7Nobody is currently punished."
+      entry: "&f[{type}] &7{target}: &f{reason}"
+    ecoban:
+      usage: "&cUsage: /ecoban <reload|import <advancedban|litebans>>"
+      reloaded: "&aReloaded config.yml. (storage.type needs a full restart to take effect)"
+      import-usage: "&cUsage: /ecoban import <advancedban|litebans>"
+      import-started: "&7Importing from {source}... this runs in the background and may take a while."
+      import-finished: "&aImported {count} punishment(s) from {source}."
+      import-failed: "&cImport from {source} failed - check the console for details."
+      import-unknown-source: "&cUnknown import source '{source}'. Use advancedban or litebans."
+  ja:
+    general:
+      no-permission: "&cこの操作を行う権限がありません。"
+      player-not-found: "&cプレイヤー「{player}」が見つかりません。"
+      invalid-duration: "&c期間の指定が不正です。数字+s/m/h/d/w(例: 1d12h)または「permanent」を指定してください。"
+    ban:
+      usage: "&c使い方: /ban <プレイヤー名> [理由]"
+      issued: "&a{player}をBANしました。"
+      kick-message-permanent: "&cあなたは永久BANされています。\n&7理由: &f{reason}\n&7実行者: &f{operator}"
+      kick-message-temporary: "&cあなたは期限付きBANされています。\n&7理由: &f{reason}\n&7実行者: &f{operator}"
+    tempban:
+      usage: "&c使い方: /tempban <プレイヤー名> <期間> [理由]"
+      issued: "&a{player}を期限付きBANしました。"
+    unban:
+      usage: "&c使い方: /unban <プレイヤー名> [理由]"
+      success: "&a{player}のBANを解除しました。"
+      not-banned: "&c{player}はBANされていません。"
+    ipban:
+      usage: "&c使い方: /ipban <IPアドレス|オンラインプレイヤー名> [理由]"
+      issued: "&aIP {ip} をBANしました。"
+      kick-message: "&cあなたのIPアドレスはBANされています。"
+    unbanip:
+      usage: "&c使い方: /unbanip <IPアドレス> [理由]"
+      success: "&aIP {ip} のBANを解除しました。"
+      not-banned: "&cIP {ip} はBANされていません。"
+    mute:
+      usage: "&c使い方: /mute <プレイヤー名> [理由]"
+      issued: "&a{player}をミュートしました。"
+      blocked-permanent: "&cあなたは永久ミュートされています。\n&7理由: &f{reason}"
+      blocked-temporary: "&cあなたは期限付きミュートされています。\n&7理由: &f{reason}"
+    tempmute:
+      usage: "&c使い方: /tempmute <プレイヤー名> <期間> [理由]"
+      issued: "&a{player}を期限付きミュートしました。"
+    unmute:
+      usage: "&c使い方: /unmute <プレイヤー名> [理由]"
+      success: "&a{player}のミュートを解除しました。"
+      not-muted: "&c{player}はミュートされていません。"
+    kick:
+      usage: "&c使い方: /kick <プレイヤー名> [理由]"
+      issued: "&a{player}をキックしました。"
+      message: "&cキックされました。\n&7理由: &f{reason}"
+    warn:
+      usage: "&c使い方: /warn <プレイヤー名> [理由]"
+      issued: "&a{player}に警告しました。"
+      notice: "&e警告を受けました。\n&7理由: &f{reason}"
+    history:
+      usage: "&c使い方: /history <プレイヤー名>"
+      header: "&7--- 処罰履歴: {player} ---"
+      empty: "&7処罰履歴はありません。"
+      entry: "&f[{type}] &7{date} &7実行者: &f{operator}&7 理由: &f{reason} &7({status})"
+      status-active: "有効"
+      status-inactive: "無効"
+    banlist:
+      header: "&7--- 現在有効なBAN・ミュート ---"
+      empty: "&7現在、処罰を受けているプレイヤーはいません。"
+      entry: "&f[{type}] &7{target}: &f{reason}"
+    ecoban:
+      usage: "&c使い方: /ecoban <reload|import <advancedban|litebans>>"
+      reloaded: "&aconfig.ymlを再読み込みしました。(storage.typeの変更を反映するには再起動が必要です)"
+      import-usage: "&c使い方: /ecoban import <advancedban|litebans>"
+      import-started: "&7{source}からインポート中です... バックグラウンドで実行され、時間がかかる場合があります。"
+      import-finished: "&a{source}から{count}件の処罰をインポートしました。"
+      import-failed: "&c{source}からのインポートに失敗しました。コンソールを確認してください。"
+      import-unknown-source: "&c不明なインポート元「{source}」です。advancedbanまたはlitebansを指定してください。"

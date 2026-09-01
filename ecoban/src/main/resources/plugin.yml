@@ -1,0 +1,58 @@
+name: EcoBan
+version: '${project.version}'
+main: com.yamakotaro.ecoban.EcoBanPlugin
+api-version: '26.2'
+author: yamakotaro0328
+description: Ban/mute/kick/warn management with SQLite/MySQL storage, AdvancedBan/LiteBans migration, and a web dashboard.
+
+commands:
+  ban:
+    description: Permanently ban a player
+    usage: /ban <player> [reason]
+  tempban:
+    description: Temporarily ban a player
+    usage: /tempban <player> <duration> [reason]
+  unban:
+    description: Lift a ban
+    usage: /unban <player> [reason]
+  ipban:
+    description: Permanently ban an IP address (or an online player's IP)
+    usage: /ipban <ip|player> [reason]
+  unbanip:
+    description: Lift an IP ban
+    usage: /unbanip <ip> [reason]
+  mute:
+    description: Permanently mute a player
+    usage: /mute <player> [reason]
+  tempmute:
+    description: Temporarily mute a player
+    usage: /tempmute <player> <duration> [reason]
+  unmute:
+    description: Lift a mute
+    usage: /unmute <player> [reason]
+  kick:
+    description: Kick a player
+    usage: /kick <player> [reason]
+  warn:
+    description: Warn a player
+    usage: /warn <player> [reason]
+  history:
+    description: Show a player's punishment history
+    usage: /history <player>
+  banlist:
+    description: List currently active bans, ipbans, and mutes
+    usage: /banlist
+  ecoban:
+    description: Reload config.yml, or import from AdvancedBan/LiteBans
+    usage: /ecoban <reload|import <advancedban|litebans>>
+
+permissions:
+  ecoban.use:
+    description: Can use every EcoBan staff command (ban/tempban/unban/ipban/unbanip/mute/tempmute/unmute/kick/warn/history/banlist)
+    default: op
+  ecoban.admin:
+    description: Can use /ecoban reload and /ecoban import
+    default: op
+  ecoban.exempt:
+    description: Immune to mutes (bans and kicks still apply)
+    default: false
