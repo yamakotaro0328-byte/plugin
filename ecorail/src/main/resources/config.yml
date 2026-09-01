@@ -3,47 +3,35 @@
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
 language: en
 
-# EcoRail has no route data of its own - the rails you build ARE the route. Mark a minecart with
-# /ecorail cart mark and EcoRail keeps it running forever, pausing at any stop point (see
-# /ecorail stop create) it reaches along the way and relaunching it in the same direction once
-# the dwell time is up.
+# EcoRail has no route data of its own - the rails you build ARE the route. Every minecart on the
+# server is managed automatically the moment it exists: EcoRail keeps it running forever, never
+# lets it be stopped or reversed by anything, and passes it straight through players and mobs.
+# It pauses only at a stop point you create (see /ecorail stop create), then relaunches in the
+# same direction once the dwell time is up. Only whoever placed a rail or minecart (or a player
+# with ecorail.admin) can break it - see /ecorail's permission node.
 #
-# chunk-load-radius: how many chunks (in each direction) around a managed cart get force-loaded
-#   so it keeps simulating with nobody nearby. Keep this small (1-3) - it only needs to cover
-#   what's immediately around the cart, not the whole line, or you'll force-load far more of the
-#   world than necessary.
+# chunk-load-radius-blocks: how many blocks (in each direction) around a managed cart get
+#   force-loaded so it keeps simulating with nobody nearby. Keep this small - it only needs to
+#   cover what's immediately around the cart, not the whole line.
 # stop-radius: how close (in blocks) a cart needs to get to a stop point to trigger it.
-# launch-speed: the velocity a cart is given when relaunched after dwelling at a stop.
-# anti-reverse: correct a cart back to its running direction if it starts rolling backward (a
-#   shove, another cart, or momentum at a dead end).
-# player-collision: whether a managed cart pushes players standing in its path (vanilla
-#   behavior) or passes through them.
-# idle-release-seconds: if a cart hasn't moved (and isn't intentionally dwelling at a stop) for
-#   this long, EcoRail gives up force-loading it - a safety net against a derailed/stuck cart
-#   pinning chunks loaded forever.
+# launch-speed: the velocity a cart is given when relaunched (after dwelling, or whenever
+#   something has stopped or reversed it and EcoRail is forcing it back to speed).
 #
 # (日本語) EcoRail自体は経路データを持たない - 自分で敷いたレールがそのまま経路になる。
-# /ecorail cart mark でトロッコを管理対象にすると、EcoRailはそれを走らせ続け、
-# /ecorail stop create で作った停止地点に来るたびに一時停止し、時間が来たら
-# 同じ方向へ再発進させる。
+# サーバー上の全てのトロッコは存在した瞬間に自動的に管理対象になり、何があっても
+# 止められたり逆走させられたりせず、プレイヤーやMobを貫通する。止まるのは
+# /ecorail stop create で作った停止地点だけで、停車時間が来たら同じ方向へ再発進する。
+# レール・トロッコを壊せるのは設置した本人(または ecorail.admin 権限者)だけ。
 #
-# chunk-load-radius: 管理対象のトロッコの周囲、何チャンク四方を強制ロードするか。
-#   小さめ(1〜3)にしておくこと - トロッコの直近だけで十分で、路線全体を
-#   強制ロードする必要はない。
+# chunk-load-radius-blocks: 管理対象のトロッコの周囲、何ブロック四方を強制ロードするか。
+#   小さめにしておくこと - トロッコの直近だけで十分で、路線全体を強制ロードする必要はない。
 # stop-radius: 停止地点にどれだけ近づいたら反応するか(ブロック数)。
-# launch-speed: 停止地点から再発進する際の速度。
-# anti-reverse: 何らかの理由で逆走し始めたトロッコを、走行方向へ補正する。
-# player-collision: 管理対象のトロッコが進路上のプレイヤーを押し出すか(バニラの挙動)。
-# idle-release-seconds: (意図的な停止中を除いて)これだけの秒数動かなければ、
-#   強制ロードを諦める(脱線などで永久にチャンクを固定してしまう事故を防ぐ安全策)。
+# launch-speed: 再発進(停止地点からの発車、または何かに止められた際の強制復帰)の速度。
 physics:
   tick-interval-ticks: 4
-  chunk-load-radius: 2
+  chunk-load-radius-blocks: 8
   stop-radius: 1.5
   launch-speed: 0.4
-  anti-reverse: true
-  player-collision: true
-  idle-release-seconds: 300
 
 messages:
   en:
@@ -60,15 +48,8 @@ messages:
       list-header: "&7--- Stop points ({count}) ---"
       list-empty: "&7No stop points registered."
       list-entry: "&f({world} {x}, {y}, {z}) &7- {seconds}s"
-    cart:
-      usage: "&cUsage: /ecorail cart <mark|unmark>"
-      marked: "&aThis minecart will now run forever, pausing at any stop point it reaches."
-      unmarked: "&aThis minecart is no longer managed by EcoRail."
-      no-cart-nearby: "&cNo minecart found nearby."
-      no-managed-cart-nearby: "&cNo EcoRail-managed minecart found nearby."
-      already-managed: "&cThat minecart is already managed by EcoRail."
     ecorail:
-      usage: "&cUsage: /ecorail <stop <create|remove|list>|cart <mark|unmark>|reload>"
+      usage: "&cUsage: /ecorail <stop <create|remove|list>|reload>"
       reloaded: "&aReloaded config.yml."
   ja:
     general:
@@ -84,13 +65,6 @@ messages:
       list-header: "&7--- 停止地点一覧 ({count}) ---"
       list-empty: "&7登録されている停止地点はありません。"
       list-entry: "&f({world} {x}, {y}, {z}) &7- {seconds}秒"
-    cart:
-      usage: "&c使い方: /ecorail cart <mark|unmark>"
-      marked: "&aこのトロッコはEcoRailの管理下で走り続け、停止地点で一時停車するようになります。"
-      unmarked: "&aこのトロッコはEcoRailの管理対象から外れました。"
-      no-cart-nearby: "&c近くにトロッコが見つかりません。"
-      no-managed-cart-nearby: "&c近くに管理対象のトロッコが見つかりません。"
-      already-managed: "&cそのトロッコは既に管理対象です。"
     ecorail:
-      usage: "&c使い方: /ecorail <stop <create|remove|list>|cart <mark|unmark>|reload>"
+      usage: "&c使い方: /ecorail <stop <create|remove|list>|reload>"
       reloaded: "&aconfig.ymlを再読み込みしました。"

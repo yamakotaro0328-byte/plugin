@@ -5,16 +5,17 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * A minecart an admin has told EcoRail to keep running forever (see /ecorail cart mark). There's
- * no route data at all - the physical rails the admin already built are the route. This just:
- * (1) force-loads a small square of chunks around the cart's live position so vanilla rail
- * physics keeps it moving with nobody nearby (see ChunkForceLoadTask), and (2) pauses it for a
- * configured number of seconds whenever it reaches a marked stop point, then relaunches it in
- * whichever direction it was already heading.
+ * Every minecart on the server is managed the moment it exists (see CartAutoManageListener) -
+ * there's no opt-in step. This: (1) force-loads a small square of chunks around the cart's live
+ * position so vanilla rail physics keeps it moving with nobody nearby (see ChunkForceLoadTask),
+ * (2) pauses it for a configured number of seconds whenever it reaches a marked stop point, then
+ * relaunches it in whichever direction it was already heading, and (3) never lets it sit stopped
+ * or run backward outside of an intentional dwell - see ChunkForceLoadTask's per-tick correction.
  *
  * <p>forwardDirX/Z is continuously refreshed to the cart's last significant direction of travel
- * (not fixed at creation) - it's both the anti-reverse reference and the relaunch direction after
- * a dwell stop.
+ * (not fixed at creation) - it's both the direction ChunkForceLoadTask holds the cart to and the
+ * relaunch direction after a dwell stop. It starts at (0, 0) - a cart that's never actually moved
+ * (a purely decorative one nobody has pushed) is left alone rather than forced into motion.
  *
  * <p>lastHandledStopKey remembers which stop point this cart most recently dwelled at, so it
  * doesn't instantly re-trigger the same stop the moment it relaunches while still inside its
@@ -28,27 +29,33 @@ public class ManagedCart {
 
     private final UUID entityId;
     private final String world;
+    private final UUID ownerId;
     private int forwardDirX;
     private int forwardDirZ;
     private long dwellUntilMillis;
     private String lastHandledStopKey;
-    private int lastChunkX;
-    private int lastChunkZ;
-    private long lastMovedAt = System.currentTimeMillis();
+    private int lastBlockX;
+    private int lastBlockZ;
     private int missCount;
     private final Set<Long> heldChunks = new HashSet<>();
 
-    public ManagedCart(UUID entityId, String world, int lastChunkX, int lastChunkZ, int forwardDirX, int forwardDirZ) {
+    /** ownerId is null for a cart EcoRail discovered rather than saw placed (pre-existing, or from a chunk load) - it's then only breakable by ecorail.admin. */
+    public ManagedCart(UUID entityId, String world, int lastBlockX, int lastBlockZ, int forwardDirX, int forwardDirZ, UUID ownerId) {
         this.entityId = entityId;
         this.world = world;
-        this.lastChunkX = lastChunkX;
-        this.lastChunkZ = lastChunkZ;
+        this.lastBlockX = lastBlockX;
+        this.lastBlockZ = lastBlockZ;
         this.forwardDirX = forwardDirX;
         this.forwardDirZ = forwardDirZ;
+        this.ownerId = ownerId;
     }
 
     public UUID getEntityId() {
         return entityId;
+    }
+
+    public UUID getOwnerId() {
+        return ownerId;
     }
 
     public String getWorld() {
@@ -88,25 +95,17 @@ public class ManagedCart {
         this.lastHandledStopKey = lastHandledStopKey;
     }
 
-    public int getLastChunkX() {
-        return lastChunkX;
+    public int getLastBlockX() {
+        return lastBlockX;
     }
 
-    public int getLastChunkZ() {
-        return lastChunkZ;
+    public int getLastBlockZ() {
+        return lastBlockZ;
     }
 
-    public void setLastChunk(int x, int z) {
-        this.lastChunkX = x;
-        this.lastChunkZ = z;
-    }
-
-    public long getLastMovedAt() {
-        return lastMovedAt;
-    }
-
-    public void markMoved() {
-        this.lastMovedAt = System.currentTimeMillis();
+    public void setLastBlock(int x, int z) {
+        this.lastBlockX = x;
+        this.lastBlockZ = z;
     }
 
     public int getMissCount() {

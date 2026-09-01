@@ -3,15 +3,15 @@ version: '${project.version}'
 main: com.yamakotaro.ecorail.EcoRailPlugin
 api-version: '26.2'
 author: yamakotaro0328
-description: Keeps admin-marked minecarts running forever on your own rails, pausing at marked stop points, with chunks force-loaded around them so they keep moving with nobody nearby.
+description: Every minecart runs forever on your own rails, passing straight through players/mobs and pausing only at marked stop points - chunks are force-loaded around each one so it keeps moving with nobody nearby, and only its placer (or an admin) can break it or its rails.
 
 commands:
   ecorail:
-    description: Manage EcoRail stop points and managed minecarts, or reload config.yml
-    usage: /ecorail <stop <create|remove|list>|cart <mark|unmark>|reload>
+    description: Manage EcoRail stop points, or reload config.yml
+    usage: /ecorail <stop <create|remove|list>|reload>
     aliases: [rail]
 
 permissions:
   ecorail.admin:
-    description: Can create/remove stop points, mark/unmark minecarts, and reload config.yml
+    description: Can create/remove stop points, reload config.yml, and break any rail or minecart regardless of who placed it
     default: op
