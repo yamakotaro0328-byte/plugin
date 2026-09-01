@@ -173,3 +173,38 @@ jobs:
           name: ecoban
           path: ecoban/target/ecoban-*.jar
           if-no-files-found: error
+
+  build-ecoban-velocity:
+    # Independent Maven project (its own pom.xml), unrelated to EcoTP - built in its own job
+    # so a build failure here never blocks or reflects on any of the other plugins.
+    # ecoban-velocity depends on ecoban-core (a sibling module, not a proxy-provided API), so
+    # ecoban-core is installed to the local Maven repository first.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+          cache-dependency-path: |
+            ecoban-core/pom.xml
+            ecoban-velocity/pom.xml
+
+      - name: Install ecoban-core
+        working-directory: ecoban-core
+        run: mvn -B install -DskipTests --no-transfer-progress
+
+      - name: Build with Maven
+        working-directory: ecoban-velocity
+        run: mvn -B package --no-transfer-progress
+
+      - name: Upload EcoBan-Velocity jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecoban-velocity
+          path: ecoban-velocity/target/ecoban-velocity-*.jar
+          if-no-files-found: error

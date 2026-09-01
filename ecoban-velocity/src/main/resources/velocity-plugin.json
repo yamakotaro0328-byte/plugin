@@ -1,0 +1,8 @@
+{
+  "id": "ecoban-velocity",
+  "name": "EcoBan-Velocity",
+  "version": "${project.version}",
+  "description": "Network-wide ban/mute/kick/warn enforcement sharing EcoBan's punishment data with every backend server.",
+  "authors": ["yamakotaro0328"],
+  "main": "com.yamakotaro.ecobanvelocity.EcoBanVelocityPlugin"
+}
