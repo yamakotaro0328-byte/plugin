@@ -28,14 +28,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A small self-contained admin panel: http://&lt;host&gt;:&lt;port&gt;/ - login with the
- * username/password from config.yml, then browse/search punishments and issue or lift them.
- * Built on the JDK's own {@link HttpServer} (no extra web-framework dependency to shade), serving
- * a single bundled HTML/CSS/JS page (see src/main/resources/web/) plus a small JSON REST API.
+ * A small self-contained panel: http://&lt;host&gt;:&lt;port&gt;/ - browsing/searching
+ * punishments needs no login (anyone with the link can look), but issuing or lifting one requires
+ * signing in with the username/password from config.yml first, via the login button in the
+ * corner. Built on the JDK's own {@link HttpServer} (no extra web-framework dependency to shade),
+ * serving a single bundled HTML/CSS/JS page (see src/main/resources/web/) plus a small JSON REST
+ * API.
  *
- * Session auth is a random token in a cookie, checked on every /api/* route except /api/login -
- * intentionally simple (one shared admin account) rather than a full user system, since this is
- * meant for a handful of trusted staff, not the general public.
+ * Session auth is a random token in a cookie, checked on every write /api/* route (see authed()
+ * below) - intentionally simple (one shared admin account) rather than a full user system, since
+ * write access is meant for a handful of trusted staff even though read access is open.
  */
 public class WebDashboard {
 
@@ -77,8 +79,10 @@ public class WebDashboard {
 
         server.createContext("/api/login", this::handleLogin);
         server.createContext("/api/logout", this::handleLogout);
-        server.createContext("/api/punishments", authed(this::handlePunishments));
-        server.createContext("/api/history", authed(this::handleHistory));
+        server.createContext("/api/session", authed(this::handleSession));
+        // Browsing punishment records is public - only issuing/lifting one requires login.
+        server.createContext("/api/punishments", this::handlePunishments);
+        server.createContext("/api/history", this::handleHistory);
         server.createContext("/api/ban", authed(this::handleBan));
         server.createContext("/api/ipban", authed(this::handleIpban));
         server.createContext("/api/mute", authed(this::handleMute));
@@ -155,6 +159,11 @@ public class WebDashboard {
         if (token != null) {
             sessions.remove(token);
         }
+        respondJson(exchange, 200, okObject());
+    }
+
+    /** Lets the page ask "am I still logged in?" (e.g. after a reload) without side effects. */
+    private void handleSession(HttpExchange exchange) throws IOException {
         respondJson(exchange, 200, okObject());
     }
 

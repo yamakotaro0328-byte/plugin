@@ -1,8 +1,10 @@
-const loginView = document.getElementById("login-view");
-const appView = document.getElementById("app-view");
-const loginForm = document.getElementById("login-form");
-const loginError = document.getElementById("login-error");
+const loginButton = document.getElementById("login-button");
 const logoutButton = document.getElementById("logout-button");
+const loginOverlay = document.getElementById("login-overlay");
+const loginForm = document.getElementById("login-form");
+const loginCancel = document.getElementById("login-cancel");
+const loginError = document.getElementById("login-error");
+const issueCard = document.getElementById("issue-card");
 const issueForm = document.getElementById("issue-form");
 const issueType = document.getElementById("issue-type");
 const issueIp = document.getElementById("issue-ip");
@@ -12,28 +14,40 @@ const typeFilter = document.getElementById("type-filter");
 const refreshButton = document.getElementById("refresh-button");
 const punishmentsBody = document.getElementById("punishments-body");
 
+let loggedIn = false;
+
 async function api(path, options = {}) {
   const response = await fetch(path, {
     ...options,
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },
   });
   if (response.status === 401) {
-    showLogin();
+    setLoggedIn(false);
+    openLogin();
     throw new Error("Not logged in");
   }
   return response;
 }
 
-function showLogin() {
-  loginView.hidden = false;
-  appView.hidden = true;
+function setLoggedIn(value) {
+  loggedIn = value;
+  loginButton.hidden = value;
+  logoutButton.hidden = !value;
+  issueCard.hidden = !value;
 }
 
-function showApp() {
-  loginView.hidden = true;
-  appView.hidden = false;
-  loadPunishments();
+function openLogin() {
+  loginError.hidden = true;
+  loginOverlay.hidden = false;
 }
+
+function closeLogin() {
+  loginOverlay.hidden = true;
+  loginForm.reset();
+}
+
+loginButton.addEventListener("click", openLogin);
+loginCancel.addEventListener("click", closeLogin);
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -50,12 +64,15 @@ loginForm.addEventListener("submit", async (event) => {
     loginError.hidden = false;
     return;
   }
-  showApp();
+  closeLogin();
+  setLoggedIn(true);
+  loadPunishments();
 });
 
 logoutButton.addEventListener("click", async () => {
   await fetch("/api/logout", { method: "POST" });
-  showLogin();
+  setLoggedIn(false);
+  loadPunishments();
 });
 
 issueType.addEventListener("change", () => {
@@ -90,7 +107,7 @@ issueForm.addEventListener("submit", async (event) => {
       loadPunishments();
     }
   } catch (e) {
-    // showLogin() already ran if this was a 401.
+    // openLogin() already ran if this was a 401.
   }
 });
 
@@ -116,13 +133,10 @@ async function loadPunishments() {
   if (type) {
     params.set("type", type);
   }
-  try {
-    const response = await api("/api/punishments?" + params.toString());
-    const punishments = await response.json();
-    renderPunishments(punishments);
-  } catch (e) {
-    // showLogin() already ran if this was a 401.
-  }
+  // Browsing needs no auth, so a plain fetch here (never triggers the login overlay).
+  const response = await fetch("/api/punishments?" + params.toString());
+  const punishments = await response.json();
+  renderPunishments(punishments);
 }
 
 function renderPunishments(punishments) {
@@ -144,7 +158,7 @@ function renderPunishments(punishments) {
       <td></td>
     `;
 
-    if (p.active && (p.type === "BAN" || p.type === "TEMPBAN" || p.type === "IPBAN" || p.type === "MUTE" || p.type === "TEMPMUTE")) {
+    if (loggedIn && p.active && (p.type === "BAN" || p.type === "TEMPBAN" || p.type === "IPBAN" || p.type === "MUTE" || p.type === "TEMPMUTE")) {
       const button = document.createElement("button");
       button.className = "small ghost";
       button.textContent = "Lift";
@@ -174,7 +188,7 @@ async function liftPunishment(punishment) {
     await api(path, { method: "POST", body: JSON.stringify(body) });
     loadPunishments();
   } catch (e) {
-    // showLogin() already ran if this was a 401.
+    // openLogin() already ran if this was a 401.
   }
 }
 
@@ -184,5 +198,6 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Try to resume an existing session (the cookie survives a page reload).
-api("/api/punishments").then(showApp).catch(showLogin);
+// The punishments list loads for everyone; the session check just decides whether to
+// reveal the issue form and Lift buttons (the cookie, if any, survives a page reload).
+fetch("/api/session").then((response) => setLoggedIn(response.ok)).finally(loadPunishments);
