@@ -1,0 +1,20 @@
+name: EcoRail
+version: '${project.version}'
+main: com.yamakotaro.ecorail.EcoRailPlugin
+api-version: '26.2'
+author: yamakotaro0328
+description: Sign-based train stations and tickets on vanilla rails, with chunks force-loaded around moving carts so trains keep running while nobody's chunk is loaded nearby.
+# Vault is entirely optional: without it, riders can only pay with a physical ticket item,
+# and the economy fare option on boarding signs is simply unavailable.
+softdepend: [Vault]
+
+commands:
+  ecorail:
+    description: Manage EcoRail stations and tickets, or reload config.yml
+    usage: /ecorail <station <create|remove|list>|ticket give <player> <from> <to>|reload>
+    aliases: [rail]
+
+permissions:
+  ecorail.admin:
+    description: Can create/remove stations, give tickets, and reload config.yml
+    default: op
