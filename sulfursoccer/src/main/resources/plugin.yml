@@ -1,0 +1,16 @@
+name: SulfurSoccer
+version: '${project.version}'
+main: com.yamakotaro.sulfursoccer.SulfurSoccerPlugin
+api-version: '26.2'
+author: yamakotaro0328
+description: Team soccer matches played with a Sulfur Cube as the ball - wand-select each goal, set team spawns and kickoff, then join a team and play.
+
+commands:
+  soccer:
+    description: Set up an arena, join a team, and start/stop matches
+    usage: /soccer <wand|arena <create|setgoal|setspawn|setkickoff|remove|list>|join <arena> <a|b>|leave|start <arena>|stop <arena>>
+
+permissions:
+  sulfursoccer.admin:
+    description: Can use the selection wand, manage arenas, and start/stop matches
+    default: op
