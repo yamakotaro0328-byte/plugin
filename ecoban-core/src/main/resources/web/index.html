@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoBan Dashboard</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div id="login-view" class="view">
+  <form id="login-form" class="login-card">
+    <h1>EcoBan</h1>
+    <p class="subtitle">Sign in to manage punishments</p>
+    <label>Username<input type="text" id="login-username" autocomplete="username" required></label>
+    <label>Password<input type="password" id="login-password" autocomplete="current-password" required></label>
+    <button type="submit">Sign in</button>
+    <p id="login-error" class="error" hidden></p>
+  </form>
+</div>
+
+<div id="app-view" class="view" hidden>
+  <header>
+    <h1>EcoBan</h1>
+    <button id="logout-button" class="ghost">Log out</button>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Issue a punishment</h2>
+      <form id="issue-form" class="issue-form">
+        <select id="issue-type">
+          <option value="ban">Ban</option>
+          <option value="ipban">IP Ban</option>
+          <option value="mute">Mute</option>
+          <option value="kick">Kick</option>
+          <option value="warn">Warn</option>
+        </select>
+        <input type="text" id="issue-uuid" placeholder="Player UUID">
+        <input type="text" id="issue-name" placeholder="Player name (optional)">
+        <input type="text" id="issue-ip" placeholder="IP address (IP Ban only)" hidden>
+        <input type="number" id="issue-duration" placeholder="Duration (minutes, blank = permanent)">
+        <input type="text" id="issue-reason" placeholder="Reason" class="wide">
+        <button type="submit">Issue</button>
+      </form>
+      <p id="issue-result" class="result"></p>
+    </section>
+
+    <section class="card">
+      <h2>Punishments</h2>
+      <div class="toolbar">
+        <input type="text" id="search-input" placeholder="Search by name or IP...">
+        <select id="type-filter">
+          <option value="">All active types</option>
+          <option value="BAN">Ban</option>
+          <option value="TEMPBAN">Temp Ban</option>
+          <option value="IPBAN">IP Ban</option>
+          <option value="MUTE">Mute</option>
+          <option value="TEMPMUTE">Temp Mute</option>
+          <option value="KICK">Kick</option>
+          <option value="WARN">Warn</option>
+        </select>
+        <button id="refresh-button">Refresh</button>
+      </div>
+      <table id="punishments-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Target</th>
+            <th>Reason</th>
+            <th>Operator</th>
+            <th>Issued</th>
+            <th>Expires</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="punishments-body"></tbody>
+      </table>
+    </section>
+  </main>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
