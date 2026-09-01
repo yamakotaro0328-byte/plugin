@@ -38,6 +38,15 @@ leveling:
   # (日本語) ジョブが最大レベルに達すると、/jobs prestige <ジョブ名> でレベル1(経験値0)に
   # 戻す代わりに、この永続ボーナスが1つ蓄積される(pay-bonus-per-levelと加算される)。
   prestige-bonus-per-prestige: 0.02
+  # Every job pays a one-time bonus (broadcast server-wide) whenever it reaches one of these
+  # levels. Re-triggers on each future prestige cycle's relevel, since prestige exists to be
+  # replayed. Set milestone-bonus-money to 0 to keep the fanfare without the payout.
+  # (日本語) どのジョブも、これらのレベルに到達するたびに一度きりのボーナス(サーバー全体に
+  # 告知)がもらえる。プレステージ後に同じレベルを再び通過した際も再発生する(プレステージは
+  # 繰り返し遊ぶための仕組みのため)。演出だけ残して支払いを止めたい場合はmilestone-bonus-moneyを
+  # 0にする。
+  milestone-levels: [10, 25, 50, 75, 100]
+  milestone-bonus-money: 100
 
 # The "explorer" job doesn't have a block/entity/item action list like the others below - it
 # pays out every time a player reaches a new farthest distance (in blocks, ignoring height) from
@@ -305,6 +314,7 @@ messages:
       info-empty: "&7This job has no configured action rewards (see config.yml)."
       prestige-not-max-level: "&cYou must reach level {max} in {job} before you can prestige."
       prestige-broadcast: "&d★ &f{player} &dprestiged &f{job} &dto Prestige {prestige}!"
+      milestone-broadcast: "&6✦ &f{player} &6reached level &f{level} &6in &f{job} &6and earned a &f{money} &6bonus!"
       booster-usage: "&cUsage: /jobs booster <start <job|all> <money multiplier> <xp multiplier> <minutes> | stop <job|all> | list>"
       booster-invalid-number: "&cInvalid number."
       booster-scope-all: "All jobs"
@@ -329,9 +339,23 @@ messages:
       lore-click-leave: "&cClick to leave"
       lore-click-rejoin: "&7Not active - &aclick to resume"
       lore-click-leaderboard: "&eShift-click: &7view leaderboard"
+      hub-title: "EcoJobs"
+      hub-my-jobs: "&aMy Jobs"
+      hub-my-jobs-lore: "&7View and manage your jobs"
+      hub-leaderboards: "&6Leaderboards"
+      hub-leaderboards-lore: "&7Browse job rankings"
+      hub-settings: "&bSettings"
+      hub-settings-lore: "&7Click sounds and earnings action bar"
+      hub-admin: "&cAdmin Panel"
+      hub-admin-lore: "&7Manage jobs, multipliers, and boosters"
+      settings-title: "EcoJobs Settings"
+      settings-sound-title: "&bClick Sounds"
+      settings-actionbar-title: "&bEarnings Action Bar"
+      settings-on: "&aEnabled - click to disable"
+      settings-off: "&7Disabled - click to enable"
+      leaderboard-picker-title: "Leaderboards"
     admin:
       title: "EcoJobs Admin"
-      close: "&cClose"
       lore-enabled-yes: "&7Enabled: &aYes"
       lore-enabled-no: "&7Enabled: &cNo"
       lore-multiplier: "&7Pay multiplier: &f{multiplier}x"
@@ -381,6 +405,7 @@ messages:
       info-empty: "&7このジョブには設定された報酬がありません(config.ymlを確認してください)。"
       prestige-not-max-level: "&c{job}をプレステージするにはレベル{max}に到達する必要があります。"
       prestige-broadcast: "&d★ &f{player} &dが{job}をプレステージ{prestige}にしました！"
+      milestone-broadcast: "&6✦ &f{player} &6が&f{job}&6でレベル&f{level}&6に到達し、&f{money}&6のボーナスを獲得しました！"
       booster-usage: "&c使い方: /jobs booster <start <ジョブ名|all> <お金倍率> <経験値倍率> <分数> | stop <ジョブ名|all> | list>"
       booster-invalid-number: "&c数値が不正です。"
       booster-scope-all: "全ジョブ"
@@ -405,9 +430,23 @@ messages:
       lore-click-leave: "&cクリックで脱退"
       lore-click-rejoin: "&7非稼働 - &aクリックで再開"
       lore-click-leaderboard: "&eシフト+クリック: &7ランキングを表示"
+      hub-title: "EcoJobs"
+      hub-my-jobs: "&a自分のジョブ"
+      hub-my-jobs-lore: "&7ジョブの確認・加入/脱退"
+      hub-leaderboards: "&6ランキング"
+      hub-leaderboards-lore: "&7各ジョブのランキングを見る"
+      hub-settings: "&b設定"
+      hub-settings-lore: "&7クリック音・獲得通知の設定"
+      hub-admin: "&c管理者パネル"
+      hub-admin-lore: "&7ジョブ・倍率・ブースターの管理"
+      settings-title: "EcoJobs 設定"
+      settings-sound-title: "&bクリック音"
+      settings-actionbar-title: "&b獲得額のアクションバー表示"
+      settings-on: "&a有効 - クリックで無効化"
+      settings-off: "&7無効 - クリックで有効化"
+      leaderboard-picker-title: "ランキング"
     admin:
       title: "EcoJobs 管理"
-      close: "&c閉じる"
       lore-enabled-yes: "&7有効: &aはい"
       lore-enabled-no: "&7有効: &cいいえ"
       lore-multiplier: "&7報酬倍率: &f{multiplier}倍"

@@ -7,6 +7,7 @@ import com.yamakotaro.ecojobs.listeners.EntityJobListener;
 import com.yamakotaro.ecojobs.listeners.ExplorerListener;
 import com.yamakotaro.ecojobs.listeners.TradeJobListener;
 import com.yamakotaro.ecojobs.menu.AdminMenuListener;
+import com.yamakotaro.ecojobs.menu.HubMenuListener;
 import com.yamakotaro.ecojobs.menu.JobsMenuListener;
 import com.yamakotaro.ecojobs.storage.JobStorage;
 import com.yamakotaro.ecojobs.storage.MySqlJobStorage;
@@ -47,6 +48,8 @@ public class EcoJobsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new JobsMenuListener(jobManager, playerJobManager, jobOverrides, messages), this);
         getServer().getPluginManager().registerEvents(
                 new AdminMenuListener(jobManager, playerJobManager, jobOverrides, boosterManager, messages), this);
+        getServer().getPluginManager().registerEvents(
+                new HubMenuListener(jobManager, playerJobManager, jobOverrides, boosterManager, messages), this);
 
         JobsCommand jobsCommand = new JobsCommand(this, jobManager, playerJobManager, jobOverrides, boosterManager, messages);
         getCommand("jobs").setExecutor(jobsCommand);

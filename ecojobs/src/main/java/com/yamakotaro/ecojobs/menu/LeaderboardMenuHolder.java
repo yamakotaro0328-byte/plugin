@@ -40,7 +40,7 @@ public class LeaderboardMenuHolder implements InventoryHolder {
             inventory.setItem(slot, headOf(entry, slot + 1));
             slot++;
         }
-        inventory.setItem(CLOSE_SLOT, closeItem());
+        inventory.setItem(CLOSE_SLOT, MenuUtil.closeItem(messages));
     }
 
     private ItemStack headOf(PlayerJobManager.TopEntry entry, int rank) {
@@ -55,16 +55,6 @@ public class LeaderboardMenuHolder implements InventoryHolder {
                     "prestige", String.valueOf(entry.prestige()),
                     "xp", String.format("%.0f", entry.xp())))));
             stack.setItemMeta(skullMeta);
-        }
-        return stack;
-    }
-
-    private ItemStack closeItem() {
-        ItemStack stack = new ItemStack(Material.BARRIER);
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            meta.displayName(messages.get("admin.close", Map.of()));
-            stack.setItemMeta(meta);
         }
         return stack;
     }

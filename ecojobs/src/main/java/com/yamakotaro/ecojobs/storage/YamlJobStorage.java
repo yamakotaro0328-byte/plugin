@@ -51,6 +51,8 @@ public class YamlJobStorage implements JobStorage {
                 continue;
             }
             PlayerJobData playerData = new PlayerJobData(playerSection.getString("name", "?"));
+            playerData.setSoundEnabled(playerSection.getBoolean("settings.sound", true));
+            playerData.setActionBarEnabled(playerSection.getBoolean("settings.actionbar", true));
             ConfigurationSection explorerSection = playerSection.getConfigurationSection("explorer-distance");
             if (explorerSection != null) {
                 for (String worldName : explorerSection.getKeys(false)) {
@@ -85,6 +87,8 @@ public class YamlJobStorage implements JobStorage {
             String base = "players." + entry.getKey();
             PlayerJobData playerData = entry.getValue();
             yaml.set(base + ".name", playerData.getName());
+            yaml.set(base + ".settings.sound", playerData.isSoundEnabled());
+            yaml.set(base + ".settings.actionbar", playerData.isActionBarEnabled());
             for (Map.Entry<String, Double> distanceEntry : playerData.getExplorerDistanceByWorld().entrySet()) {
                 yaml.set(base + ".explorer-distance." + distanceEntry.getKey(), distanceEntry.getValue());
             }

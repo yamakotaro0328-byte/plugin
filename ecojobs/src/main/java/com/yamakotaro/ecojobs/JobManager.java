@@ -4,6 +4,7 @@ import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -111,5 +112,20 @@ public class JobManager {
 
     public double explorerXpPerMilestone() {
         return plugin.getConfig().getDouble("explorer.xp-per-milestone", 60);
+    }
+
+    private static final List<Integer> DEFAULT_MILESTONE_LEVELS = List.of(10, 25, 50, 75, 100);
+
+    /**
+     * Levels that trigger a one-time server-wide bonus (see PlayerJobManager#awardMilestone),
+     * applied to every job the same way.
+     */
+    public List<Integer> milestoneLevels() {
+        List<Integer> configured = plugin.getConfig().getIntegerList("leveling.milestone-levels");
+        return configured.isEmpty() ? DEFAULT_MILESTONE_LEVELS : configured;
+    }
+
+    public double milestoneBonusMoney() {
+        return plugin.getConfig().getDouble("leveling.milestone-bonus-money", 100);
     }
 }

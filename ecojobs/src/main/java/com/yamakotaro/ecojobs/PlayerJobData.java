@@ -24,6 +24,8 @@ public class PlayerJobData {
     private final Map<String, PlayerJobProgress> progress = new LinkedHashMap<>();
     private final Set<String> joined = new LinkedHashSet<>();
     private final Map<String, Double> explorerDistanceByWorld = new HashMap<>();
+    private boolean soundEnabled = true;
+    private boolean actionBarEnabled = true;
 
     public PlayerJobData(String name) {
         this.name = name;
@@ -55,5 +57,21 @@ public class PlayerJobData {
 
     public Map<String, Double> getExplorerDistanceByWorld() {
         return explorerDistanceByWorld;
+    }
+
+    public boolean isSoundEnabled() {
+        return soundEnabled;
+    }
+
+    public void setSoundEnabled(boolean soundEnabled) {
+        this.soundEnabled = soundEnabled;
+    }
+
+    public boolean isActionBarEnabled() {
+        return actionBarEnabled;
+    }
+
+    public void setActionBarEnabled(boolean actionBarEnabled) {
+        this.actionBarEnabled = actionBarEnabled;
     }
 }

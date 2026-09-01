@@ -101,7 +101,7 @@ public class JobsMenuHolder implements InventoryHolder {
             inventory.setItem(slot, buildJobItem(jobId, allProgress.get(jobId), active, enabled, canViewLeaderboard, jobManager, playerJobManager));
             slotToJobId.put(slot, jobId);
         }
-        inventory.setItem(CLOSE_SLOT, closeItem(messages));
+        inventory.setItem(CLOSE_SLOT, MenuUtil.closeItem(messages));
     }
 
     private void fillBorder() {
@@ -207,16 +207,6 @@ public class JobsMenuHolder implements InventoryHolder {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             meta.displayName(Component.empty());
-            stack.setItemMeta(meta);
-        }
-        return stack;
-    }
-
-    private static ItemStack closeItem(Messages messages) {
-        ItemStack stack = new ItemStack(Material.BARRIER);
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            meta.displayName(messages.get("menu.close", Map.of()));
             stack.setItemMeta(meta);
         }
         return stack;

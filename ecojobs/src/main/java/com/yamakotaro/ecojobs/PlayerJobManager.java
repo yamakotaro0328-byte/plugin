@@ -3,6 +3,7 @@ package com.yamakotaro.ecojobs;
 import com.yamakotaro.ecojobs.storage.JobStorage;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -90,6 +91,32 @@ public class PlayerJobManager {
     public Map<String, PlayerJobProgress> allProgress(UUID uuid) {
         PlayerJobData playerData = data.get(uuid);
         return playerData != null ? playerData.getProgress() : Map.of();
+    }
+
+    public boolean isSoundEnabled(Player player) {
+        return soundEnabledFor(player.getUniqueId());
+    }
+
+    public void toggleSoundEnabled(Player player) {
+        PlayerJobData playerData = dataFor(player);
+        playerData.setSoundEnabled(!playerData.isSoundEnabled());
+        markDirty(player.getUniqueId());
+    }
+
+    public boolean isActionBarEnabled(Player player) {
+        PlayerJobData playerData = data.get(player.getUniqueId());
+        return playerData == null || playerData.isActionBarEnabled();
+    }
+
+    public void toggleActionBarEnabled(Player player) {
+        PlayerJobData playerData = dataFor(player);
+        playerData.setActionBarEnabled(!playerData.isActionBarEnabled());
+        markDirty(player.getUniqueId());
+    }
+
+    private boolean soundEnabledFor(UUID uuid) {
+        PlayerJobData playerData = data.get(uuid);
+        return playerData == null || playerData.isSoundEnabled();
     }
 
     public JoinResult join(Player player, String jobId) {
@@ -228,9 +255,11 @@ public class PlayerJobManager {
             Economy economy = economyHolder.get();
             if (economy != null) {
                 economy.depositPlayer(player, money);
-                player.sendActionBar(messages.get("jobs.earned", Map.of(
-                        "money", String.format("%.2f", money),
-                        "job", messages.jobName(job.getId()))));
+                if (isActionBarEnabled(player)) {
+                    player.sendActionBar(messages.get("jobs.earned", Map.of(
+                            "money", String.format("%.2f", money),
+                            "job", messages.jobName(job.getId()))));
+                }
             } else if (!noEconomyWarned) {
                 noEconomyWarned = true;
                 plugin.getLogger().warning("No economy plugin found (Vault) - job levels/xp still work, but no money will be paid out.");
@@ -256,12 +285,42 @@ public class PlayerJobManager {
             player.sendMessage(messages.get("jobs.level-up", Map.of(
                     "job", messages.jobName(job.getId()),
                     "level", String.valueOf(progress.getLevel()))));
+            if (soundEnabledFor(player.getUniqueId())) {
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+            }
+            if (jobManager.milestoneLevels().contains(progress.getLevel())) {
+                awardMilestone(player, job, progress.getLevel());
+            }
             if (progress.getLevel() >= maxLevel) {
                 player.sendMessage(messages.get("jobs.max-level-reached", Map.of("job", messages.jobName(job.getId()))));
             }
         }
         if (progress.getLevel() >= maxLevel) {
             progress.setXp(0);
+        }
+    }
+
+    /**
+     * A one-time server-wide fanfare (bonus money, broadcast, and a toast-style sound) whenever a
+     * job reaches one of config.yml's leveling.milestone-levels. Re-triggers naturally on a later
+     * prestige cycle's relevel through the same levels - that's intentional, not a bug: prestige
+     * exists precisely to be replayed.
+     */
+    private void awardMilestone(Player player, JobDefinition job, int level) {
+        double money = jobManager.milestoneBonusMoney();
+        if (money > 0) {
+            Economy economy = economyHolder.get();
+            if (economy != null) {
+                economy.depositPlayer(player, money);
+            }
+        }
+        Bukkit.getServer().sendMessage(messages.get("jobs.milestone-broadcast", Map.of(
+                "player", player.getName(),
+                "job", messages.jobName(job.getId()),
+                "level", String.valueOf(level),
+                "money", String.format("%.2f", money))));
+        if (soundEnabledFor(player.getUniqueId())) {
+            player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
         }
     }
 

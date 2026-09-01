@@ -60,7 +60,7 @@ public class AdminMenuHolder implements InventoryHolder {
         }
         inventory.setItem(BOOSTER_START_SLOT, boosterStartItem());
         inventory.setItem(BOOSTER_STOP_SLOT, boosterStopItem(boosterManager));
-        inventory.setItem(CLOSE_SLOT, closeItem());
+        inventory.setItem(CLOSE_SLOT, MenuUtil.closeItem(messages));
     }
 
     private ItemStack buildJobItem(String jobId, JobOverrides jobOverrides, BoosterManager boosterManager) {
@@ -115,16 +115,6 @@ public class AdminMenuHolder implements InventoryHolder {
             meta.displayName(messages.get("admin.booster-stop-title", Map.of()));
             meta.lore(List.of(messages.get("admin.booster-stop-lore",
                     Map.of("count", String.valueOf(boosterManager.active().size())))));
-            stack.setItemMeta(meta);
-        }
-        return stack;
-    }
-
-    private ItemStack closeItem() {
-        ItemStack stack = new ItemStack(Material.BARRIER);
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            meta.displayName(messages.get("admin.close", Map.of()));
             stack.setItemMeta(meta);
         }
         return stack;

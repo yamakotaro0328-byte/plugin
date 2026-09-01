@@ -68,7 +68,7 @@ public class AdminMenuListener implements Listener {
                     "xp", String.format("%.2f", AdminMenuHolder.QUICK_BOOSTER_MULTIPLIER),
                     "minutes", String.valueOf(AdminMenuHolder.QUICK_BOOSTER_MINUTES),
                     "player", player.getName())));
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.6f, 1.2f);
+            playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1.2f);
             holder.render(jobManager, jobOverrides, boosterManager);
             return;
         }
@@ -77,7 +77,7 @@ public class AdminMenuListener implements Listener {
             if (stopped > 0) {
                 Bukkit.getServer().sendMessage(messages.get("jobs.booster-stopped-all", Map.of("player", player.getName())));
             }
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 0.8f);
+            playSound(player, Sound.UI_BUTTON_CLICK, 0.8f);
             holder.render(jobManager, jobOverrides, boosterManager);
             return;
         }
@@ -91,7 +91,7 @@ public class AdminMenuListener implements Listener {
             LeaderboardMenuHolder leaderboard = new LeaderboardMenuHolder(messages, jobId);
             leaderboard.render(playerJobManager);
             player.openInventory(leaderboard.getInventory());
-            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.4f);
+            playSound(player, Sound.UI_BUTTON_CLICK, 1.4f);
             return;
         }
         if (event.isShiftClick() && event.isRightClick()) {
@@ -101,7 +101,13 @@ public class AdminMenuListener implements Listener {
         } else {
             jobOverrides.setEnabled(jobId, !jobOverrides.isEnabled(jobId));
         }
-        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.4f);
+        playSound(player, Sound.UI_BUTTON_CLICK, 1.4f);
         holder.render(jobManager, jobOverrides, boosterManager);
+    }
+
+    private void playSound(Player player, Sound sound, float pitch) {
+        if (playerJobManager.isSoundEnabled(player)) {
+            player.playSound(player.getLocation(), sound, 0.6f, pitch);
+        }
     }
 }

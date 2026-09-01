@@ -47,7 +47,9 @@ public class MySqlJobStorage implements JobStorage {
         try (Statement statement = conn.createStatement()) {
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS " + playersTable + " ("
                     + "uuid VARCHAR(36) PRIMARY KEY, "
-                    + "name VARCHAR(16))");
+                    + "name VARCHAR(16), "
+                    + "sound_enabled BOOLEAN NOT NULL DEFAULT TRUE, "
+                    + "actionbar_enabled BOOLEAN NOT NULL DEFAULT TRUE)");
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS " + progressTable + " ("
                     + "uuid VARCHAR(36), "
                     + "job_id VARCHAR(64), "
@@ -74,9 +76,12 @@ public class MySqlJobStorage implements JobStorage {
             return data;
         }
         try (Statement statement = conn.createStatement();
-             ResultSet rs = statement.executeQuery("SELECT uuid, name FROM " + playersTable)) {
+             ResultSet rs = statement.executeQuery("SELECT uuid, name, sound_enabled, actionbar_enabled FROM " + playersTable)) {
             while (rs.next()) {
-                data.put(UUID.fromString(rs.getString("uuid")), new PlayerJobData(rs.getString("name")));
+                PlayerJobData playerData = new PlayerJobData(rs.getString("name"));
+                playerData.setSoundEnabled(rs.getBoolean("sound_enabled"));
+                playerData.setActionBarEnabled(rs.getBoolean("actionbar_enabled"));
+                data.put(UUID.fromString(rs.getString("uuid")), playerData);
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to load EcoJobs players", e);
@@ -123,8 +128,8 @@ public class MySqlJobStorage implements JobStorage {
             return;
         }
         try (PreparedStatement playerStatement = conn.prepareStatement(
-                "INSERT INTO " + playersTable + " (uuid, name) VALUES (?, ?) "
-                        + "ON DUPLICATE KEY UPDATE name = VALUES(name)");
+                "INSERT INTO " + playersTable + " (uuid, name, sound_enabled, actionbar_enabled) VALUES (?, ?, ?, ?) "
+                        + "ON DUPLICATE KEY UPDATE name = VALUES(name), sound_enabled = VALUES(sound_enabled), actionbar_enabled = VALUES(actionbar_enabled)");
              PreparedStatement progressStatement = conn.prepareStatement(
                      "INSERT INTO " + progressTable + " (uuid, job_id, level, xp, prestige, joined) VALUES (?, ?, ?, ?, ?, ?) "
                              + "ON DUPLICATE KEY UPDATE level = VALUES(level), xp = VALUES(xp), prestige = VALUES(prestige), joined = VALUES(joined)");
@@ -138,6 +143,8 @@ public class MySqlJobStorage implements JobStorage {
                 }
                 playerStatement.setString(1, uuid.toString());
                 playerStatement.setString(2, playerData.getName());
+                playerStatement.setBoolean(3, playerData.isSoundEnabled());
+                playerStatement.setBoolean(4, playerData.isActionBarEnabled());
                 playerStatement.addBatch();
 
                 for (Map.Entry<String, PlayerJobProgress> entry : playerData.getProgress().entrySet()) {

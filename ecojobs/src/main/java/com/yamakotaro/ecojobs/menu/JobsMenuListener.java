@@ -90,11 +90,15 @@ public class JobsMenuListener implements Listener {
         holder.render(jobManager, playerJobManager, jobOverrides, player);
     }
 
-    private static void playSuccess(Player player) {
-        player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.4f);
+    private void playSuccess(Player player) {
+        if (playerJobManager.isSoundEnabled(player)) {
+            player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.6f, 1.4f);
+        }
     }
 
-    private static void playDenied(Player player) {
-        player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.6f, 1f);
+    private void playDenied(Player player) {
+        if (playerJobManager.isSoundEnabled(player)) {
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 0.6f, 1f);
+        }
     }
 }

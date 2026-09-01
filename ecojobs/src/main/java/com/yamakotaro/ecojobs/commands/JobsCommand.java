@@ -11,7 +11,7 @@ import com.yamakotaro.ecojobs.PlayerJobManager;
 import com.yamakotaro.ecojobs.PlayerJobProgress;
 import com.yamakotaro.ecojobs.TabCompleteUtil;
 import com.yamakotaro.ecojobs.menu.AdminMenuHolder;
-import com.yamakotaro.ecojobs.menu.JobsMenuHolder;
+import com.yamakotaro.ecojobs.menu.HubMenuHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -282,8 +282,8 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(messages.get("general.no-permission", Map.of()));
             return;
         }
-        JobsMenuHolder holder = new JobsMenuHolder(messages);
-        holder.render(jobManager, playerJobManager, jobOverrides, player);
+        HubMenuHolder holder = new HubMenuHolder(messages);
+        holder.render(player.hasPermission("ecojobs.admin"));
         player.openInventory(holder.getInventory());
     }
 
