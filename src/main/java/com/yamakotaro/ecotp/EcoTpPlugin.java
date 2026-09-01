@@ -3,10 +3,12 @@ package com.yamakotaro.ecotp;
 import com.yamakotaro.ecotp.commands.AcceptCommand;
 import com.yamakotaro.ecotp.commands.BalanceCommand;
 import com.yamakotaro.ecotp.commands.BaltopCommand;
+import com.yamakotaro.ecotp.commands.DailyCommand;
 import com.yamakotaro.ecotp.commands.DelHomeCommand;
 import com.yamakotaro.ecotp.commands.DonateCommand;
 import com.yamakotaro.ecotp.commands.DonateMessageCommand;
 import com.yamakotaro.ecotp.commands.EcoAdminCommand;
+import com.yamakotaro.ecotp.commands.EcoItemCommand;
 import com.yamakotaro.ecotp.commands.EcoTpCommand;
 import com.yamakotaro.ecotp.commands.HomeCommand;
 import com.yamakotaro.ecotp.commands.HomesCommand;
@@ -21,6 +23,7 @@ import com.yamakotaro.ecotp.commands.TpaCommand;
 import com.yamakotaro.ecotp.commands.TpaDenyCommand;
 import com.yamakotaro.ecotp.commands.TphereCommand;
 import com.yamakotaro.ecotp.gui.GuiListener;
+import com.yamakotaro.ecotp.listeners.EcoItemListener;
 import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
 import com.yamakotaro.ecotp.listeners.VoteRewardJoinListener;
@@ -59,6 +62,9 @@ public class EcoTpPlugin extends JavaPlugin {
     private DonationManager donationManager;
     private VoteRewardManager voteRewardManager;
     private VotifierServer votifierServer;
+    private DailyRewardStorage dailyRewardStorage;
+    private DailyRewardManager dailyRewardManager;
+    private EcoItemManager ecoItemManager;
 
     @Override
     public void onEnable() {
@@ -115,6 +121,11 @@ public class EcoTpPlugin extends JavaPlugin {
         this.donationManager = new DonationManager(this);
         this.voteRewardManager = new VoteRewardManager(this);
         this.votifierServer = new VotifierServer(this);
+        this.dailyRewardStorage = useMysql
+                ? new MySqlDailyRewardStorage(this, mySqlConnectionProvider)
+                : new YamlDailyRewardStorage(this);
+        this.dailyRewardManager = new DailyRewardManager(this, dailyRewardStorage);
+        this.ecoItemManager = new EcoItemManager(this);
 
         HomeCommand homeCommand = new HomeCommand(this);
         getCommand("home").setExecutor(homeCommand);
@@ -154,6 +165,10 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("donate").setExecutor(donateCommand);
         getCommand("donate").setTabCompleter(donateCommand);
         getCommand("donatemessage").setExecutor(new DonateMessageCommand(this));
+        getCommand("daily").setExecutor(new DailyCommand(this));
+        EcoItemCommand ecoItemCommand = new EcoItemCommand(this);
+        getCommand("ecoitem").setExecutor(ecoItemCommand);
+        getCommand("ecoitem").setTabCompleter(ecoItemCommand);
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
         getServer().getPluginManager().registerEvents(new EconomyJoinListener(this), this);
@@ -162,6 +177,7 @@ public class EcoTpPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(teleportSafetyManager, this);
         getServer().getPluginManager().registerEvents(chatInputManager, this);
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
+        getServer().getPluginManager().registerEvents(new EcoItemListener(this), this);
         new VoteRewardListener(this).register();
         votifierServer.start();
 
@@ -207,6 +223,9 @@ public class EcoTpPlugin extends JavaPlugin {
         }
         if (balanceStorage != null) {
             balanceStorage.close();
+        }
+        if (dailyRewardStorage != null) {
+            dailyRewardStorage.close();
         }
         if (mySqlConnectionProvider != null) {
             mySqlConnectionProvider.close();
@@ -274,6 +293,14 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public VoteRewardManager getVoteRewardManager() {
         return voteRewardManager;
+    }
+
+    public DailyRewardManager getDailyRewardManager() {
+        return dailyRewardManager;
+    }
+
+    public EcoItemManager getEcoItemManager() {
+        return ecoItemManager;
     }
 
     public Messages getMessages() {

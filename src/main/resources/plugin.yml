@@ -109,6 +109,12 @@ commands:
   donatemessage:
     description: Set (or reset) your own thank-you message shown when someone donates to you
     usage: /donatemessage <message>|reset
+  daily:
+    description: Claim your once-per-day reward (streak bonus for consecutive days)
+    usage: /daily
+  ecoitem:
+    description: Give a player a physical, redeemable currency item (admin)
+    usage: /ecoitem give <player> <amount> [quantity]
 
 permissions:
   ecotp.player:
@@ -123,6 +129,7 @@ permissions:
       ecotp.pay: true
       ecotp.menu: true
       ecotp.donate: true
+      ecotp.daily: true
   ecotp.home:
     description: Can use /home, /homes
     default: false
@@ -156,3 +163,9 @@ permissions:
   ecotp.donate:
     description: Can use /donate and /donatemessage
     default: false
+  ecotp.daily:
+    description: Can use /daily
+    default: false
+  ecotp.ecoitem:
+    description: Can use /ecoitem give (admin)
+    default: op

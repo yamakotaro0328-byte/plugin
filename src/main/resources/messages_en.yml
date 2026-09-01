@@ -15,6 +15,7 @@ general:
   player-went-offline: "&c{player} went offline."
   cannot-target-self: "&cYou can't target yourself."
   feature-disabled: "&cThis feature is currently disabled."
+  no-economy: "&cNo economy is available right now. Try again later."
 
 confirm:
   accept-button: "[Accept]"
@@ -142,6 +143,19 @@ donatemessage:
 vote:
   thanks: "&aThanks for voting! You received {amount}."
   broadcast: "&b&l[Vote] &e{player} &bvoted for the server and received &e{amount}&b! Thank you!"
+
+daily:
+  already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
+  claimed: "&aDaily reward claimed: &f{amount}&a! (streak: {streak} day(s))"
+
+ecoitem:
+  usage: "&cUsage: /ecoitem give <player> <amount> [quantity]"
+  invalid-quantity: "&cQuantity must be a number between 1 and 64."
+  given: "&aGave {player} {quantity}x currency item(s) worth {amount} each."
+  received: "&aYou received {quantity}x currency item(s) worth {amount} each! Right-click to redeem."
+  item-name: "&6{amount}"
+  item-lore: "&7Right-click to redeem for currency"
+  redeemed: "&aRedeemed for &f{amount}&a!"
 
 menu:
   title: "EcoTP Menu"

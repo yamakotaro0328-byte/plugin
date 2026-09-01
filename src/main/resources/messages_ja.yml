@@ -15,6 +15,7 @@ general:
   player-went-offline: "&c{player} はオフラインになりました。"
   cannot-target-self: "&c自分自身には指定できません。"
   feature-disabled: "&cこの機能は現在無効になっています。"
+  no-economy: "&c現在、経済システムが利用できません。しばらくしてから再度お試しください。"
 
 confirm:
   accept-button: "[承諾する]"
@@ -142,6 +143,19 @@ donatemessage:
 vote:
   thanks: "&a投票ありがとうございます！{amount}を受け取りました。"
   broadcast: "&b&l[投票] &e{player} &bさんがサーバーに投票して &e{amount} &bを受け取りました！ありがとうございます！"
+
+daily:
+  already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
+  claimed: "&aデイリーボーナスを受け取りました: &f{amount}&a！(連続{streak}日目)"
+
+ecoitem:
+  usage: "&c使い方: /ecoitem give <プレイヤー名> <金額> [個数]"
+  invalid-quantity: "&c個数は1〜64の数値で指定してください。"
+  given: "&a{player}に、1個あたり{amount}の通貨アイテムを{quantity}個渡しました。"
+  received: "&a1個あたり{amount}の通貨アイテムを{quantity}個受け取りました！右クリックで換金できます。"
+  item-name: "&6{amount}"
+  item-lore: "&7右クリックで換金"
+  redeemed: "&f{amount}&aを換金しました！"
 
 menu:
   title: "EcoTPメニュー"

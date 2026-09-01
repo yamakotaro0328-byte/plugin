@@ -45,6 +45,33 @@ features:
   baltop: true
   menu: true
   donate: true
+  daily: true
+  eco-item: true
+
+# /daily: a once-per-day claim. Claiming again within streak-window-hours of the last
+# claim increases your streak (capped at max-streak-bonus-days), which raises the reward;
+# missing that window resets the streak back to day 1.
+# reward = base-amount + min(streak - 1, max-streak-bonus-days) * streak-bonus-per-day
+# (日本語) /daily: 1日1回受け取れるボーナス。streak-window-hours以内に次回請求すると
+# 連続日数(streak、上限max-streak-bonus-days)が伸びて報酬が増え、それを過ぎると
+# streakは1日目にリセットされる。
+# 報酬 = base-amount + min(streak - 1, max-streak-bonus-days) * streak-bonus-per-day
+daily-reward:
+  base-amount: 100.0
+  streak-bonus-per-day: 20.0
+  max-streak-bonus-days: 30
+  cooldown-hours: 24
+  streak-window-hours: 48
+
+# /ecoitem give <player> <amount> [quantity] (admin): spawns a physical, tradeable
+# currency item worth <amount> each. Anyone holding one can right-click to redeem their
+# whole stack's value at once (see EcoItemManager/EcoItemListener) - no permission needed
+# to redeem, only to give.
+# (日本語) /ecoitem give <プレイヤー名> <金額> [個数] (管理者用): 右クリックで換金できる、
+# 取引可能な「物理通貨」アイテムを生成して渡す。誰でも持っていれば右クリックで
+# スタック全体の合計額を一度に換金できる(換金自体に権限は不要、付与にのみ必要)。
+eco-item:
+  material: GOLD_NUGGET
 
 # Broadcasts a thank-you message server-wide whenever /donate succeeds. Recipients can
 # personalize their own message with /donatemessage (placeholders: {player}, {amount}).
