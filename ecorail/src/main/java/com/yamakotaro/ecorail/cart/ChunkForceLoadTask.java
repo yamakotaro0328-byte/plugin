@@ -1,32 +1,27 @@
 package com.yamakotaro.ecorail.cart;
 
-import com.yamakotaro.ecorail.Messages;
-import com.yamakotaro.ecorail.settings.PlayerSettings;
-import com.yamakotaro.ecorail.settings.PlayerSettingsManager;
-import com.yamakotaro.ecorail.station.Station;
-import com.yamakotaro.ecorail.station.StationManager;
+import com.yamakotaro.ecorail.stop.StopPoint;
+import com.yamakotaro.ecorail.stop.StopPointManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Minecart;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 /**
  * Runs every physics.tick-interval-ticks: force-loads a small square of chunks around each
  * managed cart's last known position (so vanilla rail physics keeps simulating it with nobody
- * nearby), checks whether it has reached its destination station, and gives up on carts that
- * go missing or sit idle too long (see ManagedCart's class doc for why).
+ * nearby), pauses it at marked stop points, corrects it back to its running direction if it
+ * starts rolling backward, and gives up on carts that go missing or sit idle too long (a safety
+ * net against a derailed cart pinning chunks loaded forever).
  */
 public class ChunkForceLoadTask extends BukkitRunnable {
 
@@ -36,25 +31,23 @@ public class ChunkForceLoadTask extends BukkitRunnable {
 
     private final JavaPlugin plugin;
     private final CartManager cartManager;
-    private final StationManager stationManager;
-    private final PlayerSettingsManager settingsManager;
-    private final Messages messages;
+    private final StopPointManager stopPointManager;
     private int runCount;
 
-    public ChunkForceLoadTask(JavaPlugin plugin, CartManager cartManager, StationManager stationManager,
-                               PlayerSettingsManager settingsManager, Messages messages) {
+    public ChunkForceLoadTask(JavaPlugin plugin, CartManager cartManager, StopPointManager stopPointManager) {
         this.plugin = plugin;
         this.cartManager = cartManager;
-        this.stationManager = stationManager;
-        this.settingsManager = settingsManager;
-        this.messages = messages;
+        this.stopPointManager = stopPointManager;
     }
 
     @Override
     public void run() {
         int radius = plugin.getConfig().getInt("physics.chunk-load-radius", 2);
         double stopRadius = plugin.getConfig().getDouble("physics.stop-radius", 1.5);
+        double launchSpeed = plugin.getConfig().getDouble("physics.launch-speed", 0.4);
+        boolean antiReverse = plugin.getConfig().getBoolean("physics.anti-reverse", true);
         long idleReleaseMillis = plugin.getConfig().getLong("physics.idle-release-seconds", 300) * 1000L;
+        long now = System.currentTimeMillis();
 
         for (Iterator<ManagedCart> it = cartManager.all().iterator(); it.hasNext(); ) {
             ManagedCart cart = it.next();
@@ -78,20 +71,32 @@ public class ChunkForceLoadTask extends BukkitRunnable {
 
             Location location = minecart.getLocation();
             cart.setLastChunk(location.getBlockX() >> 4, location.getBlockZ() >> 4);
-            Vector velocity = minecart.getVelocity();
-            if (velocity.lengthSquared() > MOVING_SPEED_SQUARED_THRESHOLD) {
-                cart.markMoved();
-            }
-            correctReverseRunning(minecart, cart, velocity);
 
-            if (hasArrived(cart, world, location, stopRadius)) {
-                handleArrival(minecart, cart);
-                releaseAllChunks(world, cart);
-                it.remove();
+            if (cart.isDwelling(now)) {
+                continue;
+            }
+            if (cart.getDwellUntilMillis() != 0) {
+                // Dwell just elapsed - relaunch the same direction it was already heading.
+                minecart.setVelocity(new Vector(cart.getForwardDirX() * launchSpeed, 0, cart.getForwardDirZ() * launchSpeed));
+                cart.setDwellUntilMillis(0);
+                cart.markMoved();
                 continue;
             }
 
-            if (System.currentTimeMillis() - cart.getLastMovedAt() > idleReleaseMillis) {
+            Vector velocity = minecart.getVelocity();
+            if (antiReverse) {
+                velocity = correctReverseRunning(minecart, cart, velocity);
+            }
+            if (velocity.lengthSquared() > MOVING_SPEED_SQUARED_THRESHOLD) {
+                cart.markMoved();
+                updateForwardDirection(cart, velocity);
+            }
+
+            if (handleStopPoint(minecart, cart, world, location, stopRadius)) {
+                continue;
+            }
+
+            if (now - cart.getLastMovedAt() > idleReleaseMillis) {
                 releaseAllChunks(world, cart);
                 it.remove();
             }
@@ -124,57 +129,47 @@ public class ChunkForceLoadTask extends BukkitRunnable {
         });
     }
 
-    /**
-     * A shove from another cart, a player, or momentum at a dead end can send a cart rolling
-     * backward relative to how it departed. If the owner wants anti-reverse protection, flip it
-     * back to its original launch direction, keeping the same speed.
-     */
-    private void correctReverseRunning(Minecart minecart, ManagedCart cart, Vector velocity) {
-        if (cart.getOwnerId() == null || (cart.getForwardDirX() == 0 && cart.getForwardDirZ() == 0)) {
-            return;
-        }
-        PlayerSettings settings = settingsManager.get(cart.getOwnerId());
-        if (!settings.antiReverse()) {
-            return;
+    /** @return the (possibly corrected) velocity. */
+    private Vector correctReverseRunning(Minecart minecart, ManagedCart cart, Vector velocity) {
+        if (cart.getForwardDirX() == 0 && cart.getForwardDirZ() == 0) {
+            return velocity;
         }
         double forwardComponent = velocity.getX() * cart.getForwardDirX() + velocity.getZ() * cart.getForwardDirZ();
         if (forwardComponent >= 0) {
-            return;
+            return velocity;
         }
         double horizontalSpeed = Math.sqrt(velocity.getX() * velocity.getX() + velocity.getZ() * velocity.getZ());
-        minecart.setVelocity(new Vector(cart.getForwardDirX() * horizontalSpeed, velocity.getY(), cart.getForwardDirZ() * horizontalSpeed));
+        Vector corrected = new Vector(cart.getForwardDirX() * horizontalSpeed, velocity.getY(), cart.getForwardDirZ() * horizontalSpeed);
+        minecart.setVelocity(corrected);
+        return corrected;
     }
 
-    private boolean hasArrived(ManagedCart cart, World world, Location location, double stopRadius) {
-        if (cart.getDestinationStationId() == null) {
-            return false;
+    /** Snaps the (possibly diagonal, on a corner rail) velocity to the dominant cardinal axis. */
+    private void updateForwardDirection(ManagedCart cart, Vector velocity) {
+        if (Math.abs(velocity.getX()) >= Math.abs(velocity.getZ())) {
+            cart.setForwardDirection(velocity.getX() > 0 ? 1 : -1, 0);
+        } else {
+            cart.setForwardDirection(0, velocity.getZ() > 0 ? 1 : -1);
         }
-        Optional<Station> destination = stationManager.find(cart.getDestinationStationId());
-        if (destination.isEmpty() || !destination.get().world().equals(world.getName())) {
-            return false;
-        }
-        Station station = destination.get();
-        double dx = location.getX() - station.centerX();
-        double dz = location.getZ() - station.centerZ();
-        return dx * dx + dz * dz <= stopRadius * stopRadius;
     }
 
-    private void handleArrival(Minecart minecart, ManagedCart cart) {
+    /** @return true if the cart just started (or is already) dwelling at a stop this tick. */
+    private boolean handleStopPoint(Minecart minecart, ManagedCart cart, World world, Location location, double stopRadius) {
+        Optional<StopPoint> nearby = stopPointManager.findNearest(location, stopRadius);
+        if (nearby.isEmpty()) {
+            cart.setLastHandledStopKey(null);
+            return false;
+        }
+        StopPoint stop = nearby.get();
+        if (stop.key().equals(cart.getLastHandledStopKey())) {
+            return false; // already handled this same stop - wait until the cart moves away before it can trigger again
+        }
         minecart.setVelocity(new Vector(0, 0, 0));
-        Station station = stationManager.find(cart.getDestinationStationId()).orElseThrow();
-        for (Entity passenger : List.copyOf(minecart.getPassengers())) {
-            minecart.removePassenger(passenger);
-            if (passenger instanceof Player player) {
-                player.sendMessage(messages.get("arrival.arrived", Map.of("name", station.name())));
-            }
-        }
+        cart.setDwellUntilMillis(System.currentTimeMillis() + stop.dwellSeconds() * 1000L);
+        cart.setLastHandledStopKey(stop.key());
+        return true;
     }
 
-    /**
-     * Only releases this cart's chunk tickets - removing it from tracking is the caller's job
-     * (via the iterator's own remove()), since cartManager.unregister() would mutate the same
-     * backing map the caller is iterating and trip a ConcurrentModificationException.
-     */
     private void releaseAllChunks(World world, ManagedCart cart) {
         for (Long key : cart.getHeldChunks()) {
             world.removePluginChunkTicket(unpackX(key), unpackZ(key), plugin);

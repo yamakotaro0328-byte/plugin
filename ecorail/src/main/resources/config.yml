@@ -3,132 +3,94 @@
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
 language: en
 
-# How fares are charged. Vault is optional - if it's missing (or a player has no balance),
-# they can still ride by holding a matching physical ticket item instead.
-# (日本語) 運賃の扱い。Vaultが無い(または残高不足の)場合でも、対応する切符アイテムを
-# 持っていれば乗車できる。
-economy:
-  enabled: true
-
-# Governs how managed minecarts (ones spawned from a boarding sign) keep moving even when no
-# player has their chunk loaded. Every tick-interval-ticks, EcoRail force-loads a
-# (2*chunk-load-radius+1)-chunk square around each managed cart's last known position - large
-# enough for vanilla rail physics to keep simulating it, small enough not to force-load the
-# whole line at once. Carts release their forced chunks once they arrive at their destination, or
-# after idle-release-seconds with no movement (a safety net against a derailed/stuck cart pinning
-# chunks loaded forever).
-# (日本語) 「切符で乗った」トロッコを、誰もチャンクを読み込んでいなくても走らせ続けるための設定。
-# tick-interval-ticks 毎に、各トロッコの直近位置を中心とした
-# (2*chunk-load-radius+1)四方のチャンクを強制ロードする。目的地に到着するか、
-# idle-release-seconds 秒動きが無ければ強制ロードを解除する(脱線などで永久に
-# チャンクを固定してしまう事故を防ぐための安全策)。
+# EcoRail has no route data of its own - the rails you build ARE the route. Mark a minecart with
+# /ecorail cart mark and EcoRail keeps it running forever, pausing at any stop point (see
+# /ecorail stop create) it reaches along the way and relaunching it in the same direction once
+# the dwell time is up.
+#
+# chunk-load-radius: how many chunks (in each direction) around a managed cart get force-loaded
+#   so it keeps simulating with nobody nearby. Keep this small (1-3) - it only needs to cover
+#   what's immediately around the cart, not the whole line, or you'll force-load far more of the
+#   world than necessary.
+# stop-radius: how close (in blocks) a cart needs to get to a stop point to trigger it.
+# launch-speed: the velocity a cart is given when relaunched after dwelling at a stop.
+# anti-reverse: correct a cart back to its running direction if it starts rolling backward (a
+#   shove, another cart, or momentum at a dead end).
+# player-collision: whether a managed cart pushes players standing in its path (vanilla
+#   behavior) or passes through them.
+# idle-release-seconds: if a cart hasn't moved (and isn't intentionally dwelling at a stop) for
+#   this long, EcoRail gives up force-loading it - a safety net against a derailed/stuck cart
+#   pinning chunks loaded forever.
+#
+# (日本語) EcoRail自体は経路データを持たない - 自分で敷いたレールがそのまま経路になる。
+# /ecorail cart mark でトロッコを管理対象にすると、EcoRailはそれを走らせ続け、
+# /ecorail stop create で作った停止地点に来るたびに一時停止し、時間が来たら
+# 同じ方向へ再発進させる。
+#
+# chunk-load-radius: 管理対象のトロッコの周囲、何チャンク四方を強制ロードするか。
+#   小さめ(1〜3)にしておくこと - トロッコの直近だけで十分で、路線全体を
+#   強制ロードする必要はない。
+# stop-radius: 停止地点にどれだけ近づいたら反応するか(ブロック数)。
+# launch-speed: 停止地点から再発進する際の速度。
+# anti-reverse: 何らかの理由で逆走し始めたトロッコを、走行方向へ補正する。
+# player-collision: 管理対象のトロッコが進路上のプレイヤーを押し出すか(バニラの挙動)。
+# idle-release-seconds: (意図的な停止中を除いて)これだけの秒数動かなければ、
+#   強制ロードを諦める(脱線などで永久にチャンクを固定してしまう事故を防ぐ安全策)。
 physics:
   tick-interval-ticks: 4
   chunk-load-radius: 2
   stop-radius: 1.5
   launch-speed: 0.4
+  anti-reverse: true
+  player-collision: true
   idle-release-seconds: 300
-
-# Per-player defaults for /ecorail settings, used until a player changes them there themselves.
-# anti-reverse corrects a cart back to its launch direction if it starts rolling backward (a
-# shove, another cart, or momentum at a dead end). player-collision is whether a player's own
-# carts push other players standing in their path, same as vanilla.
-# (日本語) /ecorail settings のプレイヤーごとの初期値(本人が変更するまで使われる)。
-# anti-reverse は、何らかの理由(衝突・惰性など)でトロッコが逆走し始めた際に
-# 出発時の方向へ補正する機能。player-collision は自分のトロッコが他プレイヤーを
-# 押し出すかどうか(バニラの挙動)。
-settings:
-  default-anti-reverse: true
-  default-player-collision: true
 
 messages:
   en:
     general:
       no-permission: "&cYou don't have permission to do that."
-      player-not-found: "&cPlayer '{player}' not found."
       player-only: "&cThis command can only be used by a player."
-    station:
-      usage: "&cUsage: /ecorail station <create|remove|list>"
-      create-usage: "&cUsage: /ecorail station create <name>"
-      created: "&aCreated station '{name}' here, facing {direction}."
-      already-exists: "&cA station named '{name}' already exists."
-      remove-usage: "&cUsage: /ecorail station remove <name>"
-      removed: "&aRemoved station '{name}'."
-      not-found: "&cNo station named '{name}'."
-      list-header: "&7--- Stations ({count}) ---"
-      list-empty: "&7No stations registered."
-      list-entry: "&f{name} &7({world} {x}, {y}, {z})"
-      direction-north: "north"
-      direction-south: "south"
-      direction-east: "east"
-      direction-west: "west"
-    ticket:
-      give-usage: "&cUsage: /ecorail ticket give <player> <from> <to>"
-      gave: "&aGave {player} a ticket from {from} to {to}."
-      received: "&aYou received a ticket: {from} → {to}."
-      item-name: "&f{from} → {to} Ticket"
-    sign:
-      invalid-stations: "&cUnknown station(s) - check the names on lines 2 and 3."
-      invalid-price: "&cLine 4 must be a non-negative number (the fare)."
-      created: "&aTicket sign created: {from} → {to} ({price})"
-    board:
-      no-economy: "&cNo economy is available and you don't have a valid ticket for this route."
-      insufficient-funds: "&cYou need {price} to buy this ticket (or bring a matching ticket item)."
-      boarded-paid: "&aPaid {price} - enjoy your ride to {to}!"
-      boarded-ticket: "&aTicket accepted - enjoy your ride to {to}!"
-    arrival:
-      arrived: "&aYou have arrived at {name}."
+    stop:
+      usage: "&cUsage: /ecorail stop <create|remove|list>"
+      create-usage: "&cUsage: /ecorail stop create <seconds>"
+      invalid-seconds: "&cSeconds must be a whole number greater than 0."
+      created: "&aCreated a stop point here ({seconds}s dwell)."
+      removed: "&aRemoved the nearest stop point."
+      not-found-nearby: "&cNo stop point found nearby."
+      list-header: "&7--- Stop points ({count}) ---"
+      list-empty: "&7No stop points registered."
+      list-entry: "&f({world} {x}, {y}, {z}) &7- {seconds}s"
+    cart:
+      usage: "&cUsage: /ecorail cart <mark|unmark>"
+      marked: "&aThis minecart will now run forever, pausing at any stop point it reaches."
+      unmarked: "&aThis minecart is no longer managed by EcoRail."
+      no-cart-nearby: "&cNo minecart found nearby."
+      no-managed-cart-nearby: "&cNo EcoRail-managed minecart found nearby."
+      already-managed: "&cThat minecart is already managed by EcoRail."
     ecorail:
-      usage: "&cUsage: /ecorail <station <create|remove|list>|ticket give <player> <from> <to>|settings|reload>"
+      usage: "&cUsage: /ecorail <stop <create|remove|list>|cart <mark|unmark>|reload>"
       reloaded: "&aReloaded config.yml."
-    settings:
-      title: "EcoRail Settings"
-      anti-reverse-name: "&fAnti-Reverse Protection"
-      player-collision-name: "&fPlayer Collision"
-      state-on: "&aON &7(click to turn off)"
-      state-off: "&cOFF &7(click to turn on)"
   ja:
     general:
       no-permission: "&cこの操作を行う権限がありません。"
-      player-not-found: "&cプレイヤー「{player}」が見つかりません。"
       player-only: "&cこのコマンドはプレイヤーのみ使用できます。"
-    station:
-      usage: "&c使い方: /ecorail station <create|remove|list>"
-      create-usage: "&c使い方: /ecorail station create <駅名>"
-      created: "&aこの場所に駅「{name}」を作成しました(発車方向: {direction})。"
-      already-exists: "&c駅「{name}」は既に存在します。"
-      remove-usage: "&c使い方: /ecorail station remove <駅名>"
-      removed: "&a駅「{name}」を削除しました。"
-      not-found: "&c駅「{name}」が見つかりません。"
-      list-header: "&7--- 駅一覧 ({count}) ---"
-      list-empty: "&7登録されている駅はありません。"
-      list-entry: "&f{name} &7({world} {x}, {y}, {z})"
-      direction-north: "北"
-      direction-south: "南"
-      direction-east: "東"
-      direction-west: "西"
-    ticket:
-      give-usage: "&c使い方: /ecorail ticket give <プレイヤー名> <出発駅> <到着駅>"
-      gave: "&a{player}に{from}から{to}行きの切符を渡しました。"
-      received: "&a切符を受け取りました: {from} → {to}"
-      item-name: "&f{from} → {to} 行き切符"
-    sign:
-      invalid-stations: "&c不明な駅名です。2行目・3行目を確認してください。"
-      invalid-price: "&c4行目には0以上の数字(運賃)を入力してください。"
-      created: "&a切符販売サインを作成しました: {from} → {to} ({price})"
-    board:
-      no-economy: "&c経済プラグインが無く、有効な切符も持っていません。"
-      insufficient-funds: "&cこの切符には{price}必要です(または対応する切符アイテムを持参してください)。"
-      boarded-paid: "&a{price}支払いました - {to}への乗車をお楽しみください!"
-      boarded-ticket: "&a切符を受け付けました - {to}への乗車をお楽しみください!"
-    arrival:
-      arrived: "&a{name}に到着しました。"
+    stop:
+      usage: "&c使い方: /ecorail stop <create|remove|list>"
+      create-usage: "&c使い方: /ecorail stop create <秒数>"
+      invalid-seconds: "&c秒数は1以上の整数で指定してください。"
+      created: "&aこの場所に停止地点を作成しました({seconds}秒停車)。"
+      removed: "&a最も近い停止地点を削除しました。"
+      not-found-nearby: "&c近くに停止地点が見つかりません。"
+      list-header: "&7--- 停止地点一覧 ({count}) ---"
+      list-empty: "&7登録されている停止地点はありません。"
+      list-entry: "&f({world} {x}, {y}, {z}) &7- {seconds}秒"
+    cart:
+      usage: "&c使い方: /ecorail cart <mark|unmark>"
+      marked: "&aこのトロッコはEcoRailの管理下で走り続け、停止地点で一時停車するようになります。"
+      unmarked: "&aこのトロッコはEcoRailの管理対象から外れました。"
+      no-cart-nearby: "&c近くにトロッコが見つかりません。"
+      no-managed-cart-nearby: "&c近くに管理対象のトロッコが見つかりません。"
+      already-managed: "&cそのトロッコは既に管理対象です。"
     ecorail:
-      usage: "&c使い方: /ecorail <station <create|remove|list>|ticket give <プレイヤー名> <出発駅> <到着駅>|settings|reload>"
+      usage: "&c使い方: /ecorail <stop <create|remove|list>|cart <mark|unmark>|reload>"
       reloaded: "&aconfig.ymlを再読み込みしました。"
-    settings:
-      title: "EcoRail設定"
-      anti-reverse-name: "&f逆走防止"
-      player-collision-name: "&fプレイヤー当たり判定"
-      state-on: "&aオン &7(クリックでオフに)"
-      state-off: "&cオフ &7(クリックでオンに)"

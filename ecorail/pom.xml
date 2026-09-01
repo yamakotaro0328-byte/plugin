@@ -10,8 +10,8 @@
     <packaging>jar</packaging>
 
     <name>EcoRail</name>
-    <description>Sign-based train stations and tickets on top of vanilla minecarts and rails,
-        with chunks force-loaded around every moving cart so trains keep running unattended.</description>
+    <description>Keeps admin-marked minecarts running forever on vanilla rails, pausing at
+        marked stop points, with chunks force-loaded around them so they keep moving unattended.</description>
 
     <!-- Independent Maven project (its own pom.xml), built in its own CI job so a build
          failure here never blocks or reflects on any of the other plugins. -->
@@ -27,10 +27,6 @@
             <id>papermc</id>
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
     </repositories>
 
     <dependencies>
@@ -38,14 +34,6 @@
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
             <version>[26.2.build,)</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- Vault is optional - without it, riders can only pay with a physical ticket item,
-             never shaded so every plugin on the server shares the same Economy class object. -->
-        <dependency>
-            <groupId>com.github.MilkBowl</groupId>
-            <artifactId>VaultAPI</artifactId>
-            <version>1.7</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

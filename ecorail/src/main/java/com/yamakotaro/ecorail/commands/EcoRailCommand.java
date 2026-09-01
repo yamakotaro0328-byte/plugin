@@ -1,20 +1,20 @@
 package com.yamakotaro.ecorail.commands;
 
 import com.yamakotaro.ecorail.Messages;
-import com.yamakotaro.ecorail.items.TicketItemFactory;
-import com.yamakotaro.ecorail.settings.PlayerSettingsManager;
-import com.yamakotaro.ecorail.settings.SettingsMenu;
-import com.yamakotaro.ecorail.station.Station;
-import com.yamakotaro.ecorail.station.StationManager;
-import org.bukkit.Bukkit;
+import com.yamakotaro.ecorail.cart.CartManager;
+import com.yamakotaro.ecorail.cart.ManagedCart;
+import com.yamakotaro.ecorail.stop.StopPoint;
+import com.yamakotaro.ecorail.stop.StopPointManager;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.util.Vector;
 
 import java.util.Collections;
 import java.util.List;
@@ -23,39 +23,33 @@ import java.util.Optional;
 
 public class EcoRailCommand implements CommandExecutor, TabCompleter {
 
+    private static final double COMMAND_SEARCH_RADIUS = 5.0;
+
     private final JavaPlugin plugin;
-    private final StationManager stationManager;
-    private final TicketItemFactory ticketItemFactory;
-    private final PlayerSettingsManager settingsManager;
+    private final StopPointManager stopPointManager;
+    private final CartManager cartManager;
     private final Messages messages;
 
-    public EcoRailCommand(JavaPlugin plugin, StationManager stationManager, TicketItemFactory ticketItemFactory,
-                           PlayerSettingsManager settingsManager, Messages messages) {
+    public EcoRailCommand(JavaPlugin plugin, StopPointManager stopPointManager, CartManager cartManager, Messages messages) {
         this.plugin = plugin;
-        this.stationManager = stationManager;
-        this.ticketItemFactory = ticketItemFactory;
-        this.settingsManager = settingsManager;
+        this.stopPointManager = stopPointManager;
+        this.cartManager = cartManager;
         this.messages = messages;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length == 0) {
-            sender.sendMessage(messages.get("ecorail.usage", Map.of()));
-            return true;
-        }
-        // settings is a personal preference, not an admin action - everyone else needs ecorail.admin.
-        if (args[0].equalsIgnoreCase("settings")) {
-            handleSettings(sender);
-            return true;
-        }
         if (!sender.hasPermission("ecorail.admin")) {
             sender.sendMessage(messages.get("general.no-permission", Map.of()));
             return true;
         }
+        if (args.length == 0) {
+            sender.sendMessage(messages.get("ecorail.usage", Map.of()));
+            return true;
+        }
         switch (args[0].toLowerCase()) {
-            case "station" -> handleStation(sender, args);
-            case "ticket" -> handleTicket(sender, args);
+            case "stop" -> handleStop(sender, args);
+            case "cart" -> handleCart(sender, args);
             case "reload" -> {
                 plugin.reloadConfig();
                 sender.sendMessage(messages.get("ecorail.reloaded", Map.of()));
@@ -65,102 +59,155 @@ public class EcoRailCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    private void handleSettings(CommandSender sender) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(messages.get("general.player-only", Map.of()));
-            return;
-        }
-        SettingsMenu.open(player, settingsManager, messages);
-    }
-
-    private void handleStation(CommandSender sender, String[] args) {
+    private void handleStop(CommandSender sender, String[] args) {
         if (args.length < 2) {
-            sender.sendMessage(messages.get("station.usage", Map.of()));
+            sender.sendMessage(messages.get("stop.usage", Map.of()));
             return;
         }
         switch (args[1].toLowerCase()) {
-            case "create" -> handleStationCreate(sender, args);
-            case "remove" -> handleStationRemove(sender, args);
-            case "list" -> handleStationList(sender);
-            default -> sender.sendMessage(messages.get("station.usage", Map.of()));
+            case "create" -> handleStopCreate(sender, args);
+            case "remove" -> handleStopRemove(sender);
+            case "list" -> handleStopList(sender);
+            default -> sender.sendMessage(messages.get("stop.usage", Map.of()));
         }
     }
 
-    private void handleStationCreate(CommandSender sender, String[] args) {
+    private void handleStopCreate(CommandSender sender, String[] args) {
         if (args.length < 3) {
-            sender.sendMessage(messages.get("station.create-usage", Map.of()));
+            sender.sendMessage(messages.get("stop.create-usage", Map.of()));
             return;
         }
         if (!(sender instanceof Player player)) {
             sender.sendMessage(messages.get("general.player-only", Map.of()));
             return;
         }
-        String name = args[2];
-        if (stationManager.find(name).isPresent()) {
-            sender.sendMessage(messages.get("station.already-exists", Map.of("name", name)));
+        int seconds;
+        try {
+            seconds = Integer.parseInt(args[2]);
+            if (seconds <= 0) {
+                throw new NumberFormatException();
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(messages.get("stop.invalid-seconds", Map.of()));
             return;
         }
         Location location = player.getLocation();
-        int[] direction = cardinalDirection(location.getYaw());
-        Station station = new Station(StationManager.normalize(name), name, location.getWorld().getName(),
-                location.getBlockX(), location.getBlockY(), location.getBlockZ(), direction[0], direction[1]);
-        stationManager.create(station);
-        sender.sendMessage(messages.get("station.created", Map.of("name", name, "direction", directionName(direction, messages))));
+        stopPointManager.create(new StopPoint(location.getWorld().getName(),
+                location.getBlockX(), location.getBlockY(), location.getBlockZ(), seconds));
+        sender.sendMessage(messages.get("stop.created", Map.of("seconds", String.valueOf(seconds))));
     }
 
-    private void handleStationRemove(CommandSender sender, String[] args) {
-        if (args.length < 3) {
-            sender.sendMessage(messages.get("station.remove-usage", Map.of()));
+    private void handleStopRemove(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(messages.get("general.player-only", Map.of()));
             return;
         }
-        String name = args[2];
-        boolean removed = stationManager.remove(name);
-        sender.sendMessage(messages.get(removed ? "station.removed" : "station.not-found", Map.of("name", name)));
+        Optional<StopPoint> removed = stopPointManager.removeNearest(player.getLocation(), COMMAND_SEARCH_RADIUS);
+        sender.sendMessage(messages.get(removed.isPresent() ? "stop.removed" : "stop.not-found-nearby", Map.of()));
     }
 
-    private void handleStationList(CommandSender sender) {
-        var stations = stationManager.all();
-        sender.sendMessage(messages.get("station.list-header", Map.of("count", String.valueOf(stations.size()))));
-        if (stations.isEmpty()) {
-            sender.sendMessage(messages.get("station.list-empty", Map.of()));
+    private void handleStopList(CommandSender sender) {
+        var stops = stopPointManager.all();
+        sender.sendMessage(messages.get("stop.list-header", Map.of("count", String.valueOf(stops.size()))));
+        if (stops.isEmpty()) {
+            sender.sendMessage(messages.get("stop.list-empty", Map.of()));
             return;
         }
-        for (Station station : stations) {
-            sender.sendMessage(messages.get("station.list-entry", Map.of(
-                    "name", station.name(), "world", station.world(),
-                    "x", String.valueOf(station.x()), "y", String.valueOf(station.y()), "z", String.valueOf(station.z()))));
+        for (StopPoint stop : stops) {
+            sender.sendMessage(messages.get("stop.list-entry", Map.of(
+                    "world", stop.world(), "x", String.valueOf(stop.x()), "y", String.valueOf(stop.y()),
+                    "z", String.valueOf(stop.z()), "seconds", String.valueOf(stop.dwellSeconds()))));
         }
     }
 
-    private void handleTicket(CommandSender sender, String[] args) {
-        if (args.length < 2 || !args[1].equalsIgnoreCase("give")) {
-            sender.sendMessage(messages.get("ticket.give-usage", Map.of()));
+    private void handleCart(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage(messages.get("cart.usage", Map.of()));
             return;
         }
-        if (args.length < 5) {
-            sender.sendMessage(messages.get("ticket.give-usage", Map.of()));
+        switch (args[1].toLowerCase()) {
+            case "mark" -> handleCartMark(sender);
+            case "unmark" -> handleCartUnmark(sender);
+            default -> sender.sendMessage(messages.get("cart.usage", Map.of()));
+        }
+    }
+
+    private void handleCartMark(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(messages.get("general.player-only", Map.of()));
             return;
         }
-        Player target = Bukkit.getPlayerExact(args[2]);
-        if (target == null) {
-            sender.sendMessage(messages.get("general.player-not-found", Map.of("player", args[2])));
+        Minecart nearest = findNearestMinecart(player);
+        if (nearest == null) {
+            sender.sendMessage(messages.get("cart.no-cart-nearby", Map.of()));
             return;
         }
-        Optional<Station> from = stationManager.find(args[3]);
-        if (from.isEmpty()) {
-            sender.sendMessage(messages.get("station.not-found", Map.of("name", args[3])));
+        if (cartManager.isManaged(nearest.getUniqueId())) {
+            sender.sendMessage(messages.get("cart.already-managed", Map.of()));
             return;
         }
-        Optional<Station> to = stationManager.find(args[4]);
-        if (to.isEmpty()) {
-            sender.sendMessage(messages.get("station.not-found", Map.of("name", args[4])));
+        int[] direction = directionOf(nearest, player);
+        Location location = nearest.getLocation();
+        cartManager.register(new ManagedCart(nearest.getUniqueId(), location.getWorld().getName(),
+                location.getBlockX() >> 4, location.getBlockZ() >> 4, direction[0], direction[1]));
+        sender.sendMessage(messages.get("cart.marked", Map.of()));
+    }
+
+    private void handleCartUnmark(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(messages.get("general.player-only", Map.of()));
             return;
         }
-        ItemStack ticket = ticketItemFactory.create(from.get().id(), to.get().id());
-        target.getInventory().addItem(ticket);
-        target.sendMessage(messages.get("ticket.received", Map.of("from", from.get().name(), "to", to.get().name())));
-        sender.sendMessage(messages.get("ticket.gave", Map.of(
-                "player", target.getName(), "from", from.get().name(), "to", to.get().name())));
+        Minecart nearest = findNearestManagedMinecart(player);
+        if (nearest == null) {
+            sender.sendMessage(messages.get("cart.no-managed-cart-nearby", Map.of()));
+            return;
+        }
+        cartManager.unregisterAndRelease(nearest.getUniqueId(), plugin);
+        sender.sendMessage(messages.get("cart.unmarked", Map.of()));
+    }
+
+    private Minecart findNearestMinecart(Player player) {
+        Minecart nearest = null;
+        double nearestDistanceSquared = COMMAND_SEARCH_RADIUS * COMMAND_SEARCH_RADIUS;
+        for (Entity entity : player.getNearbyEntities(COMMAND_SEARCH_RADIUS, COMMAND_SEARCH_RADIUS, COMMAND_SEARCH_RADIUS)) {
+            if (!(entity instanceof Minecart minecart)) {
+                continue;
+            }
+            double distanceSquared = entity.getLocation().distanceSquared(player.getLocation());
+            if (distanceSquared <= nearestDistanceSquared) {
+                nearest = minecart;
+                nearestDistanceSquared = distanceSquared;
+            }
+        }
+        return nearest;
+    }
+
+    private Minecart findNearestManagedMinecart(Player player) {
+        Minecart nearest = null;
+        double nearestDistanceSquared = COMMAND_SEARCH_RADIUS * COMMAND_SEARCH_RADIUS;
+        for (Entity entity : player.getNearbyEntities(COMMAND_SEARCH_RADIUS, COMMAND_SEARCH_RADIUS, COMMAND_SEARCH_RADIUS)) {
+            if (!(entity instanceof Minecart minecart) || !cartManager.isManaged(minecart.getUniqueId())) {
+                continue;
+            }
+            double distanceSquared = entity.getLocation().distanceSquared(player.getLocation());
+            if (distanceSquared <= nearestDistanceSquared) {
+                nearest = minecart;
+                nearestDistanceSquared = distanceSquared;
+            }
+        }
+        return nearest;
+    }
+
+    /** Prefers the cart's own current heading (if it's already moving); falls back to the marking player's facing. */
+    private static int[] directionOf(Minecart minecart, Player fallbackFacing) {
+        Vector velocity = minecart.getVelocity();
+        if (velocity.lengthSquared() > 0.0009) {
+            return Math.abs(velocity.getX()) >= Math.abs(velocity.getZ())
+                    ? new int[]{velocity.getX() > 0 ? 1 : -1, 0}
+                    : new int[]{0, velocity.getZ() > 0 ? 1 : -1};
+        }
+        return cardinalDirection(fallbackFacing.getLocation().getYaw());
     }
 
     private static int[] cardinalDirection(float yaw) {
@@ -176,32 +223,16 @@ public class EcoRailCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    private static String directionName(int[] direction, Messages messages) {
-        if (direction[1] == 1) return messages.raw("station.direction-south", Map.of());
-        if (direction[0] == -1) return messages.raw("station.direction-west", Map.of());
-        if (direction[1] == -1) return messages.raw("station.direction-north", Map.of());
-        return messages.raw("station.direction-east", Map.of());
-    }
-
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return filterPrefix(List.of("station", "ticket", "reload", "settings"), args[0]);
+            return filterPrefix(List.of("stop", "cart", "reload"), args[0]);
         }
-        if (args.length == 2 && args[0].equalsIgnoreCase("station")) {
+        if (args.length == 2 && args[0].equalsIgnoreCase("stop")) {
             return filterPrefix(List.of("create", "remove", "list"), args[1]);
         }
-        if (args.length == 2 && args[0].equalsIgnoreCase("ticket")) {
-            return filterPrefix(List.of("give"), args[1]);
-        }
-        if (args.length == 3 && args[0].equalsIgnoreCase("station") && args[1].equalsIgnoreCase("remove")) {
-            return filterPrefix(stationManager.all().stream().map(Station::name).toList(), args[2]);
-        }
-        if (args.length == 3 && args[0].equalsIgnoreCase("ticket") && args[1].equalsIgnoreCase("give")) {
-            return filterPrefix(Bukkit.getOnlinePlayers().stream().map(Player::getName).toList(), args[2]);
-        }
-        if ((args.length == 4 || args.length == 5) && args[0].equalsIgnoreCase("ticket") && args[1].equalsIgnoreCase("give")) {
-            return filterPrefix(stationManager.all().stream().map(Station::name).toList(), args[args.length - 1]);
+        if (args.length == 2 && args[0].equalsIgnoreCase("cart")) {
+            return filterPrefix(List.of("mark", "unmark"), args[1]);
         }
         return Collections.emptyList();
     }

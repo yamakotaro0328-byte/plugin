@@ -1,6 +1,9 @@
 package com.yamakotaro.ecorail.cart;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -8,15 +11,13 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 
 /**
- * Only the fields ChunkForceLoadTask needs to resume tracking after a restart are persisted
- * (last known chunk + destination) - held chunk tickets are never saved, since Minecraft itself
- * doesn't keep plugin chunk tickets across a restart either; they're simply re-requested on the
- * first tick after reload.
+ * Only the fields ChunkForceLoadTask needs to resume tracking after a restart are persisted -
+ * held chunk tickets are never saved, since Minecraft itself doesn't keep plugin chunk tickets
+ * across a restart either; they're simply re-requested on the first tick after reload.
  */
 public class CartManager {
 
@@ -43,16 +44,15 @@ public class CartManager {
                 continue;
             }
             String path = key + ".";
-            String ownerString = yaml.getString(path + "owner");
             ManagedCart cart = new ManagedCart(
                     entityId,
                     yaml.getString(path + "world"),
                     yaml.getInt(path + "chunk-x"),
                     yaml.getInt(path + "chunk-z"),
-                    yaml.getString(path + "destination"),
-                    ownerString != null ? UUID.fromString(ownerString) : null,
                     yaml.getInt(path + "forward-dir-x"),
                     yaml.getInt(path + "forward-dir-z"));
+            cart.setDwellUntilMillis(yaml.getLong(path + "dwell-until", 0));
+            cart.setLastHandledStopKey(yaml.getString(path + "last-stop"));
             cartsById.put(entityId, cart);
         }
     }
@@ -64,10 +64,10 @@ public class CartManager {
             yaml.set(path + "world", cart.getWorld());
             yaml.set(path + "chunk-x", cart.getLastChunkX());
             yaml.set(path + "chunk-z", cart.getLastChunkZ());
-            yaml.set(path + "destination", cart.getDestinationStationId());
-            yaml.set(path + "owner", cart.getOwnerId() != null ? cart.getOwnerId().toString() : null);
             yaml.set(path + "forward-dir-x", cart.getForwardDirX());
             yaml.set(path + "forward-dir-z", cart.getForwardDirZ());
+            yaml.set(path + "dwell-until", cart.getDwellUntilMillis());
+            yaml.set(path + "last-stop", cart.getLastHandledStopKey());
         }
         try {
             plugin.getDataFolder().mkdirs();
@@ -82,17 +82,32 @@ public class CartManager {
         save();
     }
 
-    public void unregister(UUID entityId) {
-        if (cartsById.remove(entityId) != null) {
-            save();
+    /**
+     * Removes a cart from tracking and releases its held chunk tickets immediately. Only
+     * ChunkForceLoadTask itself is allowed to remove a cart without also releasing its tickets
+     * (it does so directly via its own iterator, right after releasing them) - everywhere else,
+     * such as /ecorail cart unmark, must go through this or the chunks it was holding stay
+     * force-loaded forever.
+     */
+    public void unregisterAndRelease(UUID entityId, Plugin plugin) {
+        ManagedCart cart = cartsById.remove(entityId);
+        if (cart == null) {
+            return;
         }
+        World world = Bukkit.getWorld(cart.getWorld());
+        if (world != null) {
+            for (long key : cart.getHeldChunks()) {
+                world.removePluginChunkTicket((int) (key >> 32), (int) key, plugin);
+            }
+        }
+        save();
+    }
+
+    public boolean isManaged(UUID entityId) {
+        return cartsById.containsKey(entityId);
     }
 
     public Collection<ManagedCart> all() {
         return cartsById.values();
-    }
-
-    public Optional<ManagedCart> find(UUID entityId) {
-        return Optional.ofNullable(cartsById.get(entityId));
     }
 }

@@ -1,25 +1,22 @@
 package com.yamakotaro.ecorail.listeners;
 
 import com.yamakotaro.ecorail.cart.CartManager;
-import com.yamakotaro.ecorail.cart.ManagedCart;
-import com.yamakotaro.ecorail.settings.PlayerSettingsManager;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Optional;
-
-/** Lets a player opt their own carts out of pushing other players around (settings.player-collision). */
+/** When physics.player-collision is off, a managed cart passes through players instead of pushing them. */
 public class VehicleCollisionListener implements Listener {
 
+    private final JavaPlugin plugin;
     private final CartManager cartManager;
-    private final PlayerSettingsManager settingsManager;
 
-    public VehicleCollisionListener(CartManager cartManager, PlayerSettingsManager settingsManager) {
+    public VehicleCollisionListener(JavaPlugin plugin, CartManager cartManager) {
+        this.plugin = plugin;
         this.cartManager = cartManager;
-        this.settingsManager = settingsManager;
     }
 
     @EventHandler
@@ -28,11 +25,10 @@ public class VehicleCollisionListener implements Listener {
             return;
         }
         Vehicle vehicle = event.getVehicle();
-        Optional<ManagedCart> cart = cartManager.find(vehicle.getUniqueId());
-        if (cart.isEmpty() || cart.get().getOwnerId() == null) {
+        if (!cartManager.isManaged(vehicle.getUniqueId())) {
             return;
         }
-        if (!settingsManager.get(cart.get().getOwnerId()).playerCollision()) {
+        if (!plugin.getConfig().getBoolean("physics.player-collision", true)) {
             event.setCancelled(true);
         }
     }
