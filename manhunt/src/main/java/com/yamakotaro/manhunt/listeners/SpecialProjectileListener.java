@@ -5,48 +5,107 @@ import com.yamakotaro.manhunt.game.GameManager;
 import com.yamakotaro.manhunt.game.ManhuntGame;
 import com.yamakotaro.manhunt.game.Role;
 import com.yamakotaro.manhunt.items.SpecialItems;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.ThrowableItemProjectile;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
-/** Handles the thrown craftable items landing: the hunter's Tracking Dart and the runner's Flashbang. */
+/**
+ * Handles the thrown craftable items: the hunter's Tracking Dart and the runner's Flashbang.
+ * Both are plain snowballs so the vanilla throw works unmodified - which one was thrown is
+ * tracked by correlating the throw's PlayerInteractEvent with the ProjectileLaunchEvent that
+ * immediately follows it, then tagging the spawned entity's own PersistentDataContainer so the
+ * tag survives until it lands. Same interact-then-create correlation EcoRail's
+ * CartAutoManageListener uses for cart ownership.
+ */
 public class SpecialProjectileListener implements Listener {
+
+    private enum ThrownItem { TRACKING_DART, FLASHBANG }
 
     private final JavaPlugin plugin;
     private final GameManager gameManager;
     private final SpecialItems specialItems;
     private final Messages messages;
+    private final NamespacedKey trackingDartProjectileKey;
+    private final NamespacedKey flashbangProjectileKey;
+    private final Map<UUID, ThrownItem> pendingThrows = new HashMap<>();
 
     public SpecialProjectileListener(JavaPlugin plugin, GameManager gameManager, SpecialItems specialItems, Messages messages) {
         this.plugin = plugin;
         this.gameManager = gameManager;
         this.specialItems = specialItems;
         this.messages = messages;
+        this.trackingDartProjectileKey = new NamespacedKey(plugin, "thrown_tracking_dart");
+        this.flashbangProjectileKey = new NamespacedKey(plugin, "thrown_flashbang");
+    }
+
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND
+                || (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK)) {
+            return;
+        }
+        ItemStack item = event.getItem();
+        ThrownItem thrown;
+        if (specialItems.isTrackingDart(item)) {
+            thrown = ThrownItem.TRACKING_DART;
+        } else if (specialItems.isFlashbang(item)) {
+            thrown = ThrownItem.FLASHBANG;
+        } else {
+            return;
+        }
+        UUID playerId = event.getPlayer().getUniqueId();
+        pendingThrows.put(playerId, thrown);
+        // Safety net in case no projectile actually launches this tick (e.g. the interact did
+        // something else instead) - avoids misattributing a later, unrelated throw.
+        Bukkit.getScheduler().runTask(plugin, () -> pendingThrows.remove(playerId));
+    }
+
+    @EventHandler
+    public void onLaunch(ProjectileLaunchEvent event) {
+        if (!(event.getEntity() instanceof Projectile projectile) || !(projectile.getShooter() instanceof Player shooter)) {
+            return;
+        }
+        ThrownItem thrown = pendingThrows.remove(shooter.getUniqueId());
+        if (thrown == null) {
+            return;
+        }
+        NamespacedKey key = thrown == ThrownItem.TRACKING_DART ? trackingDartProjectileKey : flashbangProjectileKey;
+        projectile.getPersistentDataContainer().set(key, PersistentDataType.BOOLEAN, true);
     }
 
     @EventHandler
     public void onHit(ProjectileHitEvent event) {
-        if (!(event.getEntity() instanceof ThrowableItemProjectile projectile)) {
+        Entity entity = event.getEntity();
+        if (!(entity instanceof Projectile projectile)) {
             return;
         }
-        ItemStack usedItem = projectile.getItem();
-        if (specialItems.isTrackingDart(usedItem)) {
+        if (projectile.getPersistentDataContainer().has(trackingDartProjectileKey, PersistentDataType.BOOLEAN)) {
             handleTrackingDartHit(projectile, event);
-        } else if (specialItems.isFlashbang(usedItem)) {
+        } else if (projectile.getPersistentDataContainer().has(flashbangProjectileKey, PersistentDataType.BOOLEAN)) {
             handleFlashbangHit(projectile);
         }
     }
 
-    private void handleTrackingDartHit(ThrowableItemProjectile projectile, ProjectileHitEvent event) {
+    private void handleTrackingDartHit(Projectile projectile, ProjectileHitEvent event) {
         ManhuntGame game = gameManager.game();
         if (!game.isRunning() || !(projectile.getShooter() instanceof Player shooter)
                 || game.getRole(shooter.getUniqueId()) != Role.HUNTER) {
@@ -61,7 +120,7 @@ public class SpecialProjectileListener implements Listener {
         target.sendMessage(messages.get("item.tracking-dart-hit-notice", Map.of()));
     }
 
-    private void handleFlashbangHit(ThrowableItemProjectile projectile) {
+    private void handleFlashbangHit(Projectile projectile) {
         ManhuntGame game = gameManager.game();
         if (!game.isRunning() || !(projectile.getShooter() instanceof Player shooter)
                 || game.getRole(shooter.getUniqueId()) != Role.RUNNER) {
