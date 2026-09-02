@@ -2,11 +2,13 @@ package com.yamakotaro.sulfursoccer.match;
 
 import com.yamakotaro.sulfursoccer.arena.Arena;
 import com.yamakotaro.sulfursoccer.arena.ArenaManager;
+import com.yamakotaro.sulfursoccer.arena.Box;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 import java.util.Map;
 import java.util.Optional;
@@ -52,10 +54,7 @@ public class SoccerTickTask extends BukkitRunnable {
                 continue;
             }
 
-            if (isOutOfBounds(arena, ballLocation)) {
-                matchManager.respawnBall(match);
-                continue;
-            }
+            bounceOffFieldBoundary(ball, arena, ballLocation);
 
             if (timeLimitMinutes > 0 && now - match.getStartedAtMillis() > timeLimitMinutes * 60_000L) {
                 matchManager.stopWithMessage(match.getArenaId(), winnerKey(match));
@@ -89,12 +88,48 @@ public class SoccerTickTask extends BukkitRunnable {
                 "scoreA", String.valueOf(match.getScoreA()), "scoreB", String.valueOf(match.getScoreB())));
     }
 
-    /** True if the ball has left the arena's field boundary (checked horizontally - no ceiling/floor). */
-    private boolean isOutOfBounds(Arena arena, Location ballLocation) {
-        if (arena.field() == null || !ballLocation.getWorld().getName().equals(arena.world())) {
-            return false;
+    /**
+     * Keeps the ball inside the arena's field boundary (horizontally only - no ceiling/floor):
+     * clamps it back to the edge and reflects the crossed axis of its velocity, like bouncing off
+     * an invisible wall.
+     */
+    private void bounceOffFieldBoundary(Entity ball, Arena arena, Location ballLocation) {
+        Box field = arena.field();
+        if (field == null || !ballLocation.getWorld().getName().equals(arena.world())) {
+            return;
         }
-        return !arena.field().containsXZ(ballLocation.getBlockX(), ballLocation.getBlockZ());
+        int minX = Math.min(field.corner1().x(), field.corner2().x());
+        int maxX = Math.max(field.corner1().x(), field.corner2().x());
+        int minZ = Math.min(field.corner1().z(), field.corner2().z());
+        int maxZ = Math.max(field.corner1().z(), field.corner2().z());
+
+        Location location = ballLocation.clone();
+        Vector velocity = ball.getVelocity();
+        boolean bounced = false;
+
+        if (location.getX() < minX) {
+            location.setX(minX);
+            velocity.setX(Math.abs(velocity.getX()));
+            bounced = true;
+        } else if (location.getX() > maxX + 1) {
+            location.setX(maxX + 1);
+            velocity.setX(-Math.abs(velocity.getX()));
+            bounced = true;
+        }
+        if (location.getZ() < minZ) {
+            location.setZ(minZ);
+            velocity.setZ(Math.abs(velocity.getZ()));
+            bounced = true;
+        } else if (location.getZ() > maxZ + 1) {
+            location.setZ(maxZ + 1);
+            velocity.setZ(-Math.abs(velocity.getZ()));
+            bounced = true;
+        }
+
+        if (bounced) {
+            ball.teleport(location);
+            ball.setVelocity(velocity);
+        }
     }
 
     private boolean isMatchOver(Match match, int goalsToWin) {
