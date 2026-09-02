@@ -185,9 +185,12 @@ public class BossManager {
             entity.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, Integer.MAX_VALUE, definition.strengthAmplifier(), false, false));
         }
         entity.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, Integer.MAX_VALUE, 0, false, false));
-        // Wolves/polar bears etc. default to neutral - force hostility so they actually fight like a boss.
+        // Wolves default to neutral - force hostility so they actually fight like a boss, and use
+        // the darkest vanilla coat variant so it reads as something other than a normal wolf even
+        // without a resource pack.
         if (entity instanceof Wolf wolf) {
             wolf.setAngry(true);
+            wolf.setVariant(Wolf.Variant.BLACK);
         }
         if (definition.scale() != 1.0) {
             AttributeInstance scaleAttribute = entity.getAttribute(Attribute.SCALE);
