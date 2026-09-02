@@ -38,86 +38,118 @@ bossbar-style: SEGMENTED_10
 # - loot: 重み付き報酬プール。guaranteed:trueは(他の参加者への抽選とは別に)必ず1回ドロップし、
 #   broadcast:trueが付いたドロップはサーバー全体に告知される。
 bosses:
-  goblin_king:
-    display-name: "&2Goblin King"
+  # World boss - a pack-leader Ravager. The weakest of the three, so it can spawn often.
+  alpha_ravager:
+    display-name: "&2Alpha Ravager"
     entity-type: RAVAGER
     type: WORLD
-    world-interval-minutes: 180
-    cooldown-minutes: 30
-    health-boost-amplifier: 10
+    world-interval-minutes: 120
+    cooldown-minutes: 20
+    health-boost-amplifier: 12
     strength-amplifier: 2
     phases:
       - health-percent: 50
-        message: "&c{boss} enrages!"
+        message: "&2{boss} bellows in rage!"
         enrage: true
       - health-percent: 20
-        message: "&c{boss} summons reinforcements!"
-        summon-type: ZOMBIE
-        summon-count: 4
+        message: "&2{boss} calls its pack!"
+        summon-type: WOLF
+        summon-count: 3
     loot:
-      - material: EMERALD
+      - material: LEATHER
         amount: 8
-        name: "&aEmerald"
+        name: "&fTough Hide"
         weight: 40
-      - material: DIAMOND
-        amount: 3
-        name: "&bDiamond"
+      - material: IRON_INGOT
+        amount: 6
+        name: "&fIron Ingot"
+        weight: 30
+      - material: EMERALD
+        amount: 4
+        name: "&aEmerald"
         weight: 20
         guaranteed: true
+      - material: SADDLE
+        amount: 1
+        name: "&6Alpha Saddle"
+        weight: 5
+        broadcast: true
+
+  # Dungeon boss - a Hoglin warlord guarding its territory. Tougher than the world boss.
+  hollow_hoglin:
+    display-name: "&cHollow Hoglin"
+    entity-type: HOGLIN
+    type: DUNGEON
+    cooldown-minutes: 45
+    health-boost-amplifier: 16
+    strength-amplifier: 3
+    phases:
+      - health-percent: 60
+        message: "&c{boss} snorts and charges!"
+        enrage: true
+      - health-percent: 25
+        message: "&c{boss} summons hoglin thugs!"
+        summon-type: HOGLIN
+        summon-count: 2
+    loot:
+      - material: PORKCHOP
+        amount: 10
+        name: "&fRaw Pork"
+        weight: 40
+      - material: GOLD_NUGGET
+        amount: 12
+        name: "&eGold Nuggets"
+        weight: 30
+      - material: CRIMSON_FUNGUS
+        amount: 4
+        name: "&5Crimson Fungus"
+        weight: 15
+      - material: NETHERITE_SCRAP
+        amount: 1
+        name: "&8Netherite Scrap"
+        weight: 5
+        guaranteed: true
+        broadcast: true
+
+  # Event boss - what a Hoglin becomes after too long in the overworld. The strongest of the three,
+  # once a week only.
+  zoglin_warlord:
+    display-name: "&8Zoglin Warlord"
+    entity-type: ZOGLIN
+    type: EVENT
+    event-day-of-week: SUNDAY
+    event-hour: 21
+    cooldown-minutes: 10080
+    health-boost-amplifier: 24
+    strength-amplifier: 5
+    phases:
+      - health-percent: 50
+        message: "&8{boss} lets out an undead roar!"
+        enrage: true
+      - health-percent: 20
+        message: "&8{boss} summons the fallen!"
+        summon-type: ZOMBIE
+        summon-count: 5
+    loot:
+      - material: ROTTEN_FLESH
+        amount: 16
+        name: "&8Rotten Flesh"
+        weight: 40
+      - material: DIAMOND_BLOCK
+        amount: 2
+        name: "&bDiamond Block"
+        weight: 20
       - material: NETHERITE_INGOT
         amount: 1
         name: "&6Netherite Ingot"
-        weight: 5
-        broadcast: true
-
-  crypt_lord:
-    display-name: "&5Crypt Lord"
-    entity-type: WITHER_SKELETON
-    type: DUNGEON
-    cooldown-minutes: 60
-    health-boost-amplifier: 14
-    strength-amplifier: 3
-    phases:
-      - health-percent: 40
-        message: "&5{boss} calls forth the dead!"
-        summon-type: ZOMBIE
-        summon-count: 3
-    loot:
-      - material: COAL
-        amount: 16
-        name: "&8Coal"
-        weight: 40
-      - material: DIAMOND_BLOCK
-        amount: 1
-        name: "&bDiamond Block"
-        weight: 5
+        weight: 10
         guaranteed: true
         broadcast: true
-
-  weekend_dragon:
-    display-name: "&6Weekend Dragon"
-    entity-type: WITHER
-    type: EVENT
-    event-day-of-week: SATURDAY
-    event-hour: 20
-    cooldown-minutes: 1440
-    health-boost-amplifier: 20
-    strength-amplifier: 4
-    phases:
-      - health-percent: 30
-        message: "&6{boss} is furious!"
-        enrage: true
-    loot:
-      - material: ELYTRA
+      - material: NETHER_STAR
         amount: 1
-        name: "&d&lElytra"
-        weight: 5
-        guaranteed: true
+        name: "&d&lNether Star"
+        weight: 2
         broadcast: true
-      - material: GOLD_BLOCK
-        amount: 2
-        name: "&eGold Block"
-        weight: 30
 
 messages:
   en:
