@@ -29,16 +29,16 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Handles the thrown craftable items: the hunter's Tracking Dart and the runner's Flashbang.
- * Both are plain snowballs so the vanilla throw works unmodified - which one was thrown is
- * tracked by correlating the throw's PlayerInteractEvent with the ProjectileLaunchEvent that
+ * Handles the thrown craftable items: the hunter's Tracking Dart and Snare Trap, and the runner's
+ * Flashbang. All are plain snowballs so the vanilla throw works unmodified - which one was thrown
+ * is tracked by correlating the throw's PlayerInteractEvent with the ProjectileLaunchEvent that
  * immediately follows it, then tagging the spawned entity's own PersistentDataContainer so the
  * tag survives until it lands. Same interact-then-create correlation EcoRail's
  * CartAutoManageListener uses for cart ownership.
  */
 public class SpecialProjectileListener implements Listener {
 
-    private enum ThrownItem { TRACKING_DART, FLASHBANG }
+    private enum ThrownItem { TRACKING_DART, FLASHBANG, SNARE_TRAP }
 
     private final JavaPlugin plugin;
     private final GameManager gameManager;
@@ -46,6 +46,7 @@ public class SpecialProjectileListener implements Listener {
     private final Messages messages;
     private final NamespacedKey trackingDartProjectileKey;
     private final NamespacedKey flashbangProjectileKey;
+    private final NamespacedKey snareTrapProjectileKey;
     private final Map<UUID, ThrownItem> pendingThrows = new HashMap<>();
 
     public SpecialProjectileListener(JavaPlugin plugin, GameManager gameManager, SpecialItems specialItems, Messages messages) {
@@ -55,6 +56,7 @@ public class SpecialProjectileListener implements Listener {
         this.messages = messages;
         this.trackingDartProjectileKey = new NamespacedKey(plugin, "thrown_tracking_dart");
         this.flashbangProjectileKey = new NamespacedKey(plugin, "thrown_flashbang");
+        this.snareTrapProjectileKey = new NamespacedKey(plugin, "thrown_snare_trap");
     }
 
     @EventHandler
@@ -69,6 +71,8 @@ public class SpecialProjectileListener implements Listener {
             thrown = ThrownItem.TRACKING_DART;
         } else if (specialItems.isFlashbang(item)) {
             thrown = ThrownItem.FLASHBANG;
+        } else if (specialItems.isSnareTrap(item)) {
+            thrown = ThrownItem.SNARE_TRAP;
         } else {
             return;
         }
@@ -88,7 +92,11 @@ public class SpecialProjectileListener implements Listener {
         if (thrown == null) {
             return;
         }
-        NamespacedKey key = thrown == ThrownItem.TRACKING_DART ? trackingDartProjectileKey : flashbangProjectileKey;
+        NamespacedKey key = switch (thrown) {
+            case TRACKING_DART -> trackingDartProjectileKey;
+            case FLASHBANG -> flashbangProjectileKey;
+            case SNARE_TRAP -> snareTrapProjectileKey;
+        };
         projectile.getPersistentDataContainer().set(key, PersistentDataType.BOOLEAN, true);
     }
 
@@ -102,6 +110,8 @@ public class SpecialProjectileListener implements Listener {
             handleTrackingDartHit(projectile, event);
         } else if (projectile.getPersistentDataContainer().has(flashbangProjectileKey, PersistentDataType.BOOLEAN)) {
             handleFlashbangHit(projectile);
+        } else if (projectile.getPersistentDataContainer().has(snareTrapProjectileKey, PersistentDataType.BOOLEAN)) {
+            handleSnareTrapHit(projectile, event);
         }
     }
 
@@ -140,5 +150,22 @@ public class SpecialProjectileListener implements Listener {
             hunter.sendMessage(messages.get("item.flashbang-hit", Map.of()));
         }
         shooter.sendMessage(messages.get("item.flashbang-used", Map.of()));
+    }
+
+    private void handleSnareTrapHit(Projectile projectile, ProjectileHitEvent event) {
+        ManhuntGame game = gameManager.game();
+        if (!game.isRunning() || !(projectile.getShooter() instanceof Player shooter)
+                || game.getRole(shooter.getUniqueId()) != Role.HUNTER) {
+            return;
+        }
+        if (!(event.getHitEntity() instanceof Player target) || game.getRole(target.getUniqueId()) != Role.RUNNER) {
+            return;
+        }
+        long durationSeconds = plugin.getConfig().getLong("items.snare-trap-duration-seconds", 6);
+        int durationTicks = (int) (durationSeconds * 20);
+        target.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 1));
+        target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, durationTicks, 0));
+        shooter.sendMessage(messages.get("item.snare-hit", Map.of("player", target.getName())));
+        target.sendMessage(messages.get("item.snare-hit-notice", Map.of()));
     }
 }

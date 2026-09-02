@@ -29,13 +29,19 @@ compass-update-interval-ticks: 20
 # items.flashbang-radius: blast radius (blocks) of a runner's thrown Flashbang.
 # items.flashbang-blind-seconds: how long hunters caught in a Flashbang's radius are blinded and
 #   slowed for.
-# Tracking Dart and Flashbang are crafted at a crafting table (not handed out for free) - see the
-# recipes registered in SpecialItems.
+# items.snare-trap-duration-seconds: how long a runner hit by a hunter's thrown Snare Trap is
+#   slowed and weakened for.
+# items.blink-shard-distance: how far (blocks) a runner's Blink Shard teleports them forward.
+# Tracking Dart, Flashbang, Snare Trap and Blink Shard are all crafted at a crafting table (not
+# handed out for free) - see the recipes registered in SpecialItems.
 # (日本語) items.tracking-dart-glow-seconds: ハンターが投げた「追跡ダーツ」が命中したランナーが
 #   (壁越しに見える)発光する時間(秒)。
 # items.flashbang-radius: ランナーが投げた「フラッシュバン」の効果範囲(ブロック単位)。
 # items.flashbang-blind-seconds: フラッシュバンの範囲内にいたハンターが失明・鈍足になる時間(秒)。
-# 追跡ダーツとフラッシュバンは無料配布ではなく作業台でクラフトして入手する。
+# items.snare-trap-duration-seconds: ハンターが投げた「捕獲ネット」が命中したランナーが
+#   鈍足・弱体化する時間(秒)。
+# items.blink-shard-distance: ランナーの「瞬間移動の欠片」が前方に飛ばす距離(ブロック単位)。
+# 追跡ダーツ・フラッシュバン・捕獲ネット・瞬間移動の欠片は無料配布ではなく作業台でクラフトして入手する。
 items:
   locator-orb-charges: 3
   smoke-bomb-charges: 2
@@ -43,6 +49,8 @@ items:
   tracking-dart-glow-seconds: 15
   flashbang-radius: 6
   flashbang-blind-seconds: 5
+  snare-trap-duration-seconds: 6
+  blink-shard-distance: 8
 
 messages:
   en:
@@ -102,6 +110,14 @@ messages:
       flashbang-lore: "&7Throw to blind nearby hunters"
       flashbang-hit: "&eFlashbang! You're blinded and slowed!"
       flashbang-used: "&aFlashbang thrown!"
+      snare-name: "&5Snare Trap"
+      snare-lore: "&7Throw to slow and weaken a runner"
+      snare-hit: "&5You snared {player}!"
+      snare-hit-notice: "&5A hunter snared you - you're slowed and weakened!"
+      blink-name: "&bBlink Shard"
+      blink-lore: "&7Right-click to blink forward and escape"
+      blink-used: "&bYou blink forward!"
+      blink-blocked: "&cCan't blink there - something's in the way."
   ja:
     general:
       no-permission: "&cこの操作を行う権限がありません。"
@@ -159,3 +175,11 @@ messages:
       flashbang-lore: "&7投げると周囲のハンターを失明させる"
       flashbang-hit: "&eフラッシュバン! 失明・鈍足になりました!"
       flashbang-used: "&aフラッシュバンを投げました!"
+      snare-name: "&5捕獲ネット"
+      snare-lore: "&7投げると命中したランナーを鈍足・弱体化させる"
+      snare-hit: "&5{player} を捕獲しました!"
+      snare-hit-notice: "&5ハンターに捕獲されました - 鈍足・弱体化しています!"
+      blink-name: "&b瞬間移動の欠片"
+      blink-lore: "&7右クリックで前方に瞬間移動して逃げる"
+      blink-used: "&b前方に瞬間移動しました!"
+      blink-blocked: "&cそこへは瞬間移動できません - 何かが邪魔しています。"

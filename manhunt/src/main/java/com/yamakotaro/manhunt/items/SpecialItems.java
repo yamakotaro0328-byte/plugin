@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Builds and identifies every role item: the hunter's Locator Orb and Tracking Dart, and the
- * runner's Smoke Bomb and Flashbang. Locator Orb/Smoke Bomb are handed out free at game start;
- * Tracking Dart/Flashbang are craftable at any time via registerRecipes().
+ * Builds and identifies every role item: the hunter's Locator Orb, Tracking Dart and Snare Trap,
+ * and the runner's Smoke Bomb, Flashbang and Blink Shard. Locator Orb/Smoke Bomb are handed out
+ * free at game start; the rest are craftable at any time via registerRecipes().
  */
 public class SpecialItems {
 
@@ -27,6 +27,8 @@ public class SpecialItems {
     private final NamespacedKey smokeBombKey;
     private final NamespacedKey trackingDartKey;
     private final NamespacedKey flashbangKey;
+    private final NamespacedKey snareTrapKey;
+    private final NamespacedKey blinkShardKey;
 
     public SpecialItems(JavaPlugin plugin, Messages messages) {
         this.messages = messages;
@@ -34,6 +36,8 @@ public class SpecialItems {
         this.smokeBombKey = new NamespacedKey(plugin, "smoke_bomb");
         this.trackingDartKey = new NamespacedKey(plugin, "tracking_dart");
         this.flashbangKey = new NamespacedKey(plugin, "flashbang");
+        this.snareTrapKey = new NamespacedKey(plugin, "snare_trap");
+        this.blinkShardKey = new NamespacedKey(plugin, "blink_shard");
     }
 
     public ItemStack createLocatorOrb(int charges) {
@@ -76,7 +80,27 @@ public class SpecialItems {
         return item;
     }
 
-    /** Registers the crafting-table recipes for the two craftable items. Safe to call once per plugin enable. */
+    public ItemStack createSnareTrap() {
+        ItemStack item = new ItemStack(Material.SNOWBALL);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(messages.get("item.snare-name", Map.of()));
+        meta.lore(List.of(messages.get("item.snare-lore", Map.of())));
+        meta.getPersistentDataContainer().set(snareTrapKey, PersistentDataType.BOOLEAN, true);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    public ItemStack createBlinkShard() {
+        ItemStack item = new ItemStack(Material.FEATHER);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(messages.get("item.blink-name", Map.of()));
+        meta.lore(List.of(messages.get("item.blink-lore", Map.of())));
+        meta.getPersistentDataContainer().set(blinkShardKey, PersistentDataType.BOOLEAN, true);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    /** Registers the crafting-table recipes for the craftable items. Safe to call once per plugin enable. */
     public void registerRecipes(JavaPlugin plugin) {
         NamespacedKey trackingDartRecipeKey = new NamespacedKey(plugin, "tracking_dart_recipe");
         Bukkit.removeRecipe(trackingDartRecipeKey);
@@ -93,6 +117,22 @@ public class SpecialItems {
         flashbangRecipe.addIngredient(Material.GUNPOWDER);
         flashbangRecipe.addIngredient(Material.GLOWSTONE_DUST);
         Bukkit.addRecipe(flashbangRecipe);
+
+        NamespacedKey snareTrapRecipeKey = new NamespacedKey(plugin, "snare_trap_recipe");
+        Bukkit.removeRecipe(snareTrapRecipeKey);
+        ShapelessRecipe snareTrapRecipe = new ShapelessRecipe(snareTrapRecipeKey, createSnareTrap());
+        snareTrapRecipe.addIngredient(Material.SNOWBALL);
+        snareTrapRecipe.addIngredient(Material.STRING);
+        snareTrapRecipe.addIngredient(Material.IRON_NUGGET);
+        Bukkit.addRecipe(snareTrapRecipe);
+
+        NamespacedKey blinkShardRecipeKey = new NamespacedKey(plugin, "blink_shard_recipe");
+        Bukkit.removeRecipe(blinkShardRecipeKey);
+        ShapelessRecipe blinkShardRecipe = new ShapelessRecipe(blinkShardRecipeKey, createBlinkShard());
+        blinkShardRecipe.addIngredient(Material.SNOWBALL);
+        blinkShardRecipe.addIngredient(Material.ENDER_PEARL);
+        blinkShardRecipe.addIngredient(Material.FEATHER);
+        Bukkit.addRecipe(blinkShardRecipe);
     }
 
     public boolean isLocatorOrb(ItemStack item) {
@@ -111,12 +151,21 @@ public class SpecialItems {
         return hasKey(item, flashbangKey);
     }
 
+    public boolean isSnareTrap(ItemStack item) {
+        return hasKey(item, snareTrapKey);
+    }
+
+    public boolean isBlinkShard(ItemStack item) {
+        return hasKey(item, blinkShardKey);
+    }
+
     /** Strips any leftover special items from a player's inventory - called when a game ends. */
     public void clearFrom(Player player) {
         Inventory inventory = player.getInventory();
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack stack = inventory.getItem(i);
-            if (isLocatorOrb(stack) || isSmokeBomb(stack) || isTrackingDart(stack) || isFlashbang(stack)) {
+            if (isLocatorOrb(stack) || isSmokeBomb(stack) || isTrackingDart(stack) || isFlashbang(stack)
+                    || isSnareTrap(stack) || isBlinkShard(stack)) {
                 inventory.setItem(i, null);
             }
         }

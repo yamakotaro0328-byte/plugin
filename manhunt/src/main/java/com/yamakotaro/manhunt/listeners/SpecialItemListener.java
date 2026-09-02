@@ -5,6 +5,8 @@ import com.yamakotaro.manhunt.game.GameManager;
 import com.yamakotaro.manhunt.game.ManhuntGame;
 import com.yamakotaro.manhunt.game.Role;
 import com.yamakotaro.manhunt.items.SpecialItems;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,7 +20,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.Map;
 
-/** Handles right-click activation of the hunter's Locator Orb and the runner's Smoke Bomb. */
+/** Handles right-click activation of the hunter's Locator Orb and the runner's Smoke Bomb/Blink Shard. */
 public class SpecialItemListener implements Listener {
 
     private final JavaPlugin plugin;
@@ -46,6 +48,9 @@ public class SpecialItemListener implements Listener {
         } else if (specialItems.isSmokeBomb(item)) {
             event.setCancelled(true);
             useSmokeBomb(event.getPlayer());
+        } else if (specialItems.isBlinkShard(item)) {
+            event.setCancelled(true);
+            useBlinkShard(event.getPlayer());
         }
     }
 
@@ -80,6 +85,30 @@ public class SpecialItemListener implements Listener {
         runner.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, durationTicks, 0));
         runner.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, durationTicks, 1));
         runner.sendMessage(messages.get("item.smoke-used", Map.of("seconds", String.valueOf(durationSeconds))));
+    }
+
+    private void useBlinkShard(Player runner) {
+        ManhuntGame game = gameManager.game();
+        if (!game.isRunning() || game.getRole(runner.getUniqueId()) != Role.RUNNER || game.isEliminated(runner.getUniqueId())) {
+            runner.sendMessage(messages.get("item.not-usable-now", Map.of()));
+            return;
+        }
+        double distance = plugin.getConfig().getDouble("items.blink-shard-distance", 8);
+        Location origin = runner.getLocation();
+        Location destination = origin.clone().add(origin.getDirection().normalize().multiply(distance));
+        if (!isSafeToStandOn(destination)) {
+            runner.sendMessage(messages.get("item.blink-blocked", Map.of()));
+            return;
+        }
+        consumeOne(runner);
+        runner.teleport(destination);
+        runner.sendMessage(messages.get("item.blink-used", Map.of()));
+    }
+
+    private boolean isSafeToStandOn(Location location) {
+        Material feet = location.getBlock().getType();
+        Material head = location.clone().add(0, 1, 0).getBlock().getType();
+        return !feet.isSolid() && !head.isSolid();
     }
 
     private Player nearestAliveRunner(ManhuntGame game, Player hunter) {
