@@ -1,0 +1,16 @@
+name: EcoBoss
+version: '${project.version}'
+main: com.yamakotaro.ecoboss.EcoBossPlugin
+api-version: '26.2'
+author: yamakotaro0328
+description: World bosses, dungeon bosses, and scheduled event bosses - multi-phase fights with a boss bar and contribution-based loot.
+
+commands:
+  boss:
+    description: Manage and trigger boss encounters
+    usage: /boss <spawn <id>|stop <id>|wand|setspawn <id>|setregion <id>|clearspawns <id>|list|info <id>|reload>
+
+permissions:
+  ecoboss.admin:
+    description: Can spawn/stop bosses, configure spawn points and dungeon regions, and reload
+    default: op

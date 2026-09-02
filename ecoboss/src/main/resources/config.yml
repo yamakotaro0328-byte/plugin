@@ -1,0 +1,200 @@
+# EcoBoss configuration
+# Language for messages below: "en" or "ja".
+# (日本語) 以下のメッセージの言語。"en" または "ja"。
+language: en
+
+# announcement-lead-time-seconds: for WORLD/EVENT bosses, how long the "boss incoming" warning is
+#   shown before it actually spawns.
+# bossbar-color / bossbar-style: BarColor / BarStyle enum names for every boss's health bar.
+# (日本語) announcement-lead-time-seconds: WORLD/EVENTタイプのボスで、出現前に警告を表示してから
+#   実際に出現するまでの秒数。
+# bossbar-color / bossbar-style: 全ボス共通のボスバーの色・スタイル(BarColor/BarStyleの定数名)。
+announcement-lead-time-seconds: 30
+bossbar-color: RED
+bossbar-style: SEGMENTED_10
+
+# Each entry under "bosses" is one boss definition.
+# - entity-type: a vanilla EntityType name (e.g. RAVAGER, WITHER_SKELETON, ZOMBIE, WITHER).
+# - type: WORLD (spawns automatically every world-interval-minutes at a /boss setspawn point),
+#   DUNGEON (spawns when a player walks into the /boss setregion area), or EVENT (spawns once at
+#   event-day-of-week + event-hour, at a /boss setspawn point).
+# - health-boost-amplifier / strength-amplifier: applied as permanent Health Boost / Strength
+#   potion effects so the boss is tougher and hits harder - no vanilla max-health math needed.
+# - cooldown-minutes: how long after death before this boss can spawn again.
+# - phases: health-percent thresholds (checked as the fight goes on) that trigger a message, an
+#   "enrage" (extra Speed+Strength), and/or summoned adds.
+# - loot: weighted reward pool. "guaranteed: true" always drops (once) in addition to the weighted
+#   picks for other participants; "broadcast: true" announces that specific drop to the server.
+#
+# (日本語) bosses以下の各項目が1体のボス定義。
+# - entity-type: バニラのEntityType名(RAVAGER、WITHER_SKELETON、ZOMBIE、WITHERなど)。
+# - type: WORLD(world-interval-minutesごとに/boss setspawnの地点へ自動出現)、
+#   DUNGEON(/boss setregionの範囲にプレイヤーが入ると出現)、
+#   EVENT(event-day-of-week + event-hourに一度だけ/boss setspawnの地点へ出現)。
+# - health-boost-amplifier / strength-amplifier: 体力増強・与ダメージ増加のポーション効果を
+#   常時付与することで強化する(最大体力の直接操作は行わない)。
+# - cooldown-minutes: 討伐後、再度出現できるようになるまでの分数。
+# - phases: 体力の割合がしきい値を下回るたびにメッセージ・強化(enrage)・増援召喚を行う。
+# - loot: 重み付き報酬プール。guaranteed:trueは(他の参加者への抽選とは別に)必ず1回ドロップし、
+#   broadcast:trueが付いたドロップはサーバー全体に告知される。
+bosses:
+  goblin_king:
+    display-name: "&2Goblin King"
+    entity-type: RAVAGER
+    type: WORLD
+    world-interval-minutes: 180
+    cooldown-minutes: 30
+    health-boost-amplifier: 10
+    strength-amplifier: 2
+    phases:
+      - health-percent: 50
+        message: "&c{boss} enrages!"
+        enrage: true
+      - health-percent: 20
+        message: "&c{boss} summons reinforcements!"
+        summon-type: ZOMBIE
+        summon-count: 4
+    loot:
+      - material: EMERALD
+        amount: 8
+        name: "&aEmerald"
+        weight: 40
+      - material: DIAMOND
+        amount: 3
+        name: "&bDiamond"
+        weight: 20
+        guaranteed: true
+      - material: NETHERITE_INGOT
+        amount: 1
+        name: "&6Netherite Ingot"
+        weight: 5
+        broadcast: true
+
+  crypt_lord:
+    display-name: "&5Crypt Lord"
+    entity-type: WITHER_SKELETON
+    type: DUNGEON
+    cooldown-minutes: 60
+    health-boost-amplifier: 14
+    strength-amplifier: 3
+    phases:
+      - health-percent: 40
+        message: "&5{boss} calls forth the dead!"
+        summon-type: ZOMBIE
+        summon-count: 3
+    loot:
+      - material: COAL
+        amount: 16
+        name: "&8Coal"
+        weight: 40
+      - material: DIAMOND_BLOCK
+        amount: 1
+        name: "&bDiamond Block"
+        weight: 5
+        guaranteed: true
+        broadcast: true
+
+  weekend_dragon:
+    display-name: "&6Weekend Dragon"
+    entity-type: WITHER
+    type: EVENT
+    event-day-of-week: SATURDAY
+    event-hour: 20
+    cooldown-minutes: 1440
+    health-boost-amplifier: 20
+    strength-amplifier: 4
+    phases:
+      - health-percent: 30
+        message: "&6{boss} is furious!"
+        enrage: true
+    loot:
+      - material: ELYTRA
+        amount: 1
+        name: "&d&lElytra"
+        weight: 5
+        guaranteed: true
+        broadcast: true
+      - material: GOLD_BLOCK
+        amount: 2
+        name: "&eGold Block"
+        weight: 30
+
+messages:
+  en:
+    general:
+      no-permission: "&cYou don't have permission to do that."
+      player-only: "&cThis command can only be used by a player."
+    boss:
+      usage: "&cUsage: /boss <spawn <id>|stop <id>|wand|setspawn <id>|setregion <id>|clearspawns <id>|list|info <id>|reload>"
+      not-found: "&cNo boss named '{id}'."
+      spawn-usage: "&cUsage: /boss spawn <id>"
+      already-active: "&cThat boss is already active."
+      on-cooldown: "&cThat boss is on cooldown for {minutes} more minute(s)."
+      spawned: "&aSpawned '{boss}'."
+      stop-usage: "&cUsage: /boss stop <id>"
+      stopped: "&aRemoved the active '{boss}' encounter."
+      not-active: "&cThat boss isn't currently active."
+      wand-item-name: "&fRegion Selection Wand"
+      wand-given: "&aGiven the region selection wand - left-click a block for corner 1, right-click for corner 2."
+      corner1-set: "&aCorner 1 set."
+      corner2-set: "&aCorner 2 set."
+      selection-incomplete: "&cSelect both corners with the wand first (left-click, then right-click)."
+      setspawn-usage: "&cUsage: /boss setspawn <id> (stand where you want it to spawn)"
+      spawn-point-added: "&aAdded a spawn point for '{boss}' ({count} total)."
+      setregion-usage: "&cUsage: /boss setregion <id> (with both wand corners selected)"
+      region-set: "&aSet the dungeon trigger region for '{boss}'."
+      clearspawns-usage: "&cUsage: /boss clearspawns <id>"
+      spawns-cleared: "&aCleared all spawn points for '{boss}'."
+      list-header: "&7--- Bosses ({count}) ---"
+      list-entry: "&f{id} &7({type}) - {name}"
+      info-header: "&7--- {name} ({id}) ---"
+      info-type: "&7Type: {type}"
+      info-status-active: "&cStatus: active right now"
+      info-status-cooldown: "&eStatus: on cooldown ({minutes} minute(s) left)"
+      info-status-ready: "&aStatus: ready to spawn"
+      reloaded: "&aConfiguration reloaded."
+      warning-announce: "&e{boss} will appear in {seconds} seconds!"
+      spawn-announce: "&c{boss} has appeared!"
+      dungeon-awaken: "&5{boss} awakens!"
+      defeated: "&6{boss} has been defeated! Top damage: {player}."
+      loot-received: "&aYou received {reward} from {boss}!"
+      loot-broadcast: "&6{player} looted {reward} from {boss}!"
+  ja:
+    general:
+      no-permission: "&cこの操作を行う権限がありません。"
+      player-only: "&cこのコマンドはプレイヤーのみ使用できます。"
+    boss:
+      usage: "&c使い方: /boss <spawn <id>|stop <id>|wand|setspawn <id>|setregion <id>|clearspawns <id>|list|info <id>|reload>"
+      not-found: "&c「{id}」という名前のボスは見つかりません。"
+      spawn-usage: "&c使い方: /boss spawn <id>"
+      already-active: "&cそのボスは既に出現中です。"
+      on-cooldown: "&cそのボスはクールダウン中です(残り{minutes}分)。"
+      spawned: "&a「{boss}」を出現させました。"
+      stop-usage: "&c使い方: /boss stop <id>"
+      stopped: "&a「{boss}」の出現中のインスタンスを削除しました。"
+      not-active: "&cそのボスは現在出現していません。"
+      wand-item-name: "&f範囲選択ワンド"
+      wand-given: "&a範囲選択ワンドを渡しました - 左クリックで1点目、右クリックで2点目を指定します。"
+      corner1-set: "&a1点目を設定しました。"
+      corner2-set: "&a2点目を設定しました。"
+      selection-incomplete: "&c先にワンドで2点とも選択してください(左クリック→右クリック)。"
+      setspawn-usage: "&c使い方: /boss setspawn <id> (出現させたい場所に立って実行)"
+      spawn-point-added: "&a「{boss}」にスポーン地点を追加しました(合計{count}箇所)。"
+      setregion-usage: "&c使い方: /boss setregion <id> (ワンドで2点選択済みであること)"
+      region-set: "&a「{boss}」のダンジョン発生範囲を設定しました。"
+      clearspawns-usage: "&c使い方: /boss clearspawns <id>"
+      spawns-cleared: "&a「{boss}」のスポーン地点を全て削除しました。"
+      list-header: "&7--- ボス一覧 ({count}) ---"
+      list-entry: "&f{id} &7({type}) - {name}"
+      info-header: "&7--- {name} ({id}) ---"
+      info-type: "&7タイプ: {type}"
+      info-status-active: "&c状態: 現在出現中"
+      info-status-cooldown: "&e状態: クールダウン中(残り{minutes}分)"
+      info-status-ready: "&a状態: 出現可能"
+      reloaded: "&a設定を再読み込みしました。"
+      warning-announce: "&e{boss} が{seconds}秒後に出現します!"
+      spawn-announce: "&c{boss} が出現しました!"
+      dungeon-awaken: "&5{boss} が目を覚ました!"
+      defeated: "&6{boss} を討伐した! 最大貢献者: {player}。"
+      loot-received: "&a{boss}から{reward}を入手しました!"
+      loot-broadcast: "&6{player} が{boss}から{reward}をドロップさせました!"
