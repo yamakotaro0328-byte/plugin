@@ -29,6 +29,7 @@ bossbar-style: SEGMENTED_10
 # - abilities / ability-interval-seconds: active-combat moves the boss uses on its own, on top of
 #   its normal melee AI - one random pick from the list every ability-interval-seconds. Options:
 #   FIREBALL_BARRAGE, GROUND_SLAM, LIGHTNING_STRIKE, SUMMON_WAVE, CHARGE_DASH.
+# - summon-wave-type: the EntityType SUMMON_WAVE spawns (defaults to ZOMBIE if omitted).
 #
 # (日本語) bosses以下の各項目が1体のボス定義。
 # - entity-type: バニラのEntityType名(RAVAGER、WITHER_SKELETON、ZOMBIE、WITHERなど)。
@@ -46,6 +47,7 @@ bossbar-style: SEGMENTED_10
 #   ability-interval-secondsごとにリストからランダムで1つ発動する。指定可能な値:
 #   FIREBALL_BARRAGE(火球連射)、GROUND_SLAM(地面叩きつけ)、LIGHTNING_STRIKE(落雷)、
 #   SUMMON_WAVE(増援召喚)、CHARGE_DASH(突進)。
+# - summon-wave-type: SUMMON_WAVEが召喚するEntityType(省略時はZOMBIE)。
 bosses:
   # World boss - a pack-leader Ravager. The weakest of the three, so it can spawn often.
   alpha_ravager:
@@ -98,6 +100,7 @@ bosses:
     scale: 2.0
     ability-interval-seconds: 8
     abilities: [CHARGE_DASH, GROUND_SLAM, SUMMON_WAVE]
+    summon-wave-type: HOGLIN
     phases:
       - health-percent: 60
         message: "&c{boss} snorts and charges!"
@@ -167,6 +170,126 @@ bosses:
         amount: 1
         name: "&d&lNether Star"
         weight: 2
+        broadcast: true
+
+  # World boss #2 - a wild wolf pack leader (forced hostile - wolves are normally neutral).
+  warg_alpha:
+    display-name: "&fWarg Alpha"
+    entity-type: WOLF
+    type: WORLD
+    world-interval-minutes: 100
+    cooldown-minutes: 20
+    health-boost-amplifier: 8
+    strength-amplifier: 2
+    scale: 1.8
+    ability-interval-seconds: 7
+    abilities: [CHARGE_DASH, SUMMON_WAVE]
+    summon-wave-type: WOLF
+    phases:
+      - health-percent: 50
+        message: "&f{boss} howls for the pack!"
+        summon-type: WOLF
+        summon-count: 3
+    loot:
+      - material: BONE
+        amount: 10
+        name: "&fBone"
+        weight: 40
+      - material: STRING
+        amount: 8
+        name: "&fString"
+        weight: 30
+      - material: EMERALD
+        amount: 3
+        name: "&aEmerald"
+        weight: 20
+        guaranteed: true
+      - material: WOLF_ARMOR
+        amount: 1
+        name: "&6Warg Hide Armor"
+        weight: 5
+        broadcast: true
+
+  # Dungeon boss #2 - a massively oversized cave spider queen.
+  broodmother:
+    display-name: "&2Broodmother"
+    entity-type: CAVE_SPIDER
+    type: DUNGEON
+    cooldown-minutes: 45
+    health-boost-amplifier: 14
+    strength-amplifier: 2
+    scale: 3.0
+    ability-interval-seconds: 8
+    abilities: [GROUND_SLAM, SUMMON_WAVE]
+    summon-wave-type: CAVE_SPIDER
+    phases:
+      - health-percent: 60
+        message: "&2{boss} shrieks - its brood answers!"
+        summon-type: CAVE_SPIDER
+        summon-count: 3
+      - health-percent: 25
+        message: "&2{boss} spits venom!"
+        enrage: true
+    loot:
+      - material: STRING
+        amount: 12
+        name: "&fString"
+        weight: 40
+      - material: SPIDER_EYE
+        amount: 6
+        name: "&5Spider Eye"
+        weight: 30
+      - material: EMERALD
+        amount: 4
+        name: "&aEmerald"
+        weight: 20
+        guaranteed: true
+      - material: ENCHANTED_BOOK
+        amount: 1
+        name: "&dVenomous Grimoire"
+        weight: 5
+        broadcast: true
+
+  # Event boss #2 - a teleporting monster, once a week.
+  void_stalker:
+    display-name: "&5Void Stalker"
+    entity-type: ENDERMAN
+    type: EVENT
+    event-day-of-week: WEDNESDAY
+    event-hour: 21
+    cooldown-minutes: 10080
+    health-boost-amplifier: 20
+    strength-amplifier: 4
+    scale: 2.4
+    ability-interval-seconds: 5
+    abilities: [CHARGE_DASH, LIGHTNING_STRIKE, SUMMON_WAVE]
+    summon-wave-type: ENDERMITE
+    phases:
+      - health-percent: 50
+        message: "&5{boss} tears open the void!"
+        enrage: true
+      - health-percent: 20
+        message: "&5{boss} floods the area with endermites!"
+        summon-type: ENDERMITE
+        summon-count: 4
+    loot:
+      - material: ENDER_PEARL
+        amount: 8
+        name: "&5Ender Pearl"
+        weight: 40
+      - material: OBSIDIAN
+        amount: 8
+        name: "&8Obsidian"
+        weight: 30
+      - material: DIAMOND_BLOCK
+        amount: 1
+        name: "&bDiamond Block"
+        weight: 15
+        guaranteed: true
+      - material: END_CRYSTAL
+        amount: 1
+        name: "&dVoid Crystal"
+        weight: 3
         broadcast: true
 
 messages:

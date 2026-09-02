@@ -20,6 +20,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Fireball;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Wolf;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -100,6 +101,7 @@ public class BossManager {
                 plugin.getLogger().warning("Boss '" + id + "': unknown ability '" + rawAbility + "', skipping.");
             }
         }
+        EntityType summonWaveType = EntityType.valueOf(section.getString("summon-wave-type", "ZOMBIE").toUpperCase(Locale.ROOT));
 
         List<Phase> phases = new ArrayList<>();
         for (Map<?, ?> map : section.getMapList("phases")) {
@@ -132,7 +134,7 @@ public class BossManager {
 
         return new BossDefinition(id, displayName, entityType, type, healthBoostAmplifier, strengthAmplifier,
                 cooldownMinutes, worldIntervalMinutes, eventDayOfWeek, eventHour, scale, abilities,
-                abilityIntervalSeconds, phases, loot);
+                abilityIntervalSeconds, summonWaveType, phases, loot);
     }
 
     public Optional<BossDefinition> find(String id) {
@@ -183,6 +185,10 @@ public class BossManager {
             entity.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, Integer.MAX_VALUE, definition.strengthAmplifier(), false, false));
         }
         entity.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, Integer.MAX_VALUE, 0, false, false));
+        // Wolves/polar bears etc. default to neutral - force hostility so they actually fight like a boss.
+        if (entity instanceof Wolf wolf) {
+            wolf.setAngry(true);
+        }
         if (definition.scale() != 1.0) {
             AttributeInstance scaleAttribute = entity.getAttribute(Attribute.SCALE);
             if (scaleAttribute != null) {
@@ -321,7 +327,7 @@ public class BossManager {
     private void summonWave(ActiveBoss active) {
         LivingEntity entity = active.entity();
         for (int i = 0; i < 3; i++) {
-            entity.getWorld().spawnEntity(entity.getLocation(), EntityType.ZOMBIE);
+            entity.getWorld().spawnEntity(entity.getLocation(), active.definition().summonWaveType());
         }
     }
 

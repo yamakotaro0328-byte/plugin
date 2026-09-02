@@ -10,5 +10,5 @@ public record BossDefinition(String id, String displayName, EntityType entityTyp
                               int healthBoostAmplifier, int strengthAmplifier, int cooldownMinutes,
                               int worldIntervalMinutes, DayOfWeek eventDayOfWeek, int eventHour,
                               double scale, List<Ability> abilities, int abilityIntervalSeconds,
-                              List<Phase> phases, List<Reward> loot) {
+                              EntityType summonWaveType, List<Phase> phases, List<Reward> loot) {
 }
