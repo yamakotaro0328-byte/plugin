@@ -20,8 +20,7 @@ messages:
       no-permission: "&cYou don't have permission to do that."
       player-only: "&cThis command can only be used by a player."
     manhunt:
-      usage: "&cUsage: /manhunt <role <runner|hunter>|leave|start|stop|status|reload>"
-      role-usage: "&cUsage: /manhunt role <runner|hunter>"
+      usage: "&cUsage: /manhunt <runner|hunter|leave|start|stop|status|reload>"
       role-set: "&aYou are now a {role}."
       role-locked: "&cYou can't change roles while a game is running."
       left: "&aYou left the game."
@@ -43,8 +42,7 @@ messages:
       no-permission: "&cこの操作を行う権限がありません。"
       player-only: "&cこのコマンドはプレイヤーのみ使用できます。"
     manhunt:
-      usage: "&c使い方: /manhunt <role <runner|hunter>|leave|start|stop|status|reload>"
-      role-usage: "&c使い方: /manhunt role <runner|hunter>"
+      usage: "&c使い方: /manhunt <runner|hunter|leave|start|stop|status|reload>"
       role-set: "&aあなたは {role} になりました。"
       role-locked: "&cゲーム中は役割を変更できません。"
       left: "&aゲームから抜けました。"

@@ -54,15 +54,17 @@ public class MatchManager {
         }
     }
 
-    public String join(UUID playerId, String arenaId, char team) {
+    /** Joins the given arena's match, auto-assigning whichever team currently has fewer players. */
+    public JoinResult join(UUID playerId, String arenaId) {
         Optional<Arena> arena = arenaManager.find(arenaId);
         if (arena.isEmpty()) {
-            return "arena.not-found";
+            return JoinResult.error("arena.not-found");
         }
         leave(playerId);
         Match match = getOrCreateMatch(arena.get().id());
+        char team = match.getTeamA().size() <= match.getTeamB().size() ? 'a' : 'b';
         (team == 'a' ? match.getTeamA() : match.getTeamB()).add(playerId);
-        return null;
+        return JoinResult.success(team);
     }
 
     public String start(String arenaId) {

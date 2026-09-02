@@ -34,7 +34,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         switch (args[0].toLowerCase()) {
-            case "role" -> handleRole(sender, args);
+            case "runner" -> handleSetRole(sender, Role.RUNNER);
+            case "hunter" -> handleSetRole(sender, Role.HUNTER);
             case "leave" -> handleLeave(sender);
             case "start" -> handleStart(sender);
             case "stop" -> handleStop(sender);
@@ -53,19 +54,14 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         return false;
     }
 
-    private void handleRole(CommandSender sender, String[] args) {
+    private void handleSetRole(CommandSender sender, Role role) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(messages.get("general.player-only", Map.of()));
             return;
         }
-        if (args.length < 2 || !isRole(args[1])) {
-            sender.sendMessage(messages.get("manhunt.role-usage", Map.of()));
-            return;
-        }
-        Role role = args[1].equalsIgnoreCase("runner") ? Role.RUNNER : Role.HUNTER;
         String error = gameManager.setRole(player.getUniqueId(), role);
         sender.sendMessage(messages.get(error != null ? error : "manhunt.role-set",
-                Map.of("role", args[1].toLowerCase())));
+                Map.of("role", role == Role.RUNNER ? "runner" : "hunter")));
     }
 
     private void handleLeave(CommandSender sender) {
@@ -119,17 +115,10 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(messages.get("manhunt.reloaded", Map.of()));
     }
 
-    private static boolean isRole(String value) {
-        return value.equalsIgnoreCase("runner") || value.equalsIgnoreCase("hunter");
-    }
-
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return filterPrefix(List.of("role", "leave", "start", "stop", "status", "reload"), args[0]);
-        }
-        if (args.length == 2 && args[0].equalsIgnoreCase("role")) {
-            return filterPrefix(List.of("runner", "hunter"), args[1]);
+            return filterPrefix(List.of("runner", "hunter", "leave", "start", "stop", "status", "reload"), args[0]);
         }
         return Collections.emptyList();
     }

@@ -44,10 +44,16 @@ public class SoccerTickTask extends BukkitRunnable {
                 continue;
             }
 
-            if (checkGoal(match, arena, ball.getLocation())) {
+            Location ballLocation = ball.getLocation();
+            if (checkGoal(match, arena, ballLocation)) {
                 if (isMatchOver(match, goalsToWin)) {
                     matchManager.stopWithMessage(match.getArenaId(), winnerKey(match));
                 }
+                continue;
+            }
+
+            if (isOutOfBounds(arena, ballLocation)) {
+                matchManager.respawnBall(match);
                 continue;
             }
 
@@ -81,6 +87,14 @@ public class SoccerTickTask extends BukkitRunnable {
     private void announceGoal(Match match, String key) {
         matchManager.announceToMatch(match, key, Map.of(
                 "scoreA", String.valueOf(match.getScoreA()), "scoreB", String.valueOf(match.getScoreB())));
+    }
+
+    /** True if the ball has left the arena's field boundary (checked horizontally - no ceiling/floor). */
+    private boolean isOutOfBounds(Arena arena, Location ballLocation) {
+        if (arena.field() == null || !ballLocation.getWorld().getName().equals(arena.world())) {
+            return false;
+        }
+        return !arena.field().containsXZ(ballLocation.getBlockX(), ballLocation.getBlockZ());
     }
 
     private boolean isMatchOver(Match match, int goalsToWin) {

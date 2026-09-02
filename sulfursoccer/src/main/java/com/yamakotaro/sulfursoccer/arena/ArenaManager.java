@@ -34,7 +34,7 @@ public class ArenaManager {
             String path = id + ".";
             String world = yaml.getString(path + "world");
             Arena arena = new Arena(id, world,
-                    readBox(yaml, path + "goal-a"), readBox(yaml, path + "goal-b"),
+                    readBox(yaml, path + "goal-a"), readBox(yaml, path + "goal-b"), readBox(yaml, path + "field"),
                     readPoint(yaml, path + "kickoff"), readPoint(yaml, path + "spawn-a"), readPoint(yaml, path + "spawn-b"));
             arenasById.put(id, arena);
         }
@@ -77,6 +77,7 @@ public class ArenaManager {
             yaml.set(path + "world", arena.world());
             writeBox(yaml, path + "goal-a", arena.goalA());
             writeBox(yaml, path + "goal-b", arena.goalB());
+            writeBox(yaml, path + "field", arena.field());
             writePoint(yaml, path + "kickoff", arena.kickoff());
             writePoint(yaml, path + "spawn-a", arena.spawnA());
             writePoint(yaml, path + "spawn-b", arena.spawnB());
@@ -94,7 +95,7 @@ public class ArenaManager {
         if (arenasById.containsKey(id)) {
             return false;
         }
-        arenasById.put(id, new Arena(id, world, null, null, null, null, null));
+        arenasById.put(id, new Arena(id, world, null, null, null, null, null, null));
         save();
         return true;
     }

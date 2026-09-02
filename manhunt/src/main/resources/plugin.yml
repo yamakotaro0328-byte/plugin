@@ -8,7 +8,7 @@ description: A classic Manhunt game - hunters chase runners with tracking compas
 commands:
   manhunt:
     description: Assign your role and control the Manhunt game
-    usage: /manhunt <role <runner|hunter>|leave|start|stop|status|reload>
+    usage: /manhunt <runner|hunter|leave|start|stop|status|reload>
 
 permissions:
   manhunt.admin:

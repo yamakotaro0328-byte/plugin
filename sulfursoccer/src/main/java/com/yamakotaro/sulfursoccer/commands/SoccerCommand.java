@@ -5,6 +5,7 @@ import com.yamakotaro.sulfursoccer.arena.Arena;
 import com.yamakotaro.sulfursoccer.arena.ArenaManager;
 import com.yamakotaro.sulfursoccer.arena.Box;
 import com.yamakotaro.sulfursoccer.arena.Point;
+import com.yamakotaro.sulfursoccer.match.JoinResult;
 import com.yamakotaro.sulfursoccer.match.MatchManager;
 import com.yamakotaro.sulfursoccer.selection.SelectionManager;
 import net.kyori.adventure.text.Component;
@@ -20,6 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +70,19 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
         return false;
     }
 
+    /** When no arena name is given, falls back to the sole registered arena - errors if there's none or more than one. */
+    private Optional<String> resolveArenaName(CommandSender sender, String[] args, int index) {
+        if (args.length > index) {
+            return Optional.of(args[index]);
+        }
+        Collection<Arena> arenas = arenaManager.all();
+        if (arenas.size() == 1) {
+            return Optional.of(arenas.iterator().next().id());
+        }
+        sender.sendMessage(messages.get(arenas.isEmpty() ? "arena.none-exist" : "arena.name-required", Map.of()));
+        return Optional.empty();
+    }
+
     private void handleWand(CommandSender sender) {
         if (!requireAdmin(sender)) {
             return;
@@ -98,6 +113,7 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
             case "setgoal" -> handleArenaSetGoal(sender, args);
             case "setspawn" -> handleArenaSetSpawn(sender, args);
             case "setkickoff" -> handleArenaSetKickoff(sender, args);
+            case "setfield" -> handleArenaSetField(sender, args);
             case "remove" -> handleArenaRemove(sender, args);
             case "list" -> handleArenaList(sender);
             default -> sender.sendMessage(messages.get("arena.usage", Map.of()));
@@ -187,6 +203,30 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
         sender.sendMessage(messages.get("arena.kickoff-set", Map.of("name", arena.id())));
     }
 
+    private void handleArenaSetField(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(messages.get("arena.setfield-usage", Map.of()));
+            return;
+        }
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(messages.get("general.player-only", Map.of()));
+            return;
+        }
+        Optional<Arena> arenaOpt = arenaManager.find(args[2]);
+        if (arenaOpt.isEmpty()) {
+            sender.sendMessage(messages.get("arena.not-found", Map.of("name", args[2])));
+            return;
+        }
+        Optional<Box> selection = selectionManager.getCompleteSelection(player.getUniqueId(), player.getWorld().getName());
+        if (selection.isEmpty()) {
+            sender.sendMessage(messages.get("wand.selection-incomplete", Map.of()));
+            return;
+        }
+        Arena arena = arenaOpt.get();
+        arenaManager.update(arena.withField(selection.get()));
+        sender.sendMessage(messages.get("arena.field-set", Map.of("name", arena.id())));
+    }
+
     private void handleArenaRemove(CommandSender sender, String[] args) {
         if (args.length < 3) {
             sender.sendMessage(messages.get("arena.remove-usage", Map.of()));
@@ -215,13 +255,17 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(messages.get("general.player-only", Map.of()));
             return;
         }
-        if (args.length < 3 || !isTeam(args[2])) {
-            sender.sendMessage(messages.get("soccer.join-usage", Map.of()));
+        Optional<String> arenaName = resolveArenaName(sender, args, 1);
+        if (arenaName.isEmpty()) {
             return;
         }
-        String error = matchManager.join(player.getUniqueId(), args[1], args[2].toLowerCase().charAt(0));
-        sender.sendMessage(messages.get(error != null ? error : "soccer.joined",
-                Map.of("name", args[1], "team", args[2].toUpperCase())));
+        JoinResult result = matchManager.join(player.getUniqueId(), arenaName.get());
+        if (result.isError()) {
+            sender.sendMessage(messages.get(result.errorKey(), Map.of("name", arenaName.get())));
+            return;
+        }
+        sender.sendMessage(messages.get("soccer.joined",
+                Map.of("name", arenaName.get(), "team", String.valueOf(result.team()).toUpperCase())));
     }
 
     private void handleLeave(CommandSender sender) {
@@ -237,24 +281,24 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
         if (!requireAdmin(sender)) {
             return;
         }
-        if (args.length < 2) {
-            sender.sendMessage(messages.get("soccer.start-usage", Map.of()));
+        Optional<String> arenaName = resolveArenaName(sender, args, 1);
+        if (arenaName.isEmpty()) {
             return;
         }
-        String error = matchManager.start(args[1]);
-        sender.sendMessage(messages.get(error != null ? error : "soccer.started", Map.of("name", args[1])));
+        String error = matchManager.start(arenaName.get());
+        sender.sendMessage(messages.get(error != null ? error : "soccer.started", Map.of("name", arenaName.get())));
     }
 
     private void handleStop(CommandSender sender, String[] args) {
         if (!requireAdmin(sender)) {
             return;
         }
-        if (args.length < 2) {
-            sender.sendMessage(messages.get("soccer.stop-usage", Map.of()));
+        Optional<String> arenaName = resolveArenaName(sender, args, 1);
+        if (arenaName.isEmpty()) {
             return;
         }
-        String error = matchManager.stopWithMessage(args[1], "soccer.stopped-manually");
-        sender.sendMessage(messages.get(error != null ? error : "soccer.stopped-manually", Map.of("name", args[1])));
+        String error = matchManager.stopWithMessage(arenaName.get(), "soccer.stopped-manually");
+        sender.sendMessage(messages.get(error != null ? error : "soccer.stopped-manually", Map.of("name", arenaName.get())));
     }
 
     private static boolean isTeam(String value) {
@@ -271,10 +315,10 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
             return filterPrefix(List.of("wand", "arena", "join", "leave", "start", "stop"), args[0]);
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("arena")) {
-            return filterPrefix(List.of("create", "setgoal", "setspawn", "setkickoff", "remove", "list"), args[1]);
+            return filterPrefix(List.of("create", "setgoal", "setspawn", "setkickoff", "setfield", "remove", "list"), args[1]);
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("arena")
-                && List.of("setgoal", "setspawn", "setkickoff", "remove").contains(args[1].toLowerCase())) {
+                && List.of("setgoal", "setspawn", "setkickoff", "setfield", "remove").contains(args[1].toLowerCase())) {
             return filterPrefix(arenaManager.all().stream().map(Arena::id).toList(), args[2]);
         }
         if (args.length == 4 && args[0].equalsIgnoreCase("arena")
@@ -283,9 +327,6 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length == 2 && (args[0].equalsIgnoreCase("join") || args[0].equalsIgnoreCase("start") || args[0].equalsIgnoreCase("stop"))) {
             return filterPrefix(arenaManager.all().stream().map(Arena::id).toList(), args[1]);
-        }
-        if (args.length == 3 && args[0].equalsIgnoreCase("join")) {
-            return filterPrefix(List.of("a", "b"), args[2]);
         }
         return Collections.emptyList();
     }
