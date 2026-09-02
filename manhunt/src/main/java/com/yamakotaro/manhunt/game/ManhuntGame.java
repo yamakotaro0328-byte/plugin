@@ -30,6 +30,15 @@ public class ManhuntGame {
         return running && System.currentTimeMillis() < headStartEndMillis;
     }
 
+    public long headStartRemainingMillis() {
+        return Math.max(0, headStartEndMillis - System.currentTimeMillis());
+    }
+
+    /** How long the chase itself (after the head start) has been going - meaningless unless isRunning() and not isHeadStartActive(). */
+    public long huntElapsedMillis() {
+        return Math.max(0, System.currentTimeMillis() - headStartEndMillis);
+    }
+
     public Role getRole(UUID playerId) {
         return roles.get(playerId);
     }

@@ -14,6 +14,21 @@ language: en
 head-start-seconds: 60
 compass-update-interval-ticks: 20
 
+# items.locator-orb-charges: how many Locator Orbs each hunter gets at game start - each use
+#   reveals the nearest alive runner's coordinates, then is consumed.
+# items.smoke-bomb-charges: how many Smoke Bombs each runner gets at game start - each use grants
+#   a short escape window, then is consumed.
+# items.smoke-bomb-duration-seconds: how long the Smoke Bomb's invisibility + speed lasts.
+# (日本語) items.locator-orb-charges: ゲーム開始時に各ハンターへ配布される「探知オーブ」の個数。
+#   使用すると最も近い生存中のランナーの座標が分かり、1個消費される。
+# items.smoke-bomb-charges: ゲーム開始時に各ランナーへ配布される「スモークボム」の個数。
+#   使用すると一時的に逃げるチャンスが得られ、1個消費される。
+# items.smoke-bomb-duration-seconds: スモークボム使用時の透明化+速度上昇の持続時間(秒)。
+items:
+  locator-orb-charges: 3
+  smoke-bomb-charges: 2
+  smoke-bomb-duration-seconds: 8
+
 messages:
   en:
     general:
@@ -40,6 +55,30 @@ messages:
       status-running: "&aThe hunt is underway."
       status-counts: "&7Runners: {runners} | Hunters: {hunters}"
       reloaded: "&aConfiguration reloaded."
+    gui:
+      title: "&8Manhunt - Status"
+      state-waiting: "&7Waiting to start"
+      state-headstart: "&6Head start"
+      state-headstart-lore: "&7Hunters released in {seconds}s"
+      state-running: "&aHunt in progress"
+      state-running-lore: "&7Hunt time: {minutes}m {seconds}s"
+      runner-alive-name: "&a{player}"
+      runner-alive-lore: "&7Status: Free"
+      runner-caught-name: "&8&m{player}"
+      runner-caught-lore: "&7Status: Caught"
+      hunter-name: "&c{player}"
+      hunter-lore: "&7Role: Hunter"
+    item:
+      locator-name: "&bLocator Orb"
+      locator-lore: "&7Right-click to locate the nearest runner"
+      locator-given: "&aYou received {count} Locator Orb(s)! Right-click to reveal the nearest runner's location."
+      locator-used: "&bNearest runner: {player} at {x}, {y}, {z}"
+      locator-none-found: "&cNo alive runners found to locate."
+      smoke-name: "&7Smoke Bomb"
+      smoke-lore: "&7Right-click for {seconds}s of invisibility"
+      smoke-given: "&aYou received {count} Smoke Bomb(s)! Right-click to vanish and escape."
+      smoke-used: "&7You vanish in a puff of smoke for {seconds} seconds!"
+      not-usable-now: "&cYou can't use that right now."
   ja:
     general:
       no-permission: "&cこの操作を行う権限がありません。"
@@ -65,3 +104,27 @@ messages:
       status-running: "&aハント進行中。"
       status-counts: "&7ランナー: {runners} | ハンター: {hunters}"
       reloaded: "&a設定を再読み込みしました。"
+    gui:
+      title: "&8マンハント - 状況"
+      state-waiting: "&7開始待ち"
+      state-headstart: "&6ヘッドスタート中"
+      state-headstart-lore: "&7あと{seconds}秒でハンター解放"
+      state-running: "&aハント進行中"
+      state-running-lore: "&7経過時間: {minutes}分{seconds}秒"
+      runner-alive-name: "&a{player}"
+      runner-alive-lore: "&7状態: 逃走中"
+      runner-caught-name: "&8&m{player}"
+      runner-caught-lore: "&7状態: 捕獲済み"
+      hunter-name: "&c{player}"
+      hunter-lore: "&7役割: ハンター"
+    item:
+      locator-name: "&b探知オーブ"
+      locator-lore: "&7右クリックで最も近いランナーの位置を探知"
+      locator-given: "&a探知オーブを{count}個受け取りました! 右クリックで最も近いランナーの位置がわかります。"
+      locator-used: "&b最も近いランナー: {player} 座標 {x}, {y}, {z}"
+      locator-none-found: "&c探知できる生存中のランナーがいません。"
+      smoke-name: "&7スモークボム"
+      smoke-lore: "&7右クリックで{seconds}秒間透明化"
+      smoke-given: "&aスモークボムを{count}個受け取りました! 右クリックで姿を消して逃げられます。"
+      smoke-used: "&7煙とともに姿を消しました({seconds}秒間)!"
+      not-usable-now: "&c今はそれを使用できません。"

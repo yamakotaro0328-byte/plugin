@@ -4,6 +4,7 @@ import com.yamakotaro.manhunt.Messages;
 import com.yamakotaro.manhunt.game.GameManager;
 import com.yamakotaro.manhunt.game.ManhuntGame;
 import com.yamakotaro.manhunt.game.Role;
+import com.yamakotaro.manhunt.gui.StatusGuiBuilder;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -21,11 +22,13 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
     private final JavaPlugin plugin;
     private final GameManager gameManager;
     private final Messages messages;
+    private final StatusGuiBuilder statusGuiBuilder;
 
-    public ManhuntCommand(JavaPlugin plugin, GameManager gameManager, Messages messages) {
+    public ManhuntCommand(JavaPlugin plugin, GameManager gameManager, Messages messages, StatusGuiBuilder statusGuiBuilder) {
         this.plugin = plugin;
         this.gameManager = gameManager;
         this.messages = messages;
+        this.statusGuiBuilder = statusGuiBuilder;
     }
 
     @Override
@@ -113,6 +116,10 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleStatus(CommandSender sender) {
+        if (sender instanceof Player player) {
+            player.openInventory(statusGuiBuilder.build());
+            return;
+        }
         ManhuntGame game = gameManager.game();
         long runners = game.getRoles().values().stream().filter(role -> role == Role.RUNNER).count();
         long hunters = game.getRoles().values().stream().filter(role -> role == Role.HUNTER).count();
