@@ -45,6 +45,8 @@ public class EcoBossPlugin extends JavaPlugin {
             worldBossScheduler.tick();
             eventBossScheduler.tick();
             bossManager.syncBossBars();
+            bossManager.tickAuras();
+            bossManager.tickAbilities();
         }, 20L, 20L);
     }
 

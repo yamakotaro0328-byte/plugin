@@ -8,16 +8,22 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Fireball;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.time.DayOfWeek;
 import java.util.ArrayList;
@@ -43,6 +49,7 @@ public class BossManager {
     private final Map<String, BossDefinition> definitionsById = new LinkedHashMap<>();
     private final Map<String, ActiveBoss> activeByBossId = new HashMap<>();
     private final Map<String, Long> cooldownUntilMillisByBossId = new HashMap<>();
+    private final Map<String, Long> nextAbilityAtMillisByBossId = new HashMap<>();
     private final Random random = new Random();
 
     public BossManager(JavaPlugin plugin, Messages messages, BossLocationManager locationManager) {
@@ -82,6 +89,17 @@ public class BossManager {
         DayOfWeek eventDayOfWeek = section.isString("event-day-of-week")
                 ? DayOfWeek.valueOf(section.getString("event-day-of-week").toUpperCase(Locale.ROOT)) : null;
         int eventHour = section.getInt("event-hour", 20);
+        double scale = section.getDouble("scale", 1.0);
+        int abilityIntervalSeconds = Math.max(1, section.getInt("ability-interval-seconds", 8));
+
+        List<Ability> abilities = new ArrayList<>();
+        for (String rawAbility : section.getStringList("abilities")) {
+            try {
+                abilities.add(Ability.valueOf(rawAbility.toUpperCase(Locale.ROOT)));
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().warning("Boss '" + id + "': unknown ability '" + rawAbility + "', skipping.");
+            }
+        }
 
         List<Phase> phases = new ArrayList<>();
         for (Map<?, ?> map : section.getMapList("phases")) {
@@ -113,7 +131,8 @@ public class BossManager {
         }
 
         return new BossDefinition(id, displayName, entityType, type, healthBoostAmplifier, strengthAmplifier,
-                cooldownMinutes, worldIntervalMinutes, eventDayOfWeek, eventHour, phases, loot);
+                cooldownMinutes, worldIntervalMinutes, eventDayOfWeek, eventHour, scale, abilities,
+                abilityIntervalSeconds, phases, loot);
     }
 
     public Optional<BossDefinition> find(String id) {
@@ -163,6 +182,13 @@ public class BossManager {
         if (definition.strengthAmplifier() > 0) {
             entity.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, Integer.MAX_VALUE, definition.strengthAmplifier(), false, false));
         }
+        entity.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, Integer.MAX_VALUE, 0, false, false));
+        if (definition.scale() != 1.0) {
+            AttributeInstance scaleAttribute = entity.getAttribute(Attribute.GENERIC_SCALE);
+            if (scaleAttribute != null) {
+                scaleAttribute.setBaseValue(definition.scale());
+            }
+        }
 
         BarColor barColor = parseBarColor(plugin.getConfig().getString("bossbar-color", "RED"));
         BarStyle barStyle = parseBarStyle(plugin.getConfig().getString("bossbar-style", "SEGMENTED_10"));
@@ -182,6 +208,7 @@ public class BossManager {
         if (active == null) {
             return "boss.not-active";
         }
+        nextAbilityAtMillisByBossId.remove(bossId);
         active.bossBar().removeAll();
         active.entity().remove();
         return null;
@@ -194,6 +221,117 @@ public class BossManager {
                 active.bossBar().addPlayer(player);
             }
         }
+    }
+
+    /** Spawns a small rotating particle ring around every active boss - a persistent "this is special" visual. */
+    public void tickAuras() {
+        long now = System.currentTimeMillis();
+        for (ActiveBoss active : activeByBossId.values()) {
+            LivingEntity entity = active.entity();
+            Location center = entity.getLocation().add(0, 1, 0);
+            double radius = 1.2 * Math.max(1.0, active.definition().scale());
+            for (int i = 0; i < 8; i++) {
+                double angle = (now / 200.0) + i * (Math.PI * 2 / 8);
+                double x = center.getX() + radius * Math.cos(angle);
+                double z = center.getZ() + radius * Math.sin(angle);
+                center.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, x, center.getY(), z, 0, 0, 0, 0, 0);
+            }
+        }
+    }
+
+    /** For every active boss with abilities configured, fires one at random once its cooldown is up. */
+    public void tickAbilities() {
+        long now = System.currentTimeMillis();
+        for (ActiveBoss active : activeByBossId.values()) {
+            BossDefinition definition = active.definition();
+            if (definition.abilities().isEmpty()) {
+                continue;
+            }
+            long nextAt = nextAbilityAtMillisByBossId.getOrDefault(definition.id(), 0L);
+            if (now < nextAt) {
+                continue;
+            }
+            Player target = nearestPlayer(active.entity());
+            if (target != null) {
+                useAbility(active, definition.abilities().get(random.nextInt(definition.abilities().size())), target);
+            }
+            nextAbilityAtMillisByBossId.put(definition.id(), now + definition.abilityIntervalSeconds() * 1000L);
+        }
+    }
+
+    private Player nearestPlayer(LivingEntity entity) {
+        Player nearest = null;
+        double nearestDistanceSquared = Double.MAX_VALUE;
+        for (Player player : entity.getWorld().getPlayers()) {
+            double distanceSquared = player.getLocation().distanceSquared(entity.getLocation());
+            if (distanceSquared < nearestDistanceSquared) {
+                nearestDistanceSquared = distanceSquared;
+                nearest = player;
+            }
+        }
+        return nearest;
+    }
+
+    private void useAbility(ActiveBoss active, Ability ability, Player target) {
+        switch (ability) {
+            case FIREBALL_BARRAGE -> fireballBarrage(active, target);
+            case GROUND_SLAM -> groundSlam(active);
+            case LIGHTNING_STRIKE -> lightningStrike(active, target);
+            case SUMMON_WAVE -> summonWave(active);
+            case CHARGE_DASH -> chargeDash(active, target);
+        }
+    }
+
+    private void fireballBarrage(ActiveBoss active, Player target) {
+        LivingEntity entity = active.entity();
+        Location eye = entity.getEyeLocation();
+        Vector baseDirection = target.getEyeLocation().toVector().subtract(eye.toVector()).normalize();
+        for (int i = -1; i <= 1; i++) {
+            Vector direction = baseDirection.clone().add(new Vector(0, i * 0.15, 0)).normalize();
+            if (entity.getWorld().spawnEntity(eye, EntityType.SMALL_FIREBALL) instanceof Fireball fireball) {
+                fireball.setShooter(entity);
+                fireball.setDirection(direction);
+            }
+        }
+    }
+
+    private void groundSlam(ActiveBoss active) {
+        LivingEntity entity = active.entity();
+        Location center = entity.getLocation();
+        center.getWorld().spawnParticle(Particle.EXPLOSION, center, 1);
+        center.getWorld().playSound(center, Sound.ENTITY_GENERIC_EXPLODE, 1.5f, 0.7f);
+        double radius = 5.0 * Math.max(1.0, active.definition().scale());
+        for (Player player : center.getWorld().getPlayers()) {
+            double distanceSquared = player.getLocation().distanceSquared(center);
+            if (distanceSquared > radius * radius) {
+                continue;
+            }
+            Vector knockback = player.getLocation().toVector().subtract(center.toVector()).normalize().multiply(1.4);
+            knockback.setY(0.6);
+            player.setVelocity(knockback);
+            player.damage(6.0, entity);
+        }
+    }
+
+    private void lightningStrike(ActiveBoss active, Player target) {
+        target.getWorld().strikeLightningEffect(target.getLocation());
+        target.damage(5.0, active.entity());
+    }
+
+    private void summonWave(ActiveBoss active) {
+        LivingEntity entity = active.entity();
+        for (int i = 0; i < 3; i++) {
+            entity.getWorld().spawnEntity(entity.getLocation(), EntityType.ZOMBIE);
+        }
+    }
+
+    private void chargeDash(ActiveBoss active, Player target) {
+        LivingEntity entity = active.entity();
+        Vector direction = target.getLocation().toVector().subtract(entity.getLocation().toVector()).normalize();
+        Vector velocity = direction.multiply(2.2);
+        velocity.setY(0.3);
+        entity.setVelocity(velocity);
+        entity.getWorld().spawnParticle(Particle.CLOUD, entity.getLocation(), 20, 0.3, 0.1, 0.3, 0.02);
     }
 
     /** Call after any damage to the boss: advances/triggers phases and refreshes the boss bar. */
@@ -230,6 +368,7 @@ public class BossManager {
     /** Call when the boss's entity dies: ends the encounter, starts its cooldown, and hands out loot. */
     public void onDeath(ActiveBoss active) {
         activeByBossId.remove(active.definition().id());
+        nextAbilityAtMillisByBossId.remove(active.definition().id());
         active.bossBar().removeAll();
         cooldownUntilMillisByBossId.put(active.definition().id(),
                 System.currentTimeMillis() + active.definition().cooldownMinutes() * 60_000L);

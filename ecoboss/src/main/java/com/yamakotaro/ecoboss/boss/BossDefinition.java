@@ -9,5 +9,6 @@ import java.util.List;
 public record BossDefinition(String id, String displayName, EntityType entityType, BossType type,
                               int healthBoostAmplifier, int strengthAmplifier, int cooldownMinutes,
                               int worldIntervalMinutes, DayOfWeek eventDayOfWeek, int eventHour,
+                              double scale, List<Ability> abilities, int abilityIntervalSeconds,
                               List<Phase> phases, List<Reward> loot) {
 }

@@ -25,6 +25,10 @@ bossbar-style: SEGMENTED_10
 #   "enrage" (extra Speed+Strength), and/or summoned adds.
 # - loot: weighted reward pool. "guaranteed: true" always drops (once) in addition to the weighted
 #   picks for other participants; "broadcast: true" announces that specific drop to the server.
+# - scale: visual size multiplier (1.0 = normal). Also widens ground-slam's radius.
+# - abilities / ability-interval-seconds: active-combat moves the boss uses on its own, on top of
+#   its normal melee AI - one random pick from the list every ability-interval-seconds. Options:
+#   FIREBALL_BARRAGE, GROUND_SLAM, LIGHTNING_STRIKE, SUMMON_WAVE, CHARGE_DASH.
 #
 # (日本語) bosses以下の各項目が1体のボス定義。
 # - entity-type: バニラのEntityType名(RAVAGER、WITHER_SKELETON、ZOMBIE、WITHERなど)。
@@ -37,6 +41,11 @@ bossbar-style: SEGMENTED_10
 # - phases: 体力の割合がしきい値を下回るたびにメッセージ・強化(enrage)・増援召喚を行う。
 # - loot: 重み付き報酬プール。guaranteed:trueは(他の参加者への抽選とは別に)必ず1回ドロップし、
 #   broadcast:trueが付いたドロップはサーバー全体に告知される。
+# - scale: 見た目の大きさの倍率(1.0が通常サイズ)。地面叩きつけの範囲にも影響する。
+# - abilities / ability-interval-seconds: 通常の近接AIとは別に、ボスが自発的に使う特殊攻撃。
+#   ability-interval-secondsごとにリストからランダムで1つ発動する。指定可能な値:
+#   FIREBALL_BARRAGE(火球連射)、GROUND_SLAM(地面叩きつけ)、LIGHTNING_STRIKE(落雷)、
+#   SUMMON_WAVE(増援召喚)、CHARGE_DASH(突進)。
 bosses:
   # World boss - a pack-leader Ravager. The weakest of the three, so it can spawn often.
   alpha_ravager:
@@ -47,6 +56,9 @@ bosses:
     cooldown-minutes: 20
     health-boost-amplifier: 12
     strength-amplifier: 2
+    scale: 1.6
+    ability-interval-seconds: 10
+    abilities: [CHARGE_DASH, GROUND_SLAM]
     phases:
       - health-percent: 50
         message: "&2{boss} bellows in rage!"
@@ -83,6 +95,9 @@ bosses:
     cooldown-minutes: 45
     health-boost-amplifier: 16
     strength-amplifier: 3
+    scale: 2.0
+    ability-interval-seconds: 8
+    abilities: [CHARGE_DASH, GROUND_SLAM, SUMMON_WAVE]
     phases:
       - health-percent: 60
         message: "&c{boss} snorts and charges!"
@@ -122,6 +137,9 @@ bosses:
     cooldown-minutes: 10080
     health-boost-amplifier: 24
     strength-amplifier: 5
+    scale: 2.8
+    ability-interval-seconds: 6
+    abilities: [FIREBALL_BARRAGE, GROUND_SLAM, LIGHTNING_STRIKE, SUMMON_WAVE, CHARGE_DASH]
     phases:
       - health-percent: 50
         message: "&8{boss} lets out an undead roar!"
