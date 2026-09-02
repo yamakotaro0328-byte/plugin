@@ -262,3 +262,30 @@ jobs:
           name: sulfursoccer
           path: sulfursoccer/target/sulfursoccer-*.jar
           if-no-files-found: error
+
+  build-manhunt:
+    # Independent Maven project (its own pom.xml), unrelated to EcoTP - built in its own job
+    # so a build failure here never blocks or reflects on any of the other plugins.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+          cache-dependency-path: manhunt/pom.xml
+
+      - name: Build with Maven
+        working-directory: manhunt
+        run: mvn -B package --no-transfer-progress
+
+      - name: Upload Manhunt jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: manhunt
+          path: manhunt/target/manhunt-*.jar
+          if-no-files-found: error

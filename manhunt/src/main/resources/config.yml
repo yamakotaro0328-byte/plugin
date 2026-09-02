@@ -1,0 +1,63 @@
+# Manhunt configuration
+# Language for messages below: "en" or "ja".
+# (日本語) 以下のメッセージの言語。"en" または "ja"。
+language: en
+
+# head-start-seconds: how long hunters are frozen in place after /manhunt start, giving runners
+#   time to scatter before the chase begins. Hunters can still look around, just not move.
+# compass-update-interval-ticks: how often each hunter's compass is re-pointed at the nearest
+#   (same-world) alive runner.
+# (日本語) head-start-seconds: /manhunt start 後、ハンターをその場に足止めする秒数。
+#   その間にランナーが散らばる時間を確保する。ハンターは見回すことはできるが移動はできない。
+# compass-update-interval-ticks: 各ハンターのコンパスを、最も近い(同じワールドの)生存中の
+#   ランナーに向け直す間隔(tick単位)。
+head-start-seconds: 60
+compass-update-interval-ticks: 20
+
+messages:
+  en:
+    general:
+      no-permission: "&cYou don't have permission to do that."
+      player-only: "&cThis command can only be used by a player."
+    manhunt:
+      usage: "&cUsage: /manhunt <role <runner|hunter>|leave|start|stop|status|reload>"
+      role-usage: "&cUsage: /manhunt role <runner|hunter>"
+      role-set: "&aYou are now a {role}."
+      role-locked: "&cYou can't change roles while a game is running."
+      left: "&aYou left the game."
+      need-both-roles: "&cAt least one runner and one hunter are needed to start."
+      already-running: "&cA game is already running."
+      not-running: "&cThere's no game running."
+      started-headstart: "&6The hunt begins! Hunters are frozen for {seconds} seconds - runners, scatter!"
+      stopped-manually: "&7The game was stopped."
+      runners-win: "&aThe Ender Dragon has fallen - the runners win!"
+      hunters-win: "&cEvery runner has been caught - the hunters win!"
+      runner-eliminated: "&e{player} was caught and is now spectating."
+      status-waiting: "&7No game running - waiting for players to pick a role."
+      status-headstart: "&6Head start in progress - hunters are still frozen."
+      status-running: "&aThe hunt is underway."
+      status-counts: "&7Runners: {runners} | Hunters: {hunters}"
+      reloaded: "&aConfiguration reloaded."
+  ja:
+    general:
+      no-permission: "&cこの操作を行う権限がありません。"
+      player-only: "&cこのコマンドはプレイヤーのみ使用できます。"
+    manhunt:
+      usage: "&c使い方: /manhunt <role <runner|hunter>|leave|start|stop|status|reload>"
+      role-usage: "&c使い方: /manhunt role <runner|hunter>"
+      role-set: "&aあなたは {role} になりました。"
+      role-locked: "&cゲーム中は役割を変更できません。"
+      left: "&aゲームから抜けました。"
+      need-both-roles: "&c開始するにはランナーとハンターが最低1人ずつ必要です。"
+      already-running: "&c既にゲームが進行中です。"
+      not-running: "&c進行中のゲームはありません。"
+      started-headstart: "&6ハント開始! ハンターは{seconds}秒間動けません - ランナーは今のうちに散らばろう!"
+      stopped-manually: "&7ゲームが停止されました。"
+      runners-win: "&aエンダードラゴンが倒された - ランナーの勝利!"
+      hunters-win: "&c全てのランナーが捕まった - ハンターの勝利!"
+      runner-eliminated: "&e{player} が捕まり、観戦モードになりました。"
+      status-waiting: "&7ゲームは開始されていません - 役割選択を待っています。"
+      status-headstart: "&6ヘッドスタート中 - ハンターはまだ動けません。"
+      status-running: "&aハント進行中。"
+      status-counts: "&7ランナー: {runners} | ハンター: {hunters}"
+      reloaded: "&a設定を再読み込みしました。"

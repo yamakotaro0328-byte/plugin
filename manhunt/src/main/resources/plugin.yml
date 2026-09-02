@@ -1,0 +1,16 @@
+name: Manhunt
+version: '${project.version}'
+main: com.yamakotaro.manhunt.ManhuntPlugin
+api-version: '26.2'
+author: yamakotaro0328
+description: A classic Manhunt game - hunters chase runners with tracking compasses; runners win by beating the Ender Dragon, hunters win by eliminating every runner.
+
+commands:
+  manhunt:
+    description: Assign your role and control the Manhunt game
+    usage: /manhunt <role <runner|hunter>|leave|start|stop|status|reload>
+
+permissions:
+  manhunt.admin:
+    description: Can start/stop the game and reload its configuration
+    default: op
