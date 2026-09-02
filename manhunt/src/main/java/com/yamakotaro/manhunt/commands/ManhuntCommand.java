@@ -4,6 +4,7 @@ import com.yamakotaro.manhunt.Messages;
 import com.yamakotaro.manhunt.game.GameManager;
 import com.yamakotaro.manhunt.game.ManhuntGame;
 import com.yamakotaro.manhunt.game.Role;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -34,8 +35,8 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         switch (args[0].toLowerCase()) {
-            case "runner" -> handleSetRole(sender, Role.RUNNER);
-            case "hunter" -> handleSetRole(sender, Role.HUNTER);
+            case "runner" -> handleSetRole(sender, args, Role.RUNNER);
+            case "hunter" -> handleSetRole(sender, args, Role.HUNTER);
             case "leave" -> handleLeave(sender);
             case "start" -> handleStart(sender);
             case "stop" -> handleStop(sender);
@@ -54,14 +55,29 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
         return false;
     }
 
-    private void handleSetRole(CommandSender sender, Role role) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(messages.get("general.player-only", Map.of()));
+    private void handleSetRole(CommandSender sender, String[] args, Role role) {
+        if (!requireAdmin(sender)) {
             return;
         }
-        String error = gameManager.setRole(player.getUniqueId(), role);
-        sender.sendMessage(messages.get(error != null ? error : "manhunt.role-set",
-                Map.of("role", role == Role.RUNNER ? "runner" : "hunter")));
+        if (args.length < 2) {
+            sender.sendMessage(messages.get("manhunt.role-usage", Map.of()));
+            return;
+        }
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            sender.sendMessage(messages.get("general.player-not-found", Map.of("player", args[1])));
+            return;
+        }
+        String error = gameManager.setRole(target.getUniqueId(), role);
+        if (error != null) {
+            sender.sendMessage(messages.get(error, Map.of()));
+            return;
+        }
+        String roleName = role == Role.RUNNER ? "runner" : "hunter";
+        target.sendMessage(messages.get("manhunt.role-set-notice", Map.of("role", roleName)));
+        if (!target.equals(sender)) {
+            sender.sendMessage(messages.get("manhunt.role-set", Map.of("player", target.getName(), "role", roleName)));
+        }
     }
 
     private void handleLeave(CommandSender sender) {
@@ -119,6 +135,9 @@ public class ManhuntCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
             return filterPrefix(List.of("runner", "hunter", "leave", "start", "stop", "status", "reload"), args[0]);
+        }
+        if (args.length == 2 && (args[0].equalsIgnoreCase("runner") || args[0].equalsIgnoreCase("hunter"))) {
+            return filterPrefix(Bukkit.getOnlinePlayers().stream().map(Player::getName).toList(), args[1]);
         }
         return Collections.emptyList();
     }
