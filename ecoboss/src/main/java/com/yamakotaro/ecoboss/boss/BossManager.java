@@ -184,7 +184,7 @@ public class BossManager {
         }
         entity.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, Integer.MAX_VALUE, 0, false, false));
         if (definition.scale() != 1.0) {
-            AttributeInstance scaleAttribute = entity.getAttribute(Attribute.GENERIC_SCALE);
+            AttributeInstance scaleAttribute = entity.getAttribute(Attribute.SCALE);
             if (scaleAttribute != null) {
                 scaleAttribute.setBaseValue(definition.scale());
             }
