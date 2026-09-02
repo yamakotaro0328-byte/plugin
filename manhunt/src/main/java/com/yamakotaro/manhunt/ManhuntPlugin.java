@@ -8,6 +8,7 @@ import com.yamakotaro.manhunt.listeners.DragonDeathListener;
 import com.yamakotaro.manhunt.listeners.HeadStartFreezeListener;
 import com.yamakotaro.manhunt.listeners.RunnerEliminationListener;
 import com.yamakotaro.manhunt.listeners.SpecialItemListener;
+import com.yamakotaro.manhunt.listeners.SpecialProjectileListener;
 import com.yamakotaro.manhunt.listeners.StatusGuiClickListener;
 import com.yamakotaro.manhunt.tasks.CompassTrackingTask;
 import org.bukkit.command.PluginCommand;
@@ -22,6 +23,7 @@ public class ManhuntPlugin extends JavaPlugin {
         saveDefaultConfig();
         Messages messages = new Messages(this);
         SpecialItems specialItems = new SpecialItems(this, messages);
+        specialItems.registerRecipes(this);
         GameManager gameManager = new GameManager(messages, specialItems, this);
         StatusGuiBuilder statusGuiBuilder = new StatusGuiBuilder(gameManager.game(), messages);
 
@@ -29,6 +31,7 @@ public class ManhuntPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new DragonDeathListener(gameManager), this);
         getServer().getPluginManager().registerEvents(new RunnerEliminationListener(gameManager), this);
         getServer().getPluginManager().registerEvents(new SpecialItemListener(this, gameManager, specialItems, messages), this);
+        getServer().getPluginManager().registerEvents(new SpecialProjectileListener(this, gameManager, specialItems, messages), this);
         getServer().getPluginManager().registerEvents(new StatusGuiClickListener(), this);
 
         ManhuntCommand manhuntCommand = new ManhuntCommand(this, gameManager, messages, statusGuiBuilder);

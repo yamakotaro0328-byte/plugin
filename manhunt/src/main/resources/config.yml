@@ -24,10 +24,25 @@ compass-update-interval-ticks: 20
 # items.smoke-bomb-charges: ゲーム開始時に各ランナーへ配布される「スモークボム」の個数。
 #   使用すると一時的に逃げるチャンスが得られ、1個消費される。
 # items.smoke-bomb-duration-seconds: スモークボム使用時の透明化+速度上昇の持続時間(秒)。
+# items.tracking-dart-glow-seconds: how long a runner hit by a hunter's thrown Tracking Dart glows
+#   (visible through walls) for.
+# items.flashbang-radius: blast radius (blocks) of a runner's thrown Flashbang.
+# items.flashbang-blind-seconds: how long hunters caught in a Flashbang's radius are blinded and
+#   slowed for.
+# Tracking Dart and Flashbang are crafted at a crafting table (not handed out for free) - see the
+# recipes registered in SpecialItems.
+# (日本語) items.tracking-dart-glow-seconds: ハンターが投げた「追跡ダーツ」が命中したランナーが
+#   (壁越しに見える)発光する時間(秒)。
+# items.flashbang-radius: ランナーが投げた「フラッシュバン」の効果範囲(ブロック単位)。
+# items.flashbang-blind-seconds: フラッシュバンの範囲内にいたハンターが失明・鈍足になる時間(秒)。
+# 追跡ダーツとフラッシュバンは無料配布ではなく作業台でクラフトして入手する。
 items:
   locator-orb-charges: 3
   smoke-bomb-charges: 2
   smoke-bomb-duration-seconds: 8
+  tracking-dart-glow-seconds: 15
+  flashbang-radius: 6
+  flashbang-blind-seconds: 5
 
 messages:
   en:
@@ -79,6 +94,14 @@ messages:
       smoke-given: "&aYou received {count} Smoke Bomb(s)! Right-click to vanish and escape."
       smoke-used: "&7You vanish in a puff of smoke for {seconds} seconds!"
       not-usable-now: "&cYou can't use that right now."
+      tracking-dart-name: "&9Tracking Dart"
+      tracking-dart-lore: "&7Throw to reveal a hit runner through walls"
+      tracking-dart-hit: "&9You marked {player} - they're glowing!"
+      tracking-dart-hit-notice: "&9A hunter marked you - you're glowing!"
+      flashbang-name: "&eFlashbang"
+      flashbang-lore: "&7Throw to blind nearby hunters"
+      flashbang-hit: "&eFlashbang! You're blinded and slowed!"
+      flashbang-used: "&aFlashbang thrown!"
   ja:
     general:
       no-permission: "&cこの操作を行う権限がありません。"
@@ -128,3 +151,11 @@ messages:
       smoke-given: "&aスモークボムを{count}個受け取りました! 右クリックで姿を消して逃げられます。"
       smoke-used: "&7煙とともに姿を消しました({seconds}秒間)!"
       not-usable-now: "&c今はそれを使用できません。"
+      tracking-dart-name: "&9追跡ダーツ"
+      tracking-dart-lore: "&7投げると命中したランナーが壁越しに見えるようになる"
+      tracking-dart-hit: "&9{player} をマークしました - 発光しています!"
+      tracking-dart-hit-notice: "&9ハンターにマークされました - 発光しています!"
+      flashbang-name: "&eフラッシュバン"
+      flashbang-lore: "&7投げると周囲のハンターを失明させる"
+      flashbang-hit: "&eフラッシュバン! 失明・鈍足になりました!"
+      flashbang-used: "&aフラッシュバンを投げました!"
