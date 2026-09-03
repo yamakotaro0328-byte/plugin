@@ -24,6 +24,10 @@ public class BaltopCommand implements CommandExecutor {
             sender.sendMessage(plugin.msg("general.feature-disabled"));
             return true;
         }
+        if (!sender.hasPermission("ecotp.baltop")) {
+            sender.sendMessage(plugin.msg("general.no-permission"));
+            return true;
+        }
 
         EcoTpEconomy ecoTpEconomy = plugin.getEcoTpEconomy();
         if (ecoTpEconomy == null) {

@@ -43,7 +43,10 @@ public class VoteRewardListener implements Listener {
             Object vote = event.getClass().getMethod("getVote").invoke(event);
             String username = (String) vote.getClass().getMethod("getUsername").invoke(vote);
             String serviceName = (String) vote.getClass().getMethod("getServiceName").invoke(vote);
-            plugin.getVoteRewardManager().handleVote(username, serviceName);
+            // NuVotifier(および互換品)は非同期でこのイベントを発火する実装があるため、
+            // Bukkit APIや共有状態に触れる handleVote 自体はメインスレッドへ戻してから呼ぶ
+            // (VotifierServer 内蔵の投票受付が同じ処理をメインスレッドへ戻しているのと揃える)。
+            Bukkit.getScheduler().runTask(plugin, () -> plugin.getVoteRewardManager().handleVote(username, serviceName));
         } catch (ReflectiveOperationException e) {
             plugin.getLogger().log(Level.WARNING, "Failed to read a vote event via reflection", e);
         }

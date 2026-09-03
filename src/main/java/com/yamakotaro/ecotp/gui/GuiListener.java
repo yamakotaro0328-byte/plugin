@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -16,6 +17,16 @@ public class GuiListener implements Listener {
 
     public GuiListener(EcoTpPlugin plugin) {
         this.plugin = plugin;
+    }
+
+    @EventHandler
+    public void onDrag(InventoryDragEvent event) {
+        InventoryHolder holder = event.getInventory().getHolder();
+        if (holder instanceof MainMenuHolder || holder instanceof PlayerSelectHolder) {
+            // クリックと同様、これらのGUIは表示専用: ドラッグでアイテムを置かせない
+            // (空いたスロットにアイテムをドロップされて紛失するのを防ぐ)。
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler

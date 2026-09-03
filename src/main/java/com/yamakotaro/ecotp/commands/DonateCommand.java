@@ -74,6 +74,10 @@ public class DonateCommand implements CommandExecutor, TabCompleter {
         }
 
         Economy economy = plugin.getEconomyHolder().get();
+        if (economy == null) {
+            player.sendMessage(plugin.msg("general.no-economy"));
+            return true;
+        }
         if (!economy.has(player, amount)) {
             player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(amount)));
             return true;

@@ -130,6 +130,7 @@ permissions:
       ecotp.menu: true
       ecotp.donate: true
       ecotp.daily: true
+      ecotp.baltop: true
   ecotp.home:
     description: Can use /home, /homes
     default: false
@@ -165,6 +166,9 @@ permissions:
     default: false
   ecotp.daily:
     description: Can use /daily
+    default: false
+  ecotp.baltop:
+    description: Can use /baltop
     default: false
   ecotp.ecoitem:
     description: Can use /ecoitem give (admin)

@@ -2,13 +2,18 @@ package com.yamakotaro.ecotp.commands;
 
 import com.yamakotaro.ecotp.ChatUtil;
 import com.yamakotaro.ecotp.EcoTpPlugin;
+import com.yamakotaro.ecotp.TabCompleteUtil;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-public class BalanceCommand implements CommandExecutor {
+import java.util.Collections;
+import java.util.List;
+
+public class BalanceCommand implements CommandExecutor, TabCompleter {
 
     private final EcoTpPlugin plugin;
 
@@ -19,6 +24,10 @@ public class BalanceCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         Economy economy = plugin.getEconomyHolder().get();
+        if (economy == null) {
+            sender.sendMessage(plugin.msg("general.no-economy"));
+            return true;
+        }
 
         if (args.length == 0) {
             if (!(sender instanceof Player player)) {
@@ -39,5 +48,13 @@ public class BalanceCommand implements CommandExecutor {
         double balance = economy.getBalance(targetName);
         sender.sendMessage(plugin.msg("balance.other", "player", targetName, "balance", ChatUtil.formatMoney(balance)));
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (args.length == 1 && sender.hasPermission("ecotp.balance.others")) {
+            return TabCompleteUtil.onlinePlayerNames(args[0], null);
+        }
+        return Collections.emptyList();
     }
 }

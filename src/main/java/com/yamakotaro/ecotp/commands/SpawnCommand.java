@@ -40,12 +40,16 @@ public class SpawnCommand implements CommandExecutor {
 
         Location spawn = plugin.getSpawnManager().getSpawn();
         double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
-        double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 100.0);
+        double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 10.0);
         double cost = plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), spawn)
                 ? CostUtil.distanceCost(player.getLocation(), spawn, minFee, blocksPerYen)
                 : minFee;
 
         Economy economy = plugin.getEconomyHolder().get();
+        if (economy == null) {
+            player.sendMessage(plugin.msg("general.no-economy"));
+            return true;
+        }
         if (!economy.has(player, cost)) {
             player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
             return true;

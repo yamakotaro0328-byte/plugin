@@ -6,19 +6,26 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 /**
  * 残高を MySQL に保存するストレージ。複数サーバー間で残高を共有したい場合に使う。
  * config.yml の storage.type を "mysql" にすると有効になる (storage.mysql 以下で接続先を設定)。
  * 接続自体は MySqlConnectionProvider (ホームストレージと共有) が管理する。
+ *
+ * 他のサーバーが同時に同じ行を更新し得るため、読み込みは (pendingBalance にある分を除いて)
+ * 必ず MySQL へ問い合わせ、結果を長期間キャッシュしない。以前は読み込み結果を無期限に
+ * キャッシュしていたため、他サーバーでの入出金が反映されず、さらに このサーバーが古い
+ * キャッシュ値から書き戻すことで他サーバーの変更を上書き消去してしまうバグがあった。
+ * pendingBalance/pendingName は「このサーバー自身がまだ MySQL へ反映していない直近の
+ * 変更」だけを保持する短命なバッファで、saveIfDirty() で書き込みが完了すると同時にそこから
+ * 取り除かれる (書き込みをリクエストの度に同期実行せず、まとめて行うための仕組み)。
  */
 public class MySqlBalanceStorage implements BalanceStorage {
 
@@ -26,10 +33,9 @@ public class MySqlBalanceStorage implements BalanceStorage {
     private final MySqlConnectionProvider connectionProvider;
     private final String table;
 
-    private final Map<UUID, Double> balanceCache = new HashMap<>();
-    private final Map<UUID, String> nameCache = new HashMap<>();
-    private final Map<String, UUID> nameToUuid = new HashMap<>();
-    private final Set<UUID> dirty = new HashSet<>();
+    private final Map<UUID, Double> pendingBalance = new ConcurrentHashMap<>();
+    private final Map<UUID, String> pendingName = new ConcurrentHashMap<>();
+    private final Set<UUID> dirty = ConcurrentHashMap.newKeySet();
 
     public MySqlBalanceStorage(EcoTpPlugin plugin, MySqlConnectionProvider connectionProvider) {
         this.plugin = plugin;
@@ -56,7 +62,7 @@ public class MySqlBalanceStorage implements BalanceStorage {
 
     @Override
     public boolean hasAccount(UUID uuid) {
-        if (balanceCache.containsKey(uuid)) {
+        if (pendingBalance.containsKey(uuid)) {
             return true;
         }
         return load(uuid).isPresent();
@@ -64,9 +70,9 @@ public class MySqlBalanceStorage implements BalanceStorage {
 
     @Override
     public double getBalance(UUID uuid) {
-        Double cached = balanceCache.get(uuid);
-        if (cached != null) {
-            return cached;
+        Double pending = pendingBalance.get(uuid);
+        if (pending != null) {
+            return pending;
         }
         return load(uuid).orElse(0.0);
     }
@@ -76,19 +82,12 @@ public class MySqlBalanceStorage implements BalanceStorage {
         if (conn == null) {
             return Optional.empty();
         }
-        String sql = "SELECT name, balance FROM " + table + " WHERE uuid = ?";
+        String sql = "SELECT balance FROM " + table + " WHERE uuid = ?";
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, uuid.toString());
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
-                    double balance = rs.getDouble("balance");
-                    String name = rs.getString("name");
-                    balanceCache.put(uuid, balance);
-                    if (name != null) {
-                        nameCache.put(uuid, name);
-                        nameToUuid.put(name.toLowerCase(), uuid);
-                    }
-                    return Optional.of(balance);
+                    return Optional.of(rs.getDouble("balance"));
                 }
             }
         } catch (SQLException e) {
@@ -99,10 +98,9 @@ public class MySqlBalanceStorage implements BalanceStorage {
 
     @Override
     public void setBalance(UUID uuid, String name, double balance) {
-        balanceCache.put(uuid, balance);
+        pendingBalance.put(uuid, balance);
         if (name != null) {
-            nameCache.put(uuid, name);
-            nameToUuid.put(name.toLowerCase(), uuid);
+            pendingName.put(uuid, name);
         }
         // MySQL への書き込みはネットワーク越しになるため、取引の度に同期で書くとメインスレッドが
         // 詰まりかねない。変更フラグだけ立てて、実際の反映は定期タスク (と終了時) にまとめて行う。
@@ -119,9 +117,11 @@ public class MySqlBalanceStorage implements BalanceStorage {
 
     @Override
     public Optional<UUID> findUuidByName(String name) {
-        UUID cached = nameToUuid.get(name.toLowerCase());
-        if (cached != null) {
-            return Optional.of(cached);
+        // まだ MySQL へ反映していない、直近このサーバーが作成/改名したアカウントも拾えるようにする。
+        for (Map.Entry<UUID, String> entry : pendingName.entrySet()) {
+            if (entry.getValue().equalsIgnoreCase(name)) {
+                return Optional.of(entry.getKey());
+            }
         }
 
         Connection conn = connectionProvider.get();
@@ -133,9 +133,7 @@ public class MySqlBalanceStorage implements BalanceStorage {
             statement.setString(1, name);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
-                    UUID uuid = UUID.fromString(rs.getString("uuid"));
-                    nameToUuid.put(name.toLowerCase(), uuid);
-                    return Optional.of(uuid);
+                    return Optional.of(UUID.fromString(rs.getString("uuid")));
                 }
             }
         } catch (SQLException e) {
@@ -181,12 +179,16 @@ public class MySqlBalanceStorage implements BalanceStorage {
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
             for (UUID uuid : flushed) {
                 statement.setString(1, uuid.toString());
-                statement.setString(2, nameCache.get(uuid));
-                statement.setDouble(3, balanceCache.getOrDefault(uuid, 0.0));
+                statement.setString(2, pendingName.get(uuid));
+                statement.setDouble(3, pendingBalance.getOrDefault(uuid, 0.0));
                 statement.addBatch();
             }
             statement.executeBatch();
             dirty.removeAll(flushed);
+            // MySQL へ反映済みになったので、これ以降は改めて DB から読む (他サーバーの変更を
+            // 取りこぼさないようにするため、反映済みの値をこのまま無期限にキャッシュし続けない)。
+            flushed.forEach(pendingBalance::remove);
+            flushed.forEach(pendingName::remove);
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to save balances (MySQL)", e);
         }

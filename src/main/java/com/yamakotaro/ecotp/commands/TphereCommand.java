@@ -57,7 +57,7 @@ public class TphereCommand implements CommandExecutor, TabCompleter {
         }
 
         double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
-        double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 100.0);
+        double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 10.0);
         double estimatedCost = plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), target.getLocation())
                 ? CostUtil.distanceCost(player.getLocation(), target.getLocation(), minFee, blocksPerYen)
                 : minFee;

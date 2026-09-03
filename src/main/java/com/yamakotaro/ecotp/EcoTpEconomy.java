@@ -238,7 +238,12 @@ public class EcoTpEconomy implements Economy {
 
     @Override
     public boolean createPlayerAccount(String playerName) {
-        return createPlayerAccount(Bukkit.getOfflinePlayer(playerName));
+        UUID uuid = resolveUuid(playerName);
+        if (balances.hasAccount(uuid)) {
+            return false;
+        }
+        ensureAccount(uuid, playerName);
+        return true;
     }
 
     @Override

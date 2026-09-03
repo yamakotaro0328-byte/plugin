@@ -149,7 +149,9 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("tpdeny").setExecutor(new TpaDenyCommand(this));
         getCommand("tpacancel").setExecutor(new TpaCancelCommand(this));
         getCommand("accept").setExecutor(new AcceptCommand(this));
-        getCommand("balance").setExecutor(new BalanceCommand(this));
+        BalanceCommand balanceCommand = new BalanceCommand(this);
+        getCommand("balance").setExecutor(balanceCommand);
+        getCommand("balance").setTabCompleter(balanceCommand);
         PayCommand payCommand = new PayCommand(this);
         getCommand("pay").setExecutor(payCommand);
         getCommand("pay").setTabCompleter(payCommand);

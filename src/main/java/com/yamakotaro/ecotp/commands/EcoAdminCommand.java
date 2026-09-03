@@ -1,13 +1,10 @@
 package com.yamakotaro.ecotp.commands;
 
 import com.yamakotaro.ecotp.ChatUtil;
-import com.yamakotaro.ecotp.EcoTpEconomy;
 import com.yamakotaro.ecotp.EcoTpPlugin;
 import com.yamakotaro.ecotp.TabCompleteUtil;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -54,22 +51,24 @@ public class EcoAdminCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
         Economy economy = plugin.getEconomyHolder().get();
-        // 独自の経済 (economy.enabled) を使っている場合のみ口座の事前作成が必要。
-        // 外部の経済プラグインに任せている場合は、そちら側の口座管理に任せる。
-        EcoTpEconomy ecoTpEconomy = plugin.getEcoTpEconomy();
-        if (ecoTpEconomy != null) {
-            ecoTpEconomy.ensureAccount(target.getUniqueId(), targetName);
+        if (economy == null) {
+            sender.sendMessage(plugin.msg("general.no-economy"));
+            return true;
         }
 
+        // 名前文字列のまま Economy に渡す (Bukkit.getOfflinePlayer(String) を自前で呼ばない):
+        // 独自経済 (EcoTpEconomy) はプレイヤー名からのUUID解決時、まずこのプラグイン自身の
+        // 残高ストレージ (これまでにこのサーバーでプレイしたことがある全員を含む) を先に
+        // 引くため、Mojang への同期的なWebリクエストで一度も見たことのない名前を解決する
+        // 場合を除き、メインスレッドをブロックせずに済む (EcoTpEconomy#resolveUuid 参照)。
         switch (sub) {
             case "give" -> {
-                economy.depositPlayer(target, amount);
+                economy.depositPlayer(targetName, amount);
                 sender.sendMessage(plugin.msg("eco.gave", "player", targetName, "amount", ChatUtil.formatMoney(amount)));
             }
             case "take" -> {
-                EconomyResponse response = economy.withdrawPlayer(target, amount);
+                EconomyResponse response = economy.withdrawPlayer(targetName, amount);
                 if (!response.transactionSuccess()) {
                     sender.sendMessage(plugin.msg("eco.took-failed", "error", response.errorMessage));
                     return true;
@@ -77,11 +76,11 @@ public class EcoAdminCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(plugin.msg("eco.took", "player", targetName, "amount", ChatUtil.formatMoney(amount)));
             }
             case "set" -> {
-                double current = economy.getBalance(target);
+                double current = economy.getBalance(targetName);
                 if (amount > current) {
-                    economy.depositPlayer(target, amount - current);
+                    economy.depositPlayer(targetName, amount - current);
                 } else if (amount < current) {
-                    economy.withdrawPlayer(target, current - amount);
+                    economy.withdrawPlayer(targetName, current - amount);
                 }
                 sender.sendMessage(plugin.msg("eco.set", "player", targetName, "amount", ChatUtil.formatMoney(amount)));
             }

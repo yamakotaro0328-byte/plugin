@@ -7,19 +7,22 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
  * GUIから「チャットに入力してください」という一往復のやり取りを実現するための仕組み。
  * 例: 送金するプレイヤーをGUIで選んだ後、金額だけチャットで入力してもらう。
+ * AsyncPlayerChatEvent はメインスレッド以外で発火するため、request()/cancelSilently()
+ * (メインスレッド) と onChat() (チャットスレッド) から同時にこのマップへアクセスされ得る。
+ * そのため通常の HashMap ではなく ConcurrentHashMap を使う。
  */
 public class ChatInputManager implements Listener {
 
     private final EcoTpPlugin plugin;
-    private final Map<UUID, PendingInput> pending = new HashMap<>();
+    private final Map<UUID, PendingInput> pending = new ConcurrentHashMap<>();
 
     public ChatInputManager(EcoTpPlugin plugin) {
         this.plugin = plugin;

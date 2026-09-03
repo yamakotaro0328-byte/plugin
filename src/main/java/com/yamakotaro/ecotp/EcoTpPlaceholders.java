@@ -1,6 +1,7 @@
 package com.yamakotaro.ecotp;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import net.milkbowl.vault.economy.Economy;
 import org.bukkit.entity.Player;
 
 /**
@@ -42,9 +43,10 @@ public class EcoTpPlaceholders extends PlaceholderExpansion {
         if (player == null) {
             return "";
         }
+        Economy economy = plugin.getEconomyHolder().get();
         return switch (identifier.toLowerCase()) {
-            case "balance" -> String.valueOf(Math.round(plugin.getEconomyHolder().get().getBalance(player)));
-            case "balance_formatted" -> ChatUtil.formatMoney(plugin.getEconomyHolder().get().getBalance(player));
+            case "balance" -> economy == null ? "0" : String.valueOf(Math.round(economy.getBalance(player)));
+            case "balance_formatted" -> economy == null ? ChatUtil.formatMoney(0) : ChatUtil.formatMoney(economy.getBalance(player));
             case "sethome_cost" -> ChatUtil.formatMoney(plugin.getHomeManager().getNextSetHomeCost(player.getUniqueId()));
             default -> null;
         };

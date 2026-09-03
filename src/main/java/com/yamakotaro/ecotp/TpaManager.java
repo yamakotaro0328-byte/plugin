@@ -98,7 +98,7 @@ public class TpaManager {
         // 「本当に行きますか？」と確認してから詠唱・課金に進む。金額はこの時点の距離での
         // 概算であり、実際の請求は詠唱完了時点の距離で再計算する (下記 startTeleport 内)。
         double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
-        double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 100.0);
+        double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 10.0);
         double estimatedCost = plugin.getTeleportSafetyManager().isSameDimension(mover.getLocation(), destinationPlayer.getLocation())
                 ? CostUtil.distanceCost(mover.getLocation(), destinationPlayer.getLocation(), minFee, blocksPerYen)
                 : minFee;
@@ -125,10 +125,14 @@ public class TpaManager {
             }
 
             double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
-            double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 100.0);
+            double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 10.0);
             double actualCost = CostUtil.distanceCost(mover.getLocation(), destination, minFee, blocksPerYen);
 
             Economy economy = plugin.getEconomyHolder().get();
+            if (economy == null) {
+                mover.sendMessage(plugin.msg("general.no-economy"));
+                return;
+            }
             if (!economy.has(mover, actualCost)) {
                 mover.sendMessage(plugin.msg("tpa.insufficient-funds-requester", "player", destinationPlayer.getName(), "cost", ChatUtil.formatMoney(actualCost)));
                 destinationPlayer.sendMessage(plugin.msg("tpa.insufficient-funds-target", "player", mover.getName(), "cost", ChatUtil.formatMoney(actualCost)));
