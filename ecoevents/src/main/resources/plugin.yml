@@ -1,0 +1,16 @@
+name: EcoEvents
+version: '${project.version}'
+main: com.yamakotaro.ecoevents.EcoEventsPlugin
+api-version: '26.2'
+author: yamakotaro0328
+description: Random environmental events - meteor showers, storms, plagues, blessings and more - that occasionally happen across the server on their own.
+
+commands:
+  event:
+    description: Trigger, toggle, list, and reload environmental events
+    usage: /event <list|trigger <id>|toggle <id>|reload>
+
+permissions:
+  ecoevents.admin:
+    description: Can manually trigger, toggle, and reload environmental events
+    default: op

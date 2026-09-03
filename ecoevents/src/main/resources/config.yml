@@ -1,0 +1,382 @@
+# EcoEvents configuration
+# Language for messages below: "en" or "ja".
+# (日本語) 以下のメッセージの言語。"en" または "ja"。
+language: en
+
+# schedule.min/max-interval-minutes: after each event (and at startup), the next one fires after a
+#   random delay in this range. Nothing fires while no one is online.
+# (日本語) schedule.min/max-interval-minutes: イベント発生後(および起動時)、この範囲内の
+#   ランダムな時間が経過すると次のイベントが発生する。プレイヤーが誰もいない間は発生しない。
+schedule:
+  min-interval-minutes: 8
+  max-interval-minutes: 20
+
+# Each entry under "events" is one environmental event. Many share the same "mechanic" (the
+# underlying behavior) with different names/radius/duration/magnitude/effects - e.g.
+# "meteor_strike" and "rogue_comet" are both METEOR_STRIKE, just tuned differently.
+# - mechanic: one of METEOR_STRIKE, METEOR_SHOWER, THUNDERSTORM, LIGHTNING_BARRAGE, BLIZZARD,
+#   SANDSTORM, EARTHQUAKE, PLAGUE, BLESSING, SKYFALL_LOOT, VOID_RIFT, WILDFIRE, FROST_WAVE,
+#   AURORA, ECLIPSE.
+# - weight: relative chance of being picked when an event fires.
+# - radius / duration-seconds / magnitude: meaning depends on the mechanic (area of effect, how
+#   long weather/potion effects last, and general intensity - e.g. meteor count or strike count).
+# - effects: potion effects applied to every online player - used by PLAGUE, BLESSING, BLIZZARD,
+#   SANDSTORM, FROST_WAVE.
+# - loot: weighted item pool that rains down - used only by SKYFALL_LOOT.
+#
+# (日本語) events以下の各項目が1つの環境イベント。多くは同じ"mechanic"(基礎となる挙動)を
+# 名前・範囲・持続時間・強さ・効果を変えて使い回している(例: meteor_strikeとrogue_cometは
+# どちらもMETEOR_STRIKEだが強さが違う)。
+# - mechanic: METEOR_STRIKE、METEOR_SHOWER、THUNDERSTORM、LIGHTNING_BARRAGE、BLIZZARD、
+#   SANDSTORM、EARTHQUAKE、PLAGUE、BLESSING、SKYFALL_LOOT、VOID_RIFT、WILDFIRE、FROST_WAVE、
+#   AURORA、ECLIPSEのいずれか。
+# - weight: イベント発生時に選ばれる相対的な重み。
+# - radius / duration-seconds / magnitude: mechanicにより意味が変わる(効果範囲、天候・ポーション
+#   効果の持続時間、全般的な強さ - 隕石の数や落雷の回数など)。
+# - effects: 全オンラインプレイヤーに付与するポーション効果 - PLAGUE、BLESSING、BLIZZARD、
+#   SANDSTORM、FROST_WAVEで使用。
+# - loot: 降ってくる重み付きアイテムプール - SKYFALL_LOOTでのみ使用。
+events:
+  meteor_strike:
+    display-name: "&cMeteor Strike"
+    mechanic: METEOR_STRIKE
+    weight: 12
+    radius: 6
+    duration-seconds: 4
+    magnitude: 1.0
+
+  meteor_shower:
+    display-name: "&6Meteor Shower"
+    mechanic: METEOR_SHOWER
+    weight: 6
+    radius: 12
+    duration-seconds: 8
+    magnitude: 2.0
+
+  meteor_barrage:
+    display-name: "&4Meteor Barrage"
+    mechanic: METEOR_SHOWER
+    weight: 3
+    radius: 16
+    duration-seconds: 10
+    magnitude: 3.0
+
+  rogue_comet:
+    display-name: "&4&lRogue Comet"
+    mechanic: METEOR_STRIKE
+    weight: 2
+    radius: 3
+    duration-seconds: 2
+    magnitude: 4.0
+
+  falling_star:
+    display-name: "&bFalling Star"
+    mechanic: SKYFALL_LOOT
+    weight: 10
+    radius: 6
+    duration-seconds: 3
+    magnitude: 0.75
+    loot:
+      - material: BREAD
+        amount: 1
+        name: "&fBread"
+        weight: 40
+      - material: GOLD_NUGGET
+        amount: 3
+        name: "&eGold Nuggets"
+        weight: 30
+      - material: EMERALD
+        amount: 1
+        name: "&aEmerald"
+        weight: 20
+      - material: DIAMOND
+        amount: 1
+        name: "&bDiamond"
+        weight: 5
+
+  star_shower:
+    display-name: "&bStar Shower"
+    mechanic: SKYFALL_LOOT
+    weight: 6
+    radius: 10
+    duration-seconds: 5
+    magnitude: 1.5
+    loot:
+      - material: EMERALD
+        amount: 2
+        name: "&aEmerald"
+        weight: 40
+      - material: GOLD_INGOT
+        amount: 2
+        name: "&eGold Ingot"
+        weight: 30
+      - material: DIAMOND
+        amount: 1
+        name: "&bDiamond"
+        weight: 20
+      - material: NETHERITE_SCRAP
+        amount: 1
+        name: "&8Netherite Scrap"
+        weight: 5
+
+  golden_shower:
+    display-name: "&6&lGolden Shower"
+    mechanic: SKYFALL_LOOT
+    weight: 2
+    radius: 8
+    duration-seconds: 4
+    magnitude: 1.0
+    loot:
+      - material: GOLD_INGOT
+        amount: 4
+        name: "&eGold Ingot"
+        weight: 40
+      - material: DIAMOND
+        amount: 2
+        name: "&bDiamond"
+        weight: 35
+      - material: EMERALD_BLOCK
+        amount: 1
+        name: "&aEmerald Block"
+        weight: 15
+      - material: NETHERITE_INGOT
+        amount: 1
+        name: "&6Netherite Ingot"
+        weight: 5
+
+  thunderstorm:
+    display-name: "&8Thunderstorm"
+    mechanic: THUNDERSTORM
+    weight: 10
+    duration-seconds: 30
+    magnitude: 1.0
+
+  rolling_thunder:
+    display-name: "&8Rolling Thunder"
+    mechanic: THUNDERSTORM
+    weight: 5
+    duration-seconds: 45
+    magnitude: 1.5
+
+  lightning_storm:
+    display-name: "&eLightning Storm"
+    mechanic: LIGHTNING_BARRAGE
+    weight: 6
+    radius: 5
+    magnitude: 2
+
+  static_storm:
+    display-name: "&e&lStatic Storm"
+    mechanic: LIGHTNING_BARRAGE
+    weight: 3
+    radius: 8
+    magnitude: 4
+
+  blizzard:
+    display-name: "&fBlizzard"
+    mechanic: BLIZZARD
+    weight: 8
+    duration-seconds: 25
+    effects:
+      - type: SLOWNESS
+        amplifier: 1
+
+  deep_freeze:
+    display-name: "&b&lDeep Freeze"
+    mechanic: BLIZZARD
+    weight: 4
+    duration-seconds: 35
+    effects:
+      - type: SLOWNESS
+        amplifier: 2
+
+  hailstorm:
+    display-name: "&fHailstorm"
+    mechanic: BLIZZARD
+    weight: 5
+    duration-seconds: 12
+    effects:
+      - type: SLOWNESS
+        amplifier: 0
+
+  arctic_freeze:
+    display-name: "&bArctic Freeze"
+    mechanic: FROST_WAVE
+    weight: 6
+    duration-seconds: 20
+    effects:
+      - type: SLOWNESS
+        amplifier: 1
+
+  frost_bite:
+    display-name: "&3Frost Bite"
+    mechanic: FROST_WAVE
+    weight: 3
+    duration-seconds: 30
+    effects:
+      - type: SLOWNESS
+        amplifier: 2
+      - type: WEAKNESS
+        amplifier: 0
+
+  sandstorm:
+    display-name: "&eSandstorm"
+    mechanic: SANDSTORM
+    weight: 8
+    duration-seconds: 20
+    effects:
+      - type: BLINDNESS
+        amplifier: 0
+      - type: SLOWNESS
+        amplifier: 0
+
+  heatwave:
+    display-name: "&6Heatwave"
+    mechanic: SANDSTORM
+    weight: 5
+    duration-seconds: 25
+    effects:
+      - type: HUNGER
+        amplifier: 0
+      - type: NAUSEA
+        amplifier: 0
+
+  earthquake:
+    display-name: "&8Earthquake"
+    mechanic: EARTHQUAKE
+    weight: 7
+    radius: 10
+    magnitude: 1.0
+
+  cataclysm:
+    display-name: "&4&lCataclysm"
+    mechanic: EARTHQUAKE
+    weight: 2
+    radius: 16
+    magnitude: 2.0
+
+  plague_wind:
+    display-name: "&2Plague Wind"
+    mechanic: PLAGUE
+    weight: 6
+    duration-seconds: 20
+    effects:
+      - type: POISON
+        amplifier: 0
+      - type: WEAKNESS
+        amplifier: 0
+
+  cursed_mist:
+    display-name: "&5Cursed Mist"
+    mechanic: PLAGUE
+    weight: 4
+    duration-seconds: 25
+    effects:
+      - type: WITHER
+        amplifier: 0
+      - type: HUNGER
+        amplifier: 0
+
+  toxic_fog:
+    display-name: "&2Toxic Fog"
+    mechanic: PLAGUE
+    weight: 4
+    duration-seconds: 15
+    effects:
+      - type: NAUSEA
+        amplifier: 1
+      - type: BLINDNESS
+        amplifier: 0
+
+  blessing_of_light:
+    display-name: "&eBlessing of Light"
+    mechanic: BLESSING
+    weight: 5
+    duration-seconds: 30
+    effects:
+      - type: REGENERATION
+        amplifier: 1
+      - type: ABSORPTION
+        amplifier: 0
+
+  lucky_wind:
+    display-name: "&aLucky Wind"
+    mechanic: BLESSING
+    weight: 4
+    duration-seconds: 40
+    effects:
+      - type: LUCK
+        amplifier: 1
+      - type: SPEED
+        amplifier: 0
+
+  warriors_vigor:
+    display-name: "&cWarrior's Vigor"
+    mechanic: BLESSING
+    weight: 3
+    duration-seconds: 30
+    effects:
+      - type: STRENGTH
+        amplifier: 1
+      - type: RESISTANCE
+        amplifier: 0
+
+  void_rift:
+    display-name: "&5Void Rift"
+    mechanic: VOID_RIFT
+    weight: 4
+    radius: 8
+
+  wildfire:
+    display-name: "&cWildfire"
+    mechanic: WILDFIRE
+    weight: 5
+    radius: 6
+    duration-seconds: 6
+
+  aurora_borealis:
+    display-name: "&dAurora Borealis"
+    mechanic: AURORA
+    weight: 4
+
+  eclipse:
+    display-name: "&8&lEclipse"
+    mechanic: ECLIPSE
+    weight: 3
+    duration-seconds: 30
+
+messages:
+  en:
+    general:
+      no-permission: "&cYou don't have permission to do that."
+    event:
+      usage: "&cUsage: /event <list|trigger <id>|toggle <id>|reload>"
+      not-found: "&cNo event named '{id}'."
+      trigger-usage: "&cUsage: /event trigger <id>"
+      triggered: "&aTriggered '{event}'."
+      toggle-usage: "&cUsage: /event toggle <id>"
+      toggled-on: "&aEvent '{event}' is now enabled."
+      toggled-off: "&7Event '{event}' is now disabled."
+      badge-enabled: "&aON"
+      badge-disabled: "&cOFF"
+      list-header: "&7--- Events ({count}) ---"
+      list-entry: "&f{id} &7[{status}&7] - {name}"
+      reloaded: "&aConfiguration reloaded."
+      occurring: "&6⚡ {event} ⚡"
+  ja:
+    general:
+      no-permission: "&cこの操作を行う権限がありません。"
+    event:
+      usage: "&c使い方: /event <list|trigger <id>|toggle <id>|reload>"
+      not-found: "&c「{id}」という名前のイベントは見つかりません。"
+      trigger-usage: "&c使い方: /event trigger <id>"
+      triggered: "&a「{event}」を発生させました。"
+      toggle-usage: "&c使い方: /event toggle <id>"
+      toggled-on: "&a「{event}」を有効にしました。"
+      toggled-off: "&7「{event}」を無効にしました。"
+      badge-enabled: "&aON"
+      badge-disabled: "&cOFF"
+      list-header: "&7--- イベント一覧 ({count}) ---"
+      list-entry: "&f{id} &7[{status}&7] - {name}"
+      reloaded: "&a設定を再読み込みしました。"
+      occurring: "&6⚡ {event} ⚡"
