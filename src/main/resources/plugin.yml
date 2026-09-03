@@ -118,7 +118,13 @@ commands:
 
 permissions:
   ecotp.player:
-    description: Grants all basic player features (home/sethome/spawn/tpa/tphere/pay/menu)
+    description: Grants all basic player features (home/sethome/spawn/tpa/tphere/pay/menu),
+      plus the basic features of companion add-ons (EcoTP-QuickActions' quick menu, weather
+      vote, admin shop, and player shop) so a permissions plugin only needs to grant this one
+      node for the whole EcoTP family's everyday player features. Bukkit permission "children"
+      can reference any plugin's node by name, not just this plugin's own, which is what makes
+      this bundling possible even though ecotpqa.* is declared by a separate plugin
+      (EcoTP-QuickActions/addon-quickactions).
     default: true
     children:
       ecotp.home: true
@@ -131,6 +137,10 @@ permissions:
       ecotp.donate: true
       ecotp.daily: true
       ecotp.baltop: true
+      ecotpqa.quickmenu: true
+      ecotpqa.weathervote: true
+      ecotpqa.adminshop: true
+      ecotpqa.playershop: true
   ecotp.home:
     description: Can use /home, /homes
     default: false
