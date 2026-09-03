@@ -75,7 +75,7 @@ public class VoteRewardManager {
         if (!file.exists()) {
             return;
         }
-        YamlConfiguration data = YamlConfiguration.loadConfiguration(file);
+        YamlConfiguration data = YamlIo.load(file);
         pendingUsernames.addAll(data.getStringList("pending"));
     }
 
@@ -83,8 +83,7 @@ public class VoteRewardManager {
         YamlConfiguration data = new YamlConfiguration();
         data.set("pending", new ArrayList<>(pendingUsernames));
         try {
-            plugin.getDataFolder().mkdirs();
-            data.save(file);
+            YamlIo.save(data, file);
         } catch (IOException e) {
             plugin.getLogger().log(Level.WARNING, "Failed to save pending-votes.yml", e);
         }

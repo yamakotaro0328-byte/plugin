@@ -60,7 +60,7 @@ public class DonationManager {
         if (!file.exists()) {
             return;
         }
-        YamlConfiguration data = YamlConfiguration.loadConfiguration(file);
+        YamlConfiguration data = YamlIo.load(file);
         var section = data.getConfigurationSection("messages");
         if (section == null) {
             return;
@@ -80,8 +80,7 @@ public class DonationManager {
             data.set("messages." + entry.getKey(), entry.getValue());
         }
         try {
-            plugin.getDataFolder().mkdirs();
-            data.save(file);
+            YamlIo.save(data, file);
         } catch (IOException e) {
             plugin.getLogger().log(Level.WARNING, "Failed to save donations.yml", e);
         }

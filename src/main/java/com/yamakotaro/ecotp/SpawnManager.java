@@ -18,7 +18,7 @@ public class SpawnManager {
     public SpawnManager(EcoTpPlugin plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "spawn.yml");
-        this.data = YamlConfiguration.loadConfiguration(file);
+        this.data = YamlIo.load(file);
     }
 
     public boolean hasCustomSpawn() {
@@ -53,7 +53,7 @@ public class SpawnManager {
 
     public void save() {
         try {
-            data.save(file);
+            YamlIo.save(data, file);
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to save spawn.yml", e);
         }

@@ -40,6 +40,8 @@ public class MySqlHomeStorage implements HomeStorage {
         if (conn == null) {
             return;
         }
+        // ホーム名は日本語などの非ASCII文字も許可しているため、テーブル自体の文字コードを
+        // 明示的にutf8mb4にしておく (MySQLサーバーのデフォルトがlatin1等だと文字化けするため)。
         String homesSql = "CREATE TABLE IF NOT EXISTS " + homesTable + " ("
                 + "uuid VARCHAR(36) NOT NULL, "
                 + "name VARCHAR(16) NOT NULL, "
@@ -49,7 +51,7 @@ public class MySqlHomeStorage implements HomeStorage {
                 + "z DOUBLE NOT NULL, "
                 + "yaw FLOAT NOT NULL, "
                 + "pitch FLOAT NOT NULL, "
-                + "PRIMARY KEY (uuid, name))";
+                + "PRIMARY KEY (uuid, name)) DEFAULT CHARSET=utf8mb4";
         String countsSql = "CREATE TABLE IF NOT EXISTS " + countsTable + " ("
                 + "uuid VARCHAR(36) PRIMARY KEY, "
                 + "count INT NOT NULL DEFAULT 0)";

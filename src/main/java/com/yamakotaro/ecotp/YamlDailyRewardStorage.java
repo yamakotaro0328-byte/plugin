@@ -21,7 +21,7 @@ public class YamlDailyRewardStorage implements DailyRewardStorage {
     public YamlDailyRewardStorage(EcoTpPlugin plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "daily-rewards.yml");
-        this.data = YamlConfiguration.loadConfiguration(file);
+        this.data = YamlIo.load(file);
     }
 
     @Override
@@ -40,8 +40,7 @@ public class YamlDailyRewardStorage implements DailyRewardStorage {
         data.set(path + ".last-claim", claimMillis);
         data.set(path + ".streak", newStreak);
         try {
-            plugin.getDataFolder().mkdirs();
-            data.save(file);
+            YamlIo.save(data, file);
         } catch (IOException e) {
             plugin.getLogger().log(Level.WARNING, "Failed to save daily-rewards.yml", e);
         }

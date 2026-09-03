@@ -38,7 +38,7 @@ public class EssentialsImporter {
             return null;
         }
 
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        YamlConfiguration yaml = YamlIo.load(file);
         String moneyStr = yaml.getString("money");
         if (moneyStr == null) {
             return null;

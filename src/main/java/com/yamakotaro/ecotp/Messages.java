@@ -24,6 +24,10 @@ import java.util.logging.Level;
  * その言語のテンプレートで messages.yml を再生成する (このときカスタマイズした
  * 文言は上書きされる)。値が一致している間は、既存の messages.yml (と自由な
  * 編集内容) がそのまま使われる。
+ *
+ * messages.yml 自体の読み書きは必ず YamlIo (YamlConfiguration.loadConfiguration(File)/
+ * FileConfiguration#save(File) の代わりに常にUTF-8で読み書きするヘルパー) を経由すること。
+ * 詳しい理由は YamlIo のクラスコメント参照 (文字化けバグの原因だった)。
  */
 public class Messages {
 
@@ -61,9 +65,9 @@ public class Messages {
             }
             Files.copy(in, file.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             // 生成した言語を記録しておく。テンプレート自体にはこのキーは無いので追記する。
-            YamlConfiguration generated = YamlConfiguration.loadConfiguration(file);
+            YamlConfiguration generated = YamlIo.load(file);
             generated.set(LANGUAGE_MARKER_PATH, language);
-            generated.save(file);
+            YamlIo.save(generated, file);
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to create messages.yml", e);
         }
@@ -74,7 +78,7 @@ public class Messages {
         if (!file.exists()) {
             regenerateFromBundledResource(desiredLanguage);
         } else {
-            YamlConfiguration existing = YamlConfiguration.loadConfiguration(file);
+            YamlConfiguration existing = YamlIo.load(file);
             // マーカーが無い messages.yml は、このマーカーが存在する前のバージョンで
             // 生成されたものであり、当時のデフォルト言語は常に "en" だった。
             String storedLanguage = existing.getString(LANGUAGE_MARKER_PATH, "en");
@@ -86,7 +90,7 @@ public class Messages {
             }
         }
 
-        this.data = YamlConfiguration.loadConfiguration(file);
+        this.data = YamlIo.load(file);
         // jar 内のデフォルト値をフォールバックとして重ねる (アップデートで新しいキーが増えても壊れない)
         try (InputStream in = plugin.getResource(bundledResourceName(desiredLanguage))) {
             if (in != null) {

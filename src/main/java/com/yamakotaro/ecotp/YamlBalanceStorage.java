@@ -28,7 +28,7 @@ public class YamlBalanceStorage implements BalanceStorage {
     public YamlBalanceStorage(EcoTpPlugin plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "balances.yml");
-        this.data = YamlConfiguration.loadConfiguration(file);
+        this.data = YamlIo.load(file);
         for (String key : data.getKeys(false)) {
             String name = data.getString(key + ".name");
             if (name != null) {
@@ -98,7 +98,7 @@ public class YamlBalanceStorage implements BalanceStorage {
             return;
         }
         try {
-            data.save(file);
+            YamlIo.save(data, file);
             dirty = false;
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to save balances.yml", e);

@@ -34,7 +34,7 @@ public class MySqlConnectionProvider {
         String database = plugin.getConfig().getString("storage.mysql.database", "ecotp");
         this.username = plugin.getConfig().getString("storage.mysql.username", "root");
         this.password = plugin.getConfig().getString("storage.mysql.password", "");
-        this.url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&autoReconnect=true&characterEncoding=utf8";
+        this.url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&autoReconnect=true&characterEncoding=UTF-8";
         connect();
     }
 

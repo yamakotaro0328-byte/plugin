@@ -25,7 +25,7 @@ public class YamlHomeStorage implements HomeStorage {
     public YamlHomeStorage(EcoTpPlugin plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "homes.yml");
-        this.data = YamlConfiguration.loadConfiguration(file);
+        this.data = YamlIo.load(file);
     }
 
     private String homesPath(UUID uuid) {
@@ -110,7 +110,7 @@ public class YamlHomeStorage implements HomeStorage {
 
     private void save() {
         try {
-            data.save(file);
+            YamlIo.save(data, file);
         } catch (IOException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to save homes.yml", e);
         }
