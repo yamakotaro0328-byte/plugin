@@ -29,7 +29,7 @@ public class MenuCommand implements CommandExecutor {
             player.sendMessage(plugin.msg("general.no-permission"));
             return true;
         }
-        player.openInventory(new MainMenuHolder(plugin).getInventory());
+        player.openInventory(new MainMenuHolder(plugin, player).getInventory());
         return true;
     }
 }

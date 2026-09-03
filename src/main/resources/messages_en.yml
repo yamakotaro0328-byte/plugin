@@ -167,9 +167,47 @@ menu:
   balance: "&6Check balance"
   pay: "&ePay"
   baltop: "&bLeaderboard"
+  daily: "&6Claim daily reward"
+  donate: "&dDonate to a player"
   close: "&cClose"
+  back: "&7« Back"
   select-player-title: "Select a player"
   no-players-online: "&cThere are no other players online."
   chat-input-amount: "&aType the amount to send in chat. (type cancel to cancel)"
   chat-input-cancelled: "&eCancelled."
   chat-input-timeout: "&cInput timed out."
+  lore:
+    home:
+      - "&7Teleport to your home."
+      - "&7Fee: at least {fee} (grows with distance)"
+    sethome:
+      - "&7Set a home at your current location."
+      - "&7Next cost: &f{cost}"
+      - "&7Homes: &f{used}/{max}"
+    spawn:
+      - "&7Teleport to the server spawn."
+      - "&7Fee: at least {fee} (grows with distance)"
+    tpa:
+      - "&7Request to teleport to a player."
+      - "&7You pay the fee if they accept."
+      - "&7Fee: at least {fee} (grows with distance)"
+    tphere:
+      - "&7Summon a player to you."
+      - "&7They pay the fee if they accept."
+      - "&7Fee: at least {fee} (grows with distance)"
+    balance:
+      - "&7Check your balance."
+      - "&7Balance: &f{balance}"
+    pay:
+      - "&7Send money to another player."
+    baltop:
+      - "&7Show the balance leaderboard."
+    daily:
+      - "&7Claim your once-per-day reward."
+      - "&7Streak: &f{streak} day(s)"
+      - "{status}"
+    daily-status-ready: "&aClaimable now!"
+    daily-status-waiting: "&7Available in &f{time}"
+    donate:
+      - "&7Donate money to another player."
+      - "&7Broadcasts a thank-you message server-wide."

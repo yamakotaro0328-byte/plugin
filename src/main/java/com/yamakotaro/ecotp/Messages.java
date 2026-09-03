@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
 /**
@@ -108,6 +110,26 @@ public class Messages {
             template = template.replace(key, value);
         }
         return ChatUtil.color(template);
+    }
+
+    /**
+     * messages.yml の文字列リスト (アイテムの説明文など) を読み込み、色変換とプレース
+     * ホルダー置換を行う。{@link #get} のリスト版。
+     * @param path         例: "menu.lore.home"
+     * @param replacements "key1", value1, "key2", value2 ... のペア。value は toString() される。
+     */
+    public List<String> getList(String path, Object... replacements) {
+        List<String> result = new ArrayList<>();
+        for (String line : data.getStringList(path)) {
+            String template = line;
+            for (int i = 0; i + 1 < replacements.length; i += 2) {
+                String key = "{" + replacements[i] + "}";
+                String value = String.valueOf(replacements[i + 1]);
+                template = template.replace(key, value);
+            }
+            result.add(ChatUtil.color(template));
+        }
+        return result;
     }
 
     public String currencySingular() {
