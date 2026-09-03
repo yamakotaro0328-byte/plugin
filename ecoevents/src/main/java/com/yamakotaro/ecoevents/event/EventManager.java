@@ -6,7 +6,9 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
+import org.bukkit.Registry;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
@@ -78,13 +80,14 @@ public class EventManager {
 
         List<PotionEffectSpec> effects = new ArrayList<>();
         for (Map<?, ?> map : section.getMapList("effects")) {
-            try {
-                PotionEffectType type = PotionEffectType.valueOf(String.valueOf(map.get("type")).toUpperCase(Locale.ROOT));
-                int amplifier = map.get("amplifier") instanceof Number number ? number.intValue() : 0;
-                effects.add(new PotionEffectSpec(type, amplifier));
-            } catch (IllegalArgumentException e) {
-                plugin.getLogger().warning("Event '" + id + "': unknown potion effect '" + map.get("type") + "', skipping.");
+            String rawType = String.valueOf(map.get("type"));
+            PotionEffectType type = Registry.POTION_EFFECT_TYPE.get(NamespacedKey.minecraft(rawType.toLowerCase(Locale.ROOT)));
+            if (type == null) {
+                plugin.getLogger().warning("Event '" + id + "': unknown potion effect '" + rawType + "', skipping.");
+                continue;
             }
+            int amplifier = map.get("amplifier") instanceof Number number ? number.intValue() : 0;
+            effects.add(new PotionEffectSpec(type, amplifier));
         }
 
         List<LootDrop> loot = new ArrayList<>();
