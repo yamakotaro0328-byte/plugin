@@ -173,6 +173,8 @@ menu:
   back: "&7« Back"
   profile-title: "&6&l{player}"
   select-player-title: "Select a player"
+  select-home-title: "Select a home"
+  baltop-title: "Balance Leaderboard"
   no-players-online: "&cThere are no other players online."
   chat-input-amount: "&aType the amount to send in chat. (type cancel to cancel)"
   chat-input-cancelled: "&eCancelled."
@@ -187,6 +189,16 @@ menu:
     home:
       - "&7Teleport to your home."
       - "&7Fee: at least {fee} (grows with distance)"
+    home-multi:
+      - "&7Choose one of your {count} homes."
+      - "&7Fee: at least {fee} (grows with distance)"
+    home-entry-fee:
+      - "&7Click to teleport here."
+      - "&7Fee: &f{fee}"
+    home-entry-missing:
+      - "&cThis home's world no longer exists."
+    baltop-entry:
+      - "&7Balance: &f{balance}"
     sethome:
       - "&7Set a home at your current location."
       - "&7Next cost: &f{cost}"

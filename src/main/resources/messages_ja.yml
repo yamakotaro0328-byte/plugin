@@ -173,6 +173,8 @@ menu:
   back: "&7« 戻る"
   profile-title: "&6&l{player}"
   select-player-title: "プレイヤーを選択"
+  select-home-title: "ホームを選択"
+  baltop-title: "所持金ランキング"
   no-players-online: "&c他にオンラインのプレイヤーがいません。"
   chat-input-amount: "&aチャットに送金する金額を入力してください。(キャンセルするには cancel と入力)"
   chat-input-cancelled: "&eキャンセルしました。"
@@ -187,6 +189,16 @@ menu:
     home:
       - "&7ホームへワープします。"
       - "&7料金: 最低{fee} (距離に応じて増加)"
+    home-multi:
+      - "&7{count}個のホームから選択してください。"
+      - "&7料金: 最低{fee} (距離に応じて増加)"
+    home-entry-fee:
+      - "&7クリックしてこのホームへワープ。"
+      - "&7料金: &f{fee}"
+    home-entry-missing:
+      - "&cこのホームのワールドはもう存在しません。"
+    baltop-entry:
+      - "&7所持金: &f{balance}"
     sethome:
       - "&7現在地にホームを設定します。"
       - "&7次回の料金: &f{cost}"

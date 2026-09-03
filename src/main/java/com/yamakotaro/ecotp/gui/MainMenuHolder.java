@@ -54,7 +54,7 @@ public class MainMenuHolder implements InventoryHolder {
 
         inventory.setItem(SLOT_PROFILE, profileHead(plugin, viewer));
         putIfEnabled(plugin, SLOT_HOME, "home", Material.RED_BED,
-                messages.getList("menu.lore.home", "fee", minFeeFormatted));
+                homeLore(plugin, viewer, minFeeFormatted));
         putIfEnabled(plugin, SLOT_SETHOME, "sethome", Material.COMPASS,
                 sethomeLore(plugin, viewer));
         putIfEnabled(plugin, SLOT_SPAWN, "spawn", Material.GRASS_BLOCK,
@@ -106,6 +106,14 @@ public class MainMenuHolder implements InventoryHolder {
             stack.setItemMeta(skullMeta);
         }
         return stack;
+    }
+
+    private static List<String> homeLore(EcoTpPlugin plugin, Player viewer, String feeFormatted) {
+        int count = plugin.getHomeManager().getHomeNames(viewer.getUniqueId()).size();
+        if (count > 1) {
+            return plugin.getMessages().getList("menu.lore.home-multi", "fee", feeFormatted, "count", String.valueOf(count));
+        }
+        return plugin.getMessages().getList("menu.lore.home", "fee", feeFormatted);
     }
 
     private static List<String> sethomeLore(EcoTpPlugin plugin, Player viewer) {
