@@ -62,6 +62,14 @@ public class GuiListener implements Listener {
                 backToMainMenu(player);
                 return;
             }
+            if (slot == PlayerSelectHolder.SLOT_PREV) {
+                player.openInventory(new PlayerSelectHolder(plugin, player, selectHolder.getPurpose(), selectHolder.getPage() - 1).getInventory());
+                return;
+            }
+            if (slot == PlayerSelectHolder.SLOT_NEXT) {
+                player.openInventory(new PlayerSelectHolder(plugin, player, selectHolder.getPurpose(), selectHolder.getPage() + 1).getInventory());
+                return;
+            }
             if (slot >= PlayerSelectHolder.CONTENT_SIZE) {
                 return; // 下段の枠をクリックしただけ
             }
@@ -79,6 +87,14 @@ public class GuiListener implements Listener {
                 backToMainMenu(player);
                 return;
             }
+            if (slot == HomeSelectHolder.SLOT_PREV) {
+                player.openInventory(new HomeSelectHolder(plugin, player, homeHolder.getPage() - 1).getInventory());
+                return;
+            }
+            if (slot == HomeSelectHolder.SLOT_NEXT) {
+                player.openInventory(new HomeSelectHolder(plugin, player, homeHolder.getPage() + 1).getInventory());
+                return;
+            }
             if (slot >= HomeSelectHolder.CONTENT_SIZE) {
                 return;
             }
@@ -91,13 +107,18 @@ public class GuiListener implements Listener {
             return;
         }
 
-        if (holder instanceof BaltopHolder) {
+        if (holder instanceof BaltopHolder baltopHolder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getInventory()) {
                 return;
             }
-            if (event.getSlot() == BaltopHolder.SLOT_BACK) {
+            int slot = event.getSlot();
+            if (slot == BaltopHolder.SLOT_BACK) {
                 backToMainMenu(player);
+            } else if (slot == BaltopHolder.SLOT_PREV) {
+                openBaltop(player, baltopHolder.getPage() - 1);
+            } else if (slot == BaltopHolder.SLOT_NEXT) {
+                openBaltop(player, baltopHolder.getPage() + 1);
             }
             // それ以外 (ランキングの頭アイテム) は表示専用でクリックしても何も起きない。
             return;
@@ -136,7 +157,7 @@ public class GuiListener implements Listener {
 
         if (slot == AmountSelectHolder.SLOT_BACK) {
             player.openInventory(new PlayerSelectHolder(plugin, player,
-                    holder.isDonate() ? PlayerSelectHolder.Purpose.DONATE : PlayerSelectHolder.Purpose.PAY).getInventory());
+                    holder.isDonate() ? PlayerSelectHolder.Purpose.DONATE : PlayerSelectHolder.Purpose.PAY, 0).getInventory());
             return;
         }
         if (slot == AmountSelectHolder.SLOT_CUSTOM) {
@@ -173,7 +194,7 @@ public class GuiListener implements Listener {
             case MainMenuHolder.SLOT_TPHERE -> openPlayerSelectAndClose(player, PlayerSelectHolder.Purpose.TPHERE);
             case MainMenuHolder.SLOT_BALANCE -> runAndClose(player, "balance");
             case MainMenuHolder.SLOT_PAY -> openPlayerSelectAndClose(player, PlayerSelectHolder.Purpose.PAY);
-            case MainMenuHolder.SLOT_BALTOP -> openBaltop(player);
+            case MainMenuHolder.SLOT_BALTOP -> openBaltop(player, 0);
             case MainMenuHolder.SLOT_DAILY -> runAndClose(player, "daily");
             case MainMenuHolder.SLOT_DONATE -> openPlayerSelectAndClose(player, PlayerSelectHolder.Purpose.DONATE);
             case MainMenuHolder.SLOT_CLOSE -> player.closeInventory();
@@ -203,10 +224,10 @@ public class GuiListener implements Listener {
             return;
         }
         player.closeInventory();
-        player.openInventory(new HomeSelectHolder(plugin, player).getInventory());
+        player.openInventory(new HomeSelectHolder(plugin, player, 0).getInventory());
     }
 
-    private void openBaltop(Player player) {
+    private void openBaltop(Player player, int page) {
         EcoTpEconomy ecoTpEconomy = plugin.getEcoTpEconomy();
         if (ecoTpEconomy == null) {
             // 外部の経済プラグインを使っている場合は GUI 化できない (/baltop 参照)。
@@ -225,8 +246,7 @@ public class GuiListener implements Listener {
             player.sendMessage(plugin.msg("baltop.empty"));
             return;
         }
-        player.closeInventory();
-        player.openInventory(new BaltopHolder(plugin, player, top).getInventory());
+        player.openInventory(new BaltopHolder(plugin, player, top, page).getInventory());
     }
 
     private void runAndClose(Player player, String command) {
@@ -244,7 +264,7 @@ public class GuiListener implements Listener {
             player.sendMessage(plugin.msg("menu.no-players-online"));
             return;
         }
-        player.openInventory(new PlayerSelectHolder(plugin, player, purpose).getInventory());
+        player.openInventory(new PlayerSelectHolder(plugin, player, purpose, 0).getInventory());
     }
 
     private void handlePlayerSelectClick(Player player, PlayerSelectHolder holder, ItemStack clicked) {

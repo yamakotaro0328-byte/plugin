@@ -17,31 +17,48 @@ import java.util.List;
 
 /**
  * メインメニューの「ランキング」から開く、所持金上位者の一覧GUI (/baltop の見た目版)。
- * 表示専用: クリックしても何も起きない (戻るボタン以外)。
+ * 表示専用: クリックしても何も起きない (戻るボタン以外)。45件を超える場合はページ送りできる
+ * (Paginator 参照。順位は常にページをまたいだ通し番号)。
  */
 public class BaltopHolder implements InventoryHolder {
 
     public static final int CONTENT_SIZE = 45;
     private static final int SIZE = 54;
+    public static final int SLOT_PREV = 48;
     public static final int SLOT_BACK = 49;
+    public static final int SLOT_NEXT = 50;
+    private static final int SLOT_PAGE_INDICATOR = 51;
 
     private final Inventory inventory;
+    private final int page;
 
-    public BaltopHolder(EcoTpPlugin plugin, Player viewer, List<BalanceEntry> entries) {
+    public BaltopHolder(EcoTpPlugin plugin, Player viewer, List<BalanceEntry> entries, int page) {
         this.inventory = Bukkit.createInventory(this, SIZE, plugin.getMessages().get("menu.baltop-title"));
 
         for (int slot = CONTENT_SIZE; slot < SIZE; slot++) {
             inventory.setItem(slot, MenuItems.borderPane(slot));
         }
+
+        Paginator<BalanceEntry> paginator = new Paginator<>(entries, CONTENT_SIZE);
+        this.page = Math.max(0, Math.min(page, paginator.pageCount() - 1));
+
+        if (paginator.hasPrevPage(this.page)) {
+            inventory.setItem(SLOT_PREV, MenuItems.prevPageItem(plugin));
+        }
+        if (paginator.hasNextPage(this.page)) {
+            inventory.setItem(SLOT_NEXT, MenuItems.nextPageItem(plugin));
+        }
+        if (paginator.pageCount() > 1) {
+            inventory.setItem(SLOT_PAGE_INDICATOR, MenuItems.pageIndicatorItem(plugin, this.page, paginator.pageCount()));
+        }
         inventory.setItem(SLOT_BACK, MenuItems.item(Material.ARROW, plugin.getMessages().get("menu.back"), null));
 
-        int rank = 1;
-        for (BalanceEntry entry : entries) {
-            if (rank > CONTENT_SIZE) {
-                break;
-            }
-            inventory.setItem(rank - 1, entryHead(plugin, rank, entry));
+        int rank = this.page * CONTENT_SIZE + 1;
+        int slot = 0;
+        for (BalanceEntry entry : paginator.page(this.page)) {
+            inventory.setItem(slot, entryHead(plugin, rank, entry));
             rank++;
+            slot++;
         }
         MenuItems.playOpenSound(viewer);
     }
@@ -63,6 +80,10 @@ public class BaltopHolder implements InventoryHolder {
             stack.setItemMeta(skullMeta);
         }
         return stack;
+    }
+
+    public int getPage() {
+        return page;
     }
 
     @Override

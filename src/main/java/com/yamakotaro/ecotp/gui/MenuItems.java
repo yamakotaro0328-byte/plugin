@@ -1,5 +1,6 @@
 package com.yamakotaro.ecotp.gui;
 
+import com.yamakotaro.ecotp.EcoTpPlugin;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -50,5 +51,19 @@ final class MenuItems {
     /** GUIを開いたときの効果音。ただのチェスト開閉ではなく専用の演出にすることで、他の追加要素より安っぽく見えないようにする。 */
     static void playOpenSound(Player player) {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
+    }
+
+    static ItemStack prevPageItem(EcoTpPlugin plugin) {
+        return item(Material.ARROW, plugin.getMessages().get("menu.prev-page"), null);
+    }
+
+    static ItemStack nextPageItem(EcoTpPlugin plugin) {
+        return item(Material.ARROW, plugin.getMessages().get("menu.next-page"), null);
+    }
+
+    static ItemStack pageIndicatorItem(EcoTpPlugin plugin, int pageIndex, int pageCount) {
+        String name = plugin.getMessages().get("menu.page-indicator",
+                "page", String.valueOf(pageIndex + 1), "pages", String.valueOf(pageCount));
+        return item(Material.PAPER, name, null);
     }
 }
