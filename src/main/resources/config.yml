@@ -47,6 +47,7 @@ features:
   donate: true
   daily: true
   eco-item: true
+  menu-item: true
 
 # /daily: a once-per-day claim. Claiming again within streak-window-hours of the last
 # claim increases your streak (capped at max-streak-bonus-days), which raises the reward;
@@ -72,6 +73,13 @@ daily-reward:
 # スタック全体の合計額を一度に換金できる(換金自体に権限は不要、付与にのみ必要)。
 eco-item:
   material: GOLD_NUGGET
+
+# A right-clickable item that opens the same GUI as /menu. Given automatically on join
+# (only if the player doesn't already have one somewhere in their inventory).
+# (日本語) 右クリックで /menu と同じGUIを開けるアイテム。参加時に自動配布される
+# (既に持っている場合は渡さない)。
+menu-item:
+  material: COMPASS
 
 # Broadcasts a thank-you message server-wide whenever /donate succeeds. Recipients can
 # personalize their own message with /donatemessage (placeholders: {player}, {amount}).

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -23,6 +24,10 @@ public class TpaManager {
 
     public enum Type {
         TPA, TPHERE
+    }
+
+    /** メニューGUIの通知表示用の、読み取り専用スナップショット。 */
+    public record IncomingRequestInfo(Type type, String requesterName) {
     }
 
     private final EcoTpPlugin plugin;
@@ -71,6 +76,17 @@ public class TpaManager {
         String incomingKey = type == Type.TPA ? "tpa.incoming" : "tphere.incoming";
         requester.sendMessage(plugin.msg(sentKey, "player", target.getName()));
         ChatUtil.sendTpaRequestPrompt(target, plugin.getPrefix(), requester.getName(), cost, incomingKey);
+    }
+
+    /**
+     * メニューGUIが「保留中のリクエストがあるか」を副作用無しで確認するための読み取り専用アクセサ。
+     */
+    public Optional<IncomingRequestInfo> getIncomingRequest(UUID targetUuid) {
+        Request req = requests.get(targetUuid);
+        if (req == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new IncomingRequestInfo(req.type, req.requesterName));
     }
 
     public void acceptRequest(Player target) {

@@ -157,6 +157,11 @@ ecoitem:
   item-lore: "&7Right-click to redeem for currency"
   redeemed: "&aRedeemed for &f{amount}&a!"
 
+menu-item:
+  name: "&6EcoTP Menu"
+  lore:
+    - "&7Right-click to open the menu"
+
 menu:
   title: "EcoTP Menu"
   home: "&aTeleport home"
@@ -178,6 +183,12 @@ menu:
   select-pay-amount-title: "Pay {player}"
   select-donate-amount-title: "Donate to {player}"
   amount-custom: "&bCustom amount"
+  incoming-request: "&e&l{player} wants to teleport!"
+  incoming-request-title: "Incoming Request"
+  accept: "&aAccept"
+  deny: "&cDeny"
+  request-type-tpa: "&7Wants to teleport to you"
+  request-type-tphere: "&7Wants to summon you (you'd pay)"
   no-players-online: "&cThere are no other players online."
   chat-input-amount: "&aType the amount to send in chat. (type cancel to cancel)"
   chat-input-cancelled: "&eCancelled."
@@ -206,6 +217,15 @@ menu:
       - "&7Click to send this amount"
     amount-custom:
       - "&7Type an exact amount in chat"
+    incoming-request:
+      - "&7{type}"
+      - "&7Click to respond"
+    incoming-request-head:
+      - "&7{type}"
+    accept:
+      - "&7Click to accept"
+    deny:
+      - "&7Click to deny"
     sethome:
       - "&7Set a home at your current location."
       - "&7Next cost: &f{cost}"

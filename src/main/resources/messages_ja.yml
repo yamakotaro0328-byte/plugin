@@ -157,6 +157,11 @@ ecoitem:
   item-lore: "&7右クリックで換金"
   redeemed: "&f{amount}&aを換金しました！"
 
+menu-item:
+  name: "&6EcoTPメニュー"
+  lore:
+    - "&7右クリックでメニューを開く"
+
 menu:
   title: "EcoTPメニュー"
   home: "&aホームへワープ"
@@ -178,6 +183,12 @@ menu:
   select-pay-amount-title: "{player}に送金"
   select-donate-amount-title: "{player}に寄付"
   amount-custom: "&bカスタム金額"
+  incoming-request: "&e&l{player}がテレポートを希望しています！"
+  incoming-request-title: "テレポートリクエスト"
+  accept: "&a承諾"
+  deny: "&c拒否"
+  request-type-tpa: "&7あなたのもとへ来たがっています"
+  request-type-tphere: "&7あなたを呼び出したがっています (あなたが料金を支払います)"
   no-players-online: "&c他にオンラインのプレイヤーがいません。"
   chat-input-amount: "&aチャットに送金する金額を入力してください。(キャンセルするには cancel と入力)"
   chat-input-cancelled: "&eキャンセルしました。"
@@ -206,6 +217,15 @@ menu:
       - "&7クリックしてこの金額を送る"
     amount-custom:
       - "&7チャットで正確な金額を入力"
+    incoming-request:
+      - "&7{type}"
+      - "&7クリックして応答"
+    incoming-request-head:
+      - "&7{type}"
+    accept:
+      - "&7クリックして承諾"
+    deny:
+      - "&7クリックして拒否"
     sethome:
       - "&7現在地にホームを設定します。"
       - "&7次回の料金: &f{cost}"

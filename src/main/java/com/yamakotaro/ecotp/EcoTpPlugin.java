@@ -25,6 +25,7 @@ import com.yamakotaro.ecotp.commands.TphereCommand;
 import com.yamakotaro.ecotp.gui.GuiListener;
 import com.yamakotaro.ecotp.listeners.EcoItemListener;
 import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
+import com.yamakotaro.ecotp.listeners.MenuItemListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
 import com.yamakotaro.ecotp.listeners.VoteRewardJoinListener;
 import org.bukkit.event.EventHandler;
@@ -65,6 +66,7 @@ public class EcoTpPlugin extends JavaPlugin {
     private DailyRewardStorage dailyRewardStorage;
     private DailyRewardManager dailyRewardManager;
     private EcoItemManager ecoItemManager;
+    private MenuItemManager menuItemManager;
 
     @Override
     public void onEnable() {
@@ -126,6 +128,7 @@ public class EcoTpPlugin extends JavaPlugin {
                 : new YamlDailyRewardStorage(this);
         this.dailyRewardManager = new DailyRewardManager(this, dailyRewardStorage);
         this.ecoItemManager = new EcoItemManager(this);
+        this.menuItemManager = new MenuItemManager(this);
 
         HomeCommand homeCommand = new HomeCommand(this);
         getCommand("home").setExecutor(homeCommand);
@@ -180,6 +183,7 @@ public class EcoTpPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(chatInputManager, this);
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
         getServer().getPluginManager().registerEvents(new EcoItemListener(this), this);
+        getServer().getPluginManager().registerEvents(new MenuItemListener(this), this);
         new VoteRewardListener(this).register();
         votifierServer.start();
 
@@ -303,6 +307,10 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public EcoItemManager getEcoItemManager() {
         return ecoItemManager;
+    }
+
+    public MenuItemManager getMenuItemManager() {
+        return menuItemManager;
     }
 
     public Messages getMessages() {

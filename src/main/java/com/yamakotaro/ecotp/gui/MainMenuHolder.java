@@ -3,6 +3,7 @@ package com.yamakotaro.ecotp.gui;
 import com.yamakotaro.ecotp.ChatUtil;
 import com.yamakotaro.ecotp.EcoTpPlugin;
 import com.yamakotaro.ecotp.Messages;
+import com.yamakotaro.ecotp.TpaManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -28,6 +29,7 @@ public class MainMenuHolder implements InventoryHolder {
     private static final int SIZE = 45;
 
     public static final int SLOT_PROFILE = 4;
+    public static final int SLOT_INCOMING_REQUEST = 18;
     public static final int SLOT_HOME = 10;
     public static final int SLOT_SETHOME = 11;
     public static final int SLOT_SPAWN = 12;
@@ -53,6 +55,8 @@ public class MainMenuHolder implements InventoryHolder {
         String minFeeFormatted = ChatUtil.formatMoney(minFee);
 
         inventory.setItem(SLOT_PROFILE, profileHead(plugin, viewer));
+        plugin.getTpaManager().getIncomingRequest(viewer.getUniqueId())
+                .ifPresent(info -> inventory.setItem(SLOT_INCOMING_REQUEST, incomingRequestItem(plugin, info)));
         putIfEnabled(plugin, SLOT_HOME, "home", Material.RED_BED,
                 homeLore(plugin, viewer, minFeeFormatted));
         putIfEnabled(plugin, SLOT_SETHOME, "sethome", Material.COMPASS,
@@ -106,6 +110,13 @@ public class MainMenuHolder implements InventoryHolder {
             stack.setItemMeta(skullMeta);
         }
         return stack;
+    }
+
+    private static ItemStack incomingRequestItem(EcoTpPlugin plugin, TpaManager.IncomingRequestInfo info) {
+        String typeLabel = plugin.getMessages().get(IncomingRequestHolder.typeLabelKey(info.type()));
+        String name = plugin.getMessages().get("menu.incoming-request", "player", info.requesterName());
+        List<String> lore = plugin.getMessages().getList("menu.lore.incoming-request", "type", typeLabel);
+        return MenuItems.item(Material.ENDER_EYE, name, lore, true);
     }
 
     private static List<String> homeLore(EcoTpPlugin plugin, Player viewer, String feeFormatted) {

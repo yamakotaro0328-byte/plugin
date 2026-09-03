@@ -3,6 +3,7 @@ package com.yamakotaro.ecotp.gui;
 import com.yamakotaro.ecotp.BalanceEntry;
 import com.yamakotaro.ecotp.EcoTpEconomy;
 import com.yamakotaro.ecotp.EcoTpPlugin;
+import com.yamakotaro.ecotp.TpaManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -28,7 +29,7 @@ public class GuiListener implements Listener {
         InventoryHolder holder = event.getInventory().getHolder();
         if (holder instanceof MainMenuHolder || holder instanceof PlayerSelectHolder
                 || holder instanceof HomeSelectHolder || holder instanceof BaltopHolder
-                || holder instanceof AmountSelectHolder) {
+                || holder instanceof AmountSelectHolder || holder instanceof IncomingRequestHolder) {
             // これらのGUIは表示専用: ドラッグでアイテムを置かせない
             // (空いたスロットにアイテムをドロップされて紛失するのを防ぐ)。
             event.setCancelled(true);
@@ -108,6 +109,24 @@ public class GuiListener implements Listener {
                 return;
             }
             handleAmountSelectClick(player, amountHolder, event.getSlot());
+            return;
+        }
+
+        if (holder instanceof IncomingRequestHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) {
+                return;
+            }
+            int slot = event.getSlot();
+            if (slot == IncomingRequestHolder.SLOT_ACCEPT) {
+                player.closeInventory();
+                player.performCommand("tpaccept");
+            } else if (slot == IncomingRequestHolder.SLOT_DENY) {
+                player.closeInventory();
+                player.performCommand("tpdeny");
+            } else if (slot == IncomingRequestHolder.SLOT_BACK) {
+                backToMainMenu(player);
+            }
         }
     }
 
@@ -146,6 +165,7 @@ public class GuiListener implements Listener {
 
     private void handleMainMenuClick(Player player, int slot) {
         switch (slot) {
+            case MainMenuHolder.SLOT_INCOMING_REQUEST -> openIncomingRequest(player);
             case MainMenuHolder.SLOT_HOME -> handleHomeClick(player);
             case MainMenuHolder.SLOT_SETHOME -> runAndClose(player, "sethome");
             case MainMenuHolder.SLOT_SPAWN -> runAndClose(player, "spawn");
@@ -161,6 +181,18 @@ public class GuiListener implements Listener {
                 // 枠 (ガラス板) や無効化された機能のスロットをクリックしただけ: 何もしない
             }
         }
+    }
+
+    private void openIncomingRequest(Player player) {
+        var info = plugin.getTpaManager().getIncomingRequest(player.getUniqueId());
+        if (info.isEmpty()) {
+            // 通知表示後にタイムアウト/取消などで状況が変わった: 何もせず閉じるだけ
+            player.closeInventory();
+            return;
+        }
+        player.closeInventory();
+        TpaManager.IncomingRequestInfo request = info.get();
+        player.openInventory(new IncomingRequestHolder(plugin, player, request.type(), request.requesterName()).getInventory());
     }
 
     private void handleHomeClick(Player player) {
