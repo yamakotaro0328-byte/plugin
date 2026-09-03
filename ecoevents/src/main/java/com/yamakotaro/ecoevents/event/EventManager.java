@@ -171,9 +171,11 @@ public class EventManager {
             case THUNDERSTORM -> thunderstorm(def);
             case LIGHTNING_BARRAGE -> lightningBarrage(def);
             case BLIZZARD -> blizzard(def);
+            case TYPHOON -> typhoon(def);
             case SANDSTORM -> globalEffectBurst(def, Particle.CLOUD);
             case EARTHQUAKE -> earthquake(def);
-            case PLAGUE, BLESSING -> applyEffectsToAll(def);
+            case PLAGUE -> plague(def);
+            case BLESSING -> blessing(def);
             case SKYFALL_LOOT -> skyfallLoot(def);
             case VOID_RIFT -> voidRift(def);
             case WILDFIRE -> wildfire(def);
@@ -244,6 +246,42 @@ public class EventManager {
             world.setWeatherDuration(ticks);
         }
         globalEffectBurst(def, Particle.SNOWFLAKE);
+    }
+
+    private void typhoon(EventDefinition def) {
+        World world = randomOnlineWorld();
+        if (world != null) {
+            int ticks = def.durationSeconds() * 20;
+            world.setStorm(true);
+            world.setWeatherDuration(ticks);
+        }
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            Vector wind = new Vector(random.nextDouble() * 2 - 1, 0.05, random.nextDouble() * 2 - 1);
+            if (wind.lengthSquared() > 0.0001) {
+                wind.normalize();
+            }
+            wind.multiply(0.5 * Math.max(1.0, def.magnitude()));
+            player.setVelocity(player.getVelocity().add(wind));
+            player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation().add(0, 1, 0), 25, 1.2, 1.2, 1.2, 0.08);
+            player.playSound(player.getLocation(), Sound.ENTITY_PHANTOM_FLAP, 1.5f, 0.6f);
+        }
+        applyEffectsToAll(def);
+    }
+
+    private void plague(EventDefinition def) {
+        applyEffectsToAll(def);
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.getWorld().spawnParticle(Particle.WITCH, player.getLocation().add(0, 1, 0), 20, 0.5, 0.8, 0.5, 0.02);
+            player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_AMBIENT, 1f, 0.6f);
+        }
+    }
+
+    private void blessing(EventDefinition def) {
+        applyEffectsToAll(def);
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation().add(0, 1, 0), 20, 0.5, 0.8, 0.5, 0.02);
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
+        }
     }
 
     private void earthquake(EventDefinition def) {

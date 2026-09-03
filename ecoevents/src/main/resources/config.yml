@@ -15,7 +15,7 @@ schedule:
 # underlying behavior) with different names/radius/duration/magnitude/effects - e.g.
 # "meteor_strike" and "rogue_comet" are both METEOR_STRIKE, just tuned differently.
 # - mechanic: one of METEOR_STRIKE, METEOR_SHOWER, THUNDERSTORM, LIGHTNING_BARRAGE, BLIZZARD,
-#   SANDSTORM, EARTHQUAKE, PLAGUE, BLESSING, SKYFALL_LOOT, VOID_RIFT, WILDFIRE, FROST_WAVE,
+#   TYPHOON, SANDSTORM, EARTHQUAKE, PLAGUE, BLESSING, SKYFALL_LOOT, VOID_RIFT, WILDFIRE, FROST_WAVE,
 #   AURORA, ECLIPSE.
 # - weight: relative chance of being picked when an event fires.
 # - radius / duration-seconds / magnitude: meaning depends on the mechanic (area of effect, how
@@ -197,6 +197,32 @@ events:
     duration-seconds: 12
     effects:
       - type: SLOWNESS
+        amplifier: 0
+
+  typhoon:
+    display-name: "&9Typhoon"
+    mechanic: TYPHOON
+    weight: 6
+    duration-seconds: 40
+    magnitude: 1.5
+    effects:
+      - type: SLOWNESS
+        amplifier: 0
+      - type: NAUSEA
+        amplifier: 0
+
+  super_typhoon:
+    display-name: "&1&lSuper Typhoon"
+    mechanic: TYPHOON
+    weight: 2
+    duration-seconds: 55
+    magnitude: 2.5
+    effects:
+      - type: SLOWNESS
+        amplifier: 1
+      - type: NAUSEA
+        amplifier: 0
+      - type: WEAKNESS
         amplifier: 0
 
   arctic_freeze:

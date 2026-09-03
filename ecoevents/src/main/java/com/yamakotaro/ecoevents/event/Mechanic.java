@@ -11,6 +11,7 @@ public enum Mechanic {
     THUNDERSTORM,
     LIGHTNING_BARRAGE,
     BLIZZARD,
+    TYPHOON,
     SANDSTORM,
     EARTHQUAKE,
     PLAGUE,
