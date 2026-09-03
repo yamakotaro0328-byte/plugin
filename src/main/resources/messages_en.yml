@@ -171,12 +171,19 @@ menu:
   donate: "&dDonate to a player"
   close: "&cClose"
   back: "&7« Back"
+  profile-title: "&6&l{player}"
   select-player-title: "Select a player"
   no-players-online: "&cThere are no other players online."
   chat-input-amount: "&aType the amount to send in chat. (type cancel to cancel)"
   chat-input-cancelled: "&eCancelled."
   chat-input-timeout: "&cInput timed out."
   lore:
+    profile:
+      - "&7Balance: &f{balance}"
+      - "&7Homes: &f{used}/{max}"
+      - "&7Daily streak: &f{streak} day(s)"
+    select-player-head:
+      - "&7Click to select"
     home:
       - "&7Teleport to your home."
       - "&7Fee: at least {fee} (grows with distance)"

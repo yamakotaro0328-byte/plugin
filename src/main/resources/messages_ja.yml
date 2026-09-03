@@ -171,12 +171,19 @@ menu:
   donate: "&d寄付する"
   close: "&c閉じる"
   back: "&7« 戻る"
+  profile-title: "&6&l{player}"
   select-player-title: "プレイヤーを選択"
   no-players-online: "&c他にオンラインのプレイヤーがいません。"
   chat-input-amount: "&aチャットに送金する金額を入力してください。(キャンセルするには cancel と入力)"
   chat-input-cancelled: "&eキャンセルしました。"
   chat-input-timeout: "&c入力がタイムアウトしました。"
   lore:
+    profile:
+      - "&7所持金: &f{balance}"
+      - "&7ホーム数: &f{used}/{max}"
+      - "&7デイリー連続日数: &f{streak}日"
+    select-player-head:
+      - "&7クリックして選択"
     home:
       - "&7ホームへワープします。"
       - "&7料金: 最低{fee} (距離に応じて増加)"

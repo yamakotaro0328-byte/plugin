@@ -10,6 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +27,7 @@ public class MainMenuHolder implements InventoryHolder {
 
     private static final int SIZE = 45;
 
+    public static final int SLOT_PROFILE = 4;
     public static final int SLOT_HOME = 10;
     public static final int SLOT_SETHOME = 11;
     public static final int SLOT_SPAWN = 12;
@@ -41,15 +44,15 @@ public class MainMenuHolder implements InventoryHolder {
 
     public MainMenuHolder(EcoTpPlugin plugin, Player viewer) {
         this.inventory = Bukkit.createInventory(this, SIZE, plugin.getMessages().get("menu.title"));
-        ItemStack filler = MenuItems.filler();
         for (int slot = 0; slot < SIZE; slot++) {
-            inventory.setItem(slot, filler);
+            inventory.setItem(slot, MenuItems.borderPane(slot));
         }
 
         Messages messages = plugin.getMessages();
         double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
         String minFeeFormatted = ChatUtil.formatMoney(minFee);
 
+        inventory.setItem(SLOT_PROFILE, profileHead(plugin, viewer));
         putIfEnabled(plugin, SLOT_HOME, "home", Material.RED_BED,
                 messages.getList("menu.lore.home", "fee", minFeeFormatted));
         putIfEnabled(plugin, SLOT_SETHOME, "sethome", Material.COMPASS,
@@ -64,18 +67,45 @@ public class MainMenuHolder implements InventoryHolder {
                 balanceLore(plugin, viewer)));
         putIfEnabled(plugin, SLOT_PAY, "pay", Material.EMERALD, messages.getList("menu.lore.pay"));
         putIfEnabled(plugin, SLOT_BALTOP, "baltop", Material.DIAMOND, messages.getList("menu.lore.baltop"));
-        putIfEnabled(plugin, SLOT_DAILY, "daily", Material.CLOCK, dailyLore(plugin, viewer));
+        putIfEnabled(plugin, SLOT_DAILY, "daily", Material.CLOCK, dailyLore(plugin, viewer),
+                plugin.getDailyRewardManager().isClaimable(viewer.getUniqueId()));
         putIfEnabled(plugin, SLOT_DONATE, "donate", Material.NETHER_STAR, messages.getList("menu.lore.donate"));
 
         inventory.setItem(SLOT_CLOSE, MenuItems.item(Material.BARRIER, messages.get("menu.close"), null));
+        MenuItems.playOpenSound(viewer);
     }
 
     private void putIfEnabled(EcoTpPlugin plugin, int slot, String featureKey, Material material, List<String> lore) {
+        putIfEnabled(plugin, slot, featureKey, material, lore, false);
+    }
+
+    private void putIfEnabled(EcoTpPlugin plugin, int slot, String featureKey, Material material, List<String> lore, boolean glint) {
         if (!plugin.isFeatureEnabled(featureKey)) {
             return; // 枠のガラス板のまま (無効な機能はメニューに出さない)
         }
         String displayName = plugin.getMessages().get("menu." + featureKey);
-        inventory.setItem(slot, MenuItems.item(material, displayName, lore));
+        inventory.setItem(slot, MenuItems.item(material, displayName, lore, glint));
+    }
+
+    private static ItemStack profileHead(EcoTpPlugin plugin, Player viewer) {
+        UUID uuid = viewer.getUniqueId();
+        Economy economy = plugin.getEconomyHolder().get();
+        String balance = economy == null ? "?" : ChatUtil.formatMoney(economy.getBalance(viewer));
+        int used = plugin.getHomeManager().getHomeNames(uuid).size();
+        int max = plugin.getConfig().getInt("homes.max-per-player", 3);
+        int streak = plugin.getDailyRewardManager().getStreak(uuid);
+        List<String> lore = plugin.getMessages().getList("menu.lore.profile",
+                "balance", balance, "used", String.valueOf(used), "max", String.valueOf(max), "streak", String.valueOf(streak));
+
+        ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta instanceof SkullMeta skullMeta) {
+            skullMeta.setOwningPlayer(viewer);
+            skullMeta.setDisplayName(plugin.getMessages().get("menu.profile-title", "player", viewer.getName()));
+            skullMeta.setLore(lore);
+            stack.setItemMeta(skullMeta);
+        }
+        return stack;
     }
 
     private static List<String> sethomeLore(EcoTpPlugin plugin, Player viewer) {
