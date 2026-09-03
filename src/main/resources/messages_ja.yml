@@ -175,6 +175,9 @@ menu:
   select-player-title: "プレイヤーを選択"
   select-home-title: "ホームを選択"
   baltop-title: "所持金ランキング"
+  select-pay-amount-title: "{player}に送金"
+  select-donate-amount-title: "{player}に寄付"
+  amount-custom: "&bカスタム金額"
   no-players-online: "&c他にオンラインのプレイヤーがいません。"
   chat-input-amount: "&aチャットに送金する金額を入力してください。(キャンセルするには cancel と入力)"
   chat-input-cancelled: "&eキャンセルしました。"
@@ -199,6 +202,10 @@ menu:
       - "&cこのホームのワールドはもう存在しません。"
     baltop-entry:
       - "&7所持金: &f{balance}"
+    amount-preset:
+      - "&7クリックしてこの金額を送る"
+    amount-custom:
+      - "&7チャットで正確な金額を入力"
     sethome:
       - "&7現在地にホームを設定します。"
       - "&7次回の料金: &f{cost}"

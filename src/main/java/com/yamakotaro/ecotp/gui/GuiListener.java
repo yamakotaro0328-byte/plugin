@@ -27,7 +27,8 @@ public class GuiListener implements Listener {
     public void onDrag(InventoryDragEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
         if (holder instanceof MainMenuHolder || holder instanceof PlayerSelectHolder
-                || holder instanceof HomeSelectHolder || holder instanceof BaltopHolder) {
+                || holder instanceof HomeSelectHolder || holder instanceof BaltopHolder
+                || holder instanceof AmountSelectHolder) {
             // これらのGUIは表示専用: ドラッグでアイテムを置かせない
             // (空いたスロットにアイテムをドロップされて紛失するのを防ぐ)。
             event.setCancelled(true);
@@ -98,6 +99,44 @@ public class GuiListener implements Listener {
                 backToMainMenu(player);
             }
             // それ以外 (ランキングの頭アイテム) は表示専用でクリックしても何も起きない。
+            return;
+        }
+
+        if (holder instanceof AmountSelectHolder amountHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) {
+                return;
+            }
+            handleAmountSelectClick(player, amountHolder, event.getSlot());
+        }
+    }
+
+    private void handleAmountSelectClick(Player player, AmountSelectHolder holder, int slot) {
+        String commandName = holder.isDonate() ? "donate" : "pay";
+        String targetName = holder.getTargetName();
+
+        if (slot == AmountSelectHolder.SLOT_BACK) {
+            player.openInventory(new PlayerSelectHolder(plugin, player,
+                    holder.isDonate() ? PlayerSelectHolder.Purpose.DONATE : PlayerSelectHolder.Purpose.PAY).getInventory());
+            return;
+        }
+        if (slot == AmountSelectHolder.SLOT_CUSTOM) {
+            player.closeInventory();
+            player.sendMessage(plugin.msg("menu.chat-input-amount"));
+            plugin.getChatInputManager().request(player, input -> {
+                String amount = input.trim();
+                if (!amount.matches("\\d+(\\.\\d+)?")) {
+                    player.sendMessage(plugin.getMessages().get("pay.invalid-amount"));
+                    return;
+                }
+                player.performCommand(commandName + " " + targetName + " " + amount);
+            });
+            return;
+        }
+        double preset = AmountSelectHolder.presetAmountForSlot(slot);
+        if (preset > 0) {
+            player.closeInventory();
+            player.performCommand(commandName + " " + targetName + " " + Math.round(preset));
         }
     }
 
@@ -185,27 +224,20 @@ public class GuiListener implements Listener {
             return;
         }
         String targetName = meta.getDisplayName();
-        player.closeInventory();
 
         if (holder.getPurpose() == PlayerSelectHolder.Purpose.TPA) {
+            player.closeInventory();
             player.performCommand("tpa " + targetName);
             return;
         }
         if (holder.getPurpose() == PlayerSelectHolder.Purpose.TPHERE) {
+            player.closeInventory();
             player.performCommand("tphere " + targetName);
             return;
         }
 
-        // pay/donate: 送金先を選んだので、金額はチャットで入力してもらう。
-        String commandName = holder.getPurpose() == PlayerSelectHolder.Purpose.DONATE ? "donate" : "pay";
-        player.sendMessage(plugin.msg("menu.chat-input-amount"));
-        plugin.getChatInputManager().request(player, input -> {
-            String amount = input.trim();
-            if (!amount.matches("\\d+(\\.\\d+)?")) {
-                player.sendMessage(plugin.getMessages().get("pay.invalid-amount"));
-                return;
-            }
-            player.performCommand(commandName + " " + targetName + " " + amount);
-        });
+        // pay/donate: 送金先を選んだので、次は金額のクイック選択GUIを開く。
+        boolean donate = holder.getPurpose() == PlayerSelectHolder.Purpose.DONATE;
+        player.openInventory(new AmountSelectHolder(plugin, player, targetName, donate).getInventory());
     }
 }

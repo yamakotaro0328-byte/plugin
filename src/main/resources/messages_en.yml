@@ -175,6 +175,9 @@ menu:
   select-player-title: "Select a player"
   select-home-title: "Select a home"
   baltop-title: "Balance Leaderboard"
+  select-pay-amount-title: "Pay {player}"
+  select-donate-amount-title: "Donate to {player}"
+  amount-custom: "&bCustom amount"
   no-players-online: "&cThere are no other players online."
   chat-input-amount: "&aType the amount to send in chat. (type cancel to cancel)"
   chat-input-cancelled: "&eCancelled."
@@ -199,6 +202,10 @@ menu:
       - "&cThis home's world no longer exists."
     baltop-entry:
       - "&7Balance: &f{balance}"
+    amount-preset:
+      - "&7Click to send this amount"
+    amount-custom:
+      - "&7Type an exact amount in chat"
     sethome:
       - "&7Set a home at your current location."
       - "&7Next cost: &f{cost}"
