@@ -23,7 +23,7 @@ public class JobManager {
 
     public void load() {
         jobs.clear();
-        ConfigurationSection jobsSection = plugin.getConfig().getConfigurationSection("jobs");
+        ConfigurationSection jobsSection = plugin.config().getConfigurationSection("jobs");
         if (jobsSection != null) {
             for (String jobId : jobsSection.getKeys(false)) {
                 ConfigurationSection jobSection = jobsSection.getConfigurationSection(jobId);
@@ -75,23 +75,23 @@ public class JobManager {
     }
 
     public int maxConcurrentJobs() {
-        return plugin.getConfig().getInt("max-concurrent-jobs", 3);
+        return plugin.config().getInt("max-concurrent-jobs", 3);
     }
 
     public double baseXpToLevel() {
-        return plugin.getConfig().getDouble("leveling.base-xp-to-level", 50);
+        return plugin.config().getDouble("leveling.base-xp-to-level", 50);
     }
 
     public double growthExponent() {
-        return plugin.getConfig().getDouble("leveling.growth-exponent", 1.35);
+        return plugin.config().getDouble("leveling.growth-exponent", 1.35);
     }
 
     public double payBonusPerLevel() {
-        return plugin.getConfig().getDouble("leveling.pay-bonus-per-level", 0.005);
+        return plugin.config().getDouble("leveling.pay-bonus-per-level", 0.005);
     }
 
     public int maxLevel() {
-        return plugin.getConfig().getInt("leveling.max-level", 100);
+        return plugin.config().getInt("leveling.max-level", 100);
     }
 
     /**
@@ -99,19 +99,19 @@ public class JobManager {
      * payBonusPerLevel*level - see PlayerJobManager#applyReward).
      */
     public double prestigeBonusPerPrestige() {
-        return plugin.getConfig().getDouble("leveling.prestige-bonus-per-prestige", 0.02);
+        return plugin.config().getDouble("leveling.prestige-bonus-per-prestige", 0.02);
     }
 
     public double explorerDistancePerMilestone() {
-        return plugin.getConfig().getDouble("explorer.distance-per-milestone", 250);
+        return plugin.config().getDouble("explorer.distance-per-milestone", 250);
     }
 
     public double explorerMoneyPerMilestone() {
-        return plugin.getConfig().getDouble("explorer.money-per-milestone", 100);
+        return plugin.config().getDouble("explorer.money-per-milestone", 100);
     }
 
     public double explorerXpPerMilestone() {
-        return plugin.getConfig().getDouble("explorer.xp-per-milestone", 60);
+        return plugin.config().getDouble("explorer.xp-per-milestone", 60);
     }
 
     private static final List<Integer> DEFAULT_MILESTONE_LEVELS = List.of(10, 25, 50, 75, 100);
@@ -121,11 +121,11 @@ public class JobManager {
      * applied to every job the same way.
      */
     public List<Integer> milestoneLevels() {
-        List<Integer> configured = plugin.getConfig().getIntegerList("leveling.milestone-levels");
+        List<Integer> configured = plugin.config().getIntegerList("leveling.milestone-levels");
         return configured.isEmpty() ? DEFAULT_MILESTONE_LEVELS : configured;
     }
 
     public double milestoneBonusMoney() {
-        return plugin.getConfig().getDouble("leveling.milestone-bonus-money", 100);
+        return plugin.config().getDouble("leveling.milestone-bonus-money", 100);
     }
 }

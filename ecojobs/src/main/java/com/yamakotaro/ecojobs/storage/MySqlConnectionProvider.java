@@ -34,11 +34,11 @@ public class MySqlConnectionProvider {
 
     public MySqlConnectionProvider(EcoJobsPlugin plugin) {
         this.plugin = plugin;
-        String host = plugin.getConfig().getString("storage.mysql.host", "localhost");
-        int port = plugin.getConfig().getInt("storage.mysql.port", 3306);
-        String database = plugin.getConfig().getString("storage.mysql.database", "ecojobs");
-        this.username = plugin.getConfig().getString("storage.mysql.username", "root");
-        this.password = plugin.getConfig().getString("storage.mysql.password", "");
+        String host = plugin.config().getString("storage.mysql.host", "localhost");
+        int port = plugin.config().getInt("storage.mysql.port", 3306);
+        String database = plugin.config().getString("storage.mysql.database", "ecojobs");
+        this.username = plugin.config().getString("storage.mysql.username", "root");
+        this.password = plugin.config().getString("storage.mysql.password", "");
         this.url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?useSSL=false&autoReconnect=true&characterEncoding=utf8";
         connect();
     }

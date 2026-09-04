@@ -182,10 +182,12 @@ public class JobsMenuHolder implements InventoryHolder {
                 lore.add(messages.get("menu.lore-click-leaderboard", Map.of()));
             }
             meta.lore(lore);
-            // A maxed-out job gets a subtle glint as a small trophy, distinguishing genuine
-            // mastery from simply having joined - Paper's override skips needing a fake
-            // enchantment (and the tooltip line it would otherwise force onto the item).
-            meta.setEnchantmentGlintOverride(maxed);
+            // Joined jobs glint so it's obvious at a glance which ones are currently active
+            // (rather than merely having past progress); a maxed-out job keeps glinting even
+            // after being left, as a small trophy for genuine mastery - Paper's override skips
+            // needing a fake enchantment (and the tooltip line it would otherwise force onto the
+            // item).
+            meta.setEnchantmentGlintOverride(active || maxed);
             stack.setItemMeta(meta);
         }
         return stack;

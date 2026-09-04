@@ -3,6 +3,7 @@ package com.yamakotaro.ecojobs.storage;
 import com.yamakotaro.ecojobs.EcoJobsPlugin;
 import com.yamakotaro.ecojobs.PlayerJobData;
 import com.yamakotaro.ecojobs.PlayerJobProgress;
+import com.yamakotaro.ecojobs.YamlIo;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -34,7 +35,7 @@ public class YamlJobStorage implements JobStorage {
         if (!file.exists()) {
             return data;
         }
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        YamlConfiguration yaml = YamlIo.load(file);
         ConfigurationSection playersSection = yaml.getConfigurationSection("players");
         if (playersSection == null) {
             return data;
@@ -101,8 +102,7 @@ public class YamlJobStorage implements JobStorage {
             }
         }
         try {
-            plugin.getDataFolder().mkdirs();
-            yaml.save(file);
+            YamlIo.save(yaml, file);
         } catch (IOException e) {
             plugin.getLogger().log(Level.WARNING, "Failed to save player-jobs.yml", e);
         }

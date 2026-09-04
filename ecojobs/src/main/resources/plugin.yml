@@ -8,8 +8,8 @@ softdepend: [Vault, PlaceholderAPI]
 
 commands:
   jobs:
-    description: Join/leave jobs, see your stats, browse leaderboards, and prestige
-    usage: /jobs <join|leave|list|stats|top|menu|info|prestige|admin|booster|reload> [args]
+    description: Open the jobs menu (or join/leave jobs, see your stats, browse leaderboards, and prestige)
+    usage: /jobs [join|leave|list|stats|top|menu|info|prestige|admin|booster|reload] [args]
     aliases: [job]
 
 permissions:

@@ -12,7 +12,10 @@ import com.yamakotaro.ecojobs.menu.JobsMenuListener;
 import com.yamakotaro.ecojobs.storage.JobStorage;
 import com.yamakotaro.ecojobs.storage.MySqlJobStorage;
 import com.yamakotaro.ecojobs.storage.YamlJobStorage;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
 
 /**
  * Standalone, EcoTP-independent plugin: 20 jobs that pay players (via Vault, if present) for
@@ -25,17 +28,19 @@ public class EcoJobsPlugin extends JavaPlugin {
     private static final long PLACED_BLOCK_CLEAR_INTERVAL_TICKS = 20L * 60 * 30; // every 30 minutes
 
     private PlayerJobManager playerJobManager;
+    private YamlConfiguration config;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        reloadPluginConfig();
         Messages messages = new Messages(this);
         JobManager jobManager = new JobManager(this);
         EconomyHolder economyHolder = new EconomyHolder(this);
         economyHolder.setup();
         JobOverrides jobOverrides = new JobOverrides(this);
         BoosterManager boosterManager = new BoosterManager();
-        JobStorage storage = "mysql".equalsIgnoreCase(getConfig().getString("storage.type", "yaml"))
+        JobStorage storage = "mysql".equalsIgnoreCase(config().getString("storage.type", "yaml"))
                 ? new MySqlJobStorage(this) : new YamlJobStorage(this);
         this.playerJobManager = new PlayerJobManager(this, jobManager, economyHolder, messages, storage, jobOverrides, boosterManager);
         PlacedBlockTracker placedBlockTracker = new PlacedBlockTracker();
@@ -74,5 +79,15 @@ public class EcoJobsPlugin extends JavaPlugin {
         if (playerJobManager != null) {
             playerJobManager.close();
         }
+    }
+
+    /** config.yml をこのプラグイン自身のUTF-8ローダーで再読み込みする (BukkitのreloadConfig()は使わない)。 */
+    public void reloadPluginConfig() {
+        this.config = YamlIo.load(new File(getDataFolder(), "config.yml"));
+    }
+
+    /** Bukkit標準の getConfig() の代わりに使う、UTF-8で読み込んだ設定。 */
+    public YamlConfiguration config() {
+        return config;
     }
 }

@@ -48,7 +48,9 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(messages.get("jobs.usage", Map.of()));
+            // Bare /jobs (or /job) opens the menu directly rather than dumping a usage line -
+            // handleMenu already covers the players-only/permission checks itself.
+            handleMenu(sender);
             return true;
         }
         switch (args[0].toLowerCase()) {
@@ -400,7 +402,7 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(messages.get("general.no-permission", Map.of()));
             return;
         }
-        plugin.reloadConfig();
+        plugin.reloadPluginConfig();
         jobManager.load();
         sender.sendMessage(messages.get("general.reloaded", Map.of()));
     }

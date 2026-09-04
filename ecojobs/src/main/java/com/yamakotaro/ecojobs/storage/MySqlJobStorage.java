@@ -32,7 +32,7 @@ public class MySqlJobStorage implements JobStorage {
     public MySqlJobStorage(EcoJobsPlugin plugin) {
         this.plugin = plugin;
         this.connectionProvider = new MySqlConnectionProvider(plugin);
-        String prefix = plugin.getConfig().getString("storage.mysql.table-prefix", "ecojobs_");
+        String prefix = plugin.config().getString("storage.mysql.table-prefix", "ecojobs_");
         this.playersTable = prefix + "players";
         this.progressTable = prefix + "progress";
         this.explorerTable = prefix + "explorer";

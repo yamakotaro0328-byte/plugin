@@ -20,7 +20,7 @@ public class JobOverrides {
     public JobOverrides(EcoJobsPlugin plugin) {
         this.plugin = plugin;
         this.file = new File(plugin.getDataFolder(), "job-overrides.yml");
-        this.yaml = YamlConfiguration.loadConfiguration(file);
+        this.yaml = YamlIo.load(file);
     }
 
     public boolean isEnabled(String jobId) {
@@ -48,8 +48,7 @@ public class JobOverrides {
 
     private void save() {
         try {
-            plugin.getDataFolder().mkdirs();
-            yaml.save(file);
+            YamlIo.save(yaml, file);
         } catch (IOException e) {
             plugin.getLogger().log(Level.WARNING, "Failed to save job-overrides.yml", e);
         }

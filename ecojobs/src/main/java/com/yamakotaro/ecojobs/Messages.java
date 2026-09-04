@@ -15,11 +15,11 @@ public class Messages {
     }
 
     private String language() {
-        return plugin.getConfig().getString("language", "en");
+        return plugin.config().getString("language", "en");
     }
 
     public String raw(String path, Map<String, String> replacements) {
-        FileConfiguration config = plugin.getConfig();
+        FileConfiguration config = plugin.config();
         String language = language();
         String value = config.getString("messages." + language + "." + path);
         if (value == null) {
@@ -40,7 +40,7 @@ public class Messages {
      * job-names.<language> section. Falls back to job-names.en, then the raw id.
      */
     public String jobName(String jobId) {
-        FileConfiguration config = plugin.getConfig();
+        FileConfiguration config = plugin.config();
         String value = config.getString("job-names." + language() + "." + jobId);
         if (value == null) {
             value = config.getString("job-names.en." + jobId, jobId);
