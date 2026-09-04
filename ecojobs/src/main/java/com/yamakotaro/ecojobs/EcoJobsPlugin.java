@@ -13,6 +13,7 @@ import com.yamakotaro.ecojobs.menu.JobsMenuListener;
 import com.yamakotaro.ecojobs.storage.JobStorage;
 import com.yamakotaro.ecojobs.storage.MySqlJobStorage;
 import com.yamakotaro.ecojobs.storage.YamlJobStorage;
+import com.yamakotaro.ecojobs.tasks.PerkHeartbeatTask;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,6 +28,7 @@ public class EcoJobsPlugin extends JavaPlugin {
 
     private static final long SAVE_INTERVAL_TICKS = 20L * 60 * 5; // every 5 minutes
     private static final long PLACED_BLOCK_CLEAR_INTERVAL_TICKS = 20L * 60 * 30; // every 30 minutes
+    private static final long PERK_HEARTBEAT_INTERVAL_TICKS = 20L * 5; // every 5 seconds
 
     private PlayerJobManager playerJobManager;
     private YamlConfiguration config;
@@ -41,9 +43,10 @@ public class EcoJobsPlugin extends JavaPlugin {
         economyHolder.setup();
         JobOverrides jobOverrides = new JobOverrides(this);
         BoosterManager boosterManager = new BoosterManager();
+        PerkManager perkManager = new PerkManager(this, jobManager);
         JobStorage storage = "mysql".equalsIgnoreCase(config().getString("storage.type", "yaml"))
                 ? new MySqlJobStorage(this) : new YamlJobStorage(this);
-        this.playerJobManager = new PlayerJobManager(this, jobManager, economyHolder, messages, storage, jobOverrides, boosterManager);
+        this.playerJobManager = new PlayerJobManager(this, jobManager, economyHolder, messages, storage, jobOverrides, boosterManager, perkManager);
         PlacedBlockTracker placedBlockTracker = new PlacedBlockTracker();
 
         // EvenMoreFish が入っていればカスタム魚をレア度別に支払う。未導入なら register() は何もせず、
@@ -51,12 +54,13 @@ public class EcoJobsPlugin extends JavaPlugin {
         EvenMoreFishBridge evenMoreFish = new EvenMoreFishBridge(this, playerJobManager);
         evenMoreFish.register();
 
-        getServer().getPluginManager().registerEvents(new BlockJobListener(playerJobManager, placedBlockTracker), this);
+        getServer().getPluginManager().registerEvents(new BlockJobListener(playerJobManager, placedBlockTracker, jobManager, perkManager), this);
         getServer().getPluginManager().registerEvents(new EntityJobListener(playerJobManager, jobManager, evenMoreFish), this);
         getServer().getPluginManager().registerEvents(new CraftingJobListener(playerJobManager), this);
         getServer().getPluginManager().registerEvents(new TradeJobListener(playerJobManager), this);
         getServer().getPluginManager().registerEvents(new ExplorerListener(playerJobManager), this);
-        getServer().getPluginManager().registerEvents(new JobsMenuListener(jobManager, playerJobManager, jobOverrides, boosterManager, messages), this);
+        getServer().getPluginManager().registerEvents(
+                new JobsMenuListener(jobManager, playerJobManager, jobOverrides, boosterManager, perkManager, messages), this);
         getServer().getPluginManager().registerEvents(
                 new AdminMenuListener(jobManager, playerJobManager, jobOverrides, boosterManager, messages), this);
         getServer().getPluginManager().registerEvents(
@@ -78,6 +82,11 @@ public class EcoJobsPlugin extends JavaPlugin {
         // entry otherwise - see PlacedBlockTracker#clear.
         getServer().getScheduler().runTaskTimer(this, placedBlockTracker::clear,
                 PLACED_BLOCK_CLEAR_INTERVAL_TICKS, PLACED_BLOCK_CLEAR_INTERVAL_TICKS);
+        // Keeps "potion" perks (see PerkManager) topped up for every online player in every job
+        // they're actively in - see PerkHeartbeatTask for why a periodic refresh needs no
+        // separate cleanup on leave/logout.
+        getServer().getScheduler().runTaskTimer(this,
+                new PerkHeartbeatTask(jobManager, playerJobManager, perkManager), PERK_HEARTBEAT_INTERVAL_TICKS, PERK_HEARTBEAT_INTERVAL_TICKS);
     }
 
     @Override

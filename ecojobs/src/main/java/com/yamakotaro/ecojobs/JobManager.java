@@ -2,6 +2,7 @@ package com.yamakotaro.ecojobs;
 
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,12 +31,33 @@ public class JobManager {
                 if (jobSection == null) {
                     continue;
                 }
-                jobs.put(jobId, new JobDefinition(jobId, loadActions(jobSection)));
+                jobs.put(jobId, new JobDefinition(jobId, loadActions(jobSection), loadPerks(jobSection)));
             }
         }
         // Explorer pays out purely on distance milestones (see ExplorerListener), not through
-        // the action-reward table, but still needs to exist as a joinable job.
-        jobs.put("explorer", new JobDefinition("explorer", Map.of()));
+        // the action-reward table, but still needs to exist as a joinable job. Its perks (if any)
+        // live under the top-level "explorer" section instead, alongside its milestone settings.
+        ConfigurationSection explorerSection = plugin.config().getConfigurationSection("explorer");
+        jobs.put("explorer", new JobDefinition("explorer", Map.of(),
+                explorerSection != null ? loadPerks(explorerSection) : List.of()));
+    }
+
+    /** Parses a job's (or explorer's) "perks" list - see {@link PerkDefinition} for what each field means. */
+    private List<PerkDefinition> loadPerks(ConfigurationSection section) {
+        List<PerkDefinition> perks = new ArrayList<>();
+        for (Map<?, ?> raw : section.getMapList("perks")) {
+            Object levelObj = raw.get("level");
+            Object typeObj = raw.get("type");
+            if (levelObj == null || typeObj == null) {
+                continue;
+            }
+            int level = ((Number) levelObj).intValue();
+            String type = String.valueOf(typeObj);
+            double value = raw.get("value") instanceof Number number ? number.doubleValue() : 0;
+            String effect = raw.get("effect") != null ? String.valueOf(raw.get("effect")) : null;
+            perks.add(new PerkDefinition(level, type, value, effect));
+        }
+        return perks;
     }
 
     private Map<String, Map<String, ActionReward>> loadActions(ConfigurationSection jobSection) {

@@ -4,6 +4,7 @@ import com.yamakotaro.ecojobs.BoosterManager;
 import com.yamakotaro.ecojobs.JobManager;
 import com.yamakotaro.ecojobs.JobOverrides;
 import com.yamakotaro.ecojobs.Messages;
+import com.yamakotaro.ecojobs.PerkManager;
 import com.yamakotaro.ecojobs.PlayerJobManager;
 import com.yamakotaro.ecojobs.PlayerJobProgress;
 import org.bukkit.Sound;
@@ -26,14 +27,16 @@ public class JobsMenuListener implements Listener {
     private final PlayerJobManager playerJobManager;
     private final JobOverrides jobOverrides;
     private final BoosterManager boosterManager;
+    private final PerkManager perkManager;
     private final Messages messages;
 
     public JobsMenuListener(JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides,
-                             BoosterManager boosterManager, Messages messages) {
+                             BoosterManager boosterManager, PerkManager perkManager, Messages messages) {
         this.jobManager = jobManager;
         this.playerJobManager = playerJobManager;
         this.jobOverrides = jobOverrides;
         this.boosterManager = boosterManager;
+        this.perkManager = perkManager;
         this.messages = messages;
     }
 
@@ -117,12 +120,12 @@ public class JobsMenuListener implements Listener {
             return;
         }
         if (slot == JobInfoMenuHolder.PREV_PAGE_SLOT) {
-            holder.render(jobManager, playerJobManager, jobOverrides, player, holder.getPage() - 1);
+            holder.render(jobManager, playerJobManager, jobOverrides, perkManager, player, holder.getPage() - 1);
             playSuccess(player);
             return;
         }
         if (slot == JobInfoMenuHolder.NEXT_PAGE_SLOT) {
-            holder.render(jobManager, playerJobManager, jobOverrides, player, holder.getPage() + 1);
+            holder.render(jobManager, playerJobManager, jobOverrides, perkManager, player, holder.getPage() + 1);
             playSuccess(player);
             return;
         }
@@ -210,7 +213,7 @@ public class JobsMenuListener implements Listener {
 
     private void openJobInfo(Player player, String jobId, int page) {
         JobInfoMenuHolder info = new JobInfoMenuHolder(messages, jobId);
-        info.render(jobManager, playerJobManager, jobOverrides, player, page);
+        info.render(jobManager, playerJobManager, jobOverrides, perkManager, player, page);
         player.openInventory(info.getInventory());
     }
 

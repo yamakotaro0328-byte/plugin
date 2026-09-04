@@ -57,6 +57,25 @@ explorer:
   distance-per-milestone: 250
   money-per-milestone: 100
   xp-per-milestone: 60
+  # See "jobs.<job>.perks" below for the full format - explorer's perks live here since it has no
+  # "actions" table of its own.
+  perks:
+    - { level: 25, type: potion, value: 1, effect: SPEED }
+    - { level: 75, type: pay-bonus, value: 10 }
+
+# Auto-smelt perk (see jobs.miner.perks) result map: ore block -> smelted item. Only consulted for
+# players who've unlocked an auto-smelt perk; everyone else keeps dropping the raw block as usual.
+# (日本語) 自動精錬パーク(jobs.miner.perksを参照)の対応表: 鉱石ブロック -> 精錬後のアイテム。
+# このパークを解放したプレイヤーにのみ適用され、それ以外は通常どおり未精錬でドロップする。
+auto-smelt-map:
+  IRON_ORE: IRON_INGOT
+  DEEPSLATE_IRON_ORE: IRON_INGOT
+  GOLD_ORE: GOLD_INGOT
+  DEEPSLATE_GOLD_ORE: GOLD_INGOT
+  NETHER_GOLD_ORE: GOLD_INGOT
+  COPPER_ORE: COPPER_INGOT
+  DEEPSLATE_COPPER_ORE: COPPER_INGOT
+  ANCIENT_DEBRIS: NETHERITE_SCRAP
 
 # 無限稼ぎ対策。
 # - player-kill-cooldown-minutes: 同じ相手を倒して戦士の報酬が再び出るまでの分数。2人組で
@@ -74,6 +93,33 @@ anti-farm:
 # {money, xp} の対応表になっている。名前はJavaのMaterial/EntityType列挙型と同じ表記
 # (大文字小文字は区別しない)。自由に追加・削除でき、載っていない("default"も無い)ものは
 # そのジョブでは何ももらえないだけ。
+#
+# Any job can also have a "perks:" list - level-gated bonuses beyond money/xp, shown in the GUI's
+# per-job detail screen (shift-right-click a job). Each entry is {level, type, value, effect?}:
+#   - pay-bonus: value = extra pay %, stacks with leveling.pay-bonus-per-level.
+#   - potion: value = effect amplifier (1 = level I), effect = a PotionEffectType name
+#     (e.g. FAST_DIGGING, WATER_BREATHING, SPEED). Kept up only while the job is joined.
+#   - double-drop: value = % chance a mined/chopped/harvested block's drop doubles.
+#     Only meaningful for miner/digger/woodcutter/farmer.
+#   - auto-smelt: value is unused - ore blocks drop already smelted per auto-smelt-map above.
+#     Only meaningful for miner.
+#   - xp-orb-bonus: value = flat extra *vanilla* xp (not job xp) per action.
+# "level" is an effective level (level + prestige * leveling.max-level), so prestiging a job never
+# takes a perk away. Leave a job's perks list empty (or omit it) to disable perks for that job.
+# (日本語) どのジョブにも "perks:" (パーク) リストを追加できる。お金/経験値以外の、レベルで
+# 解放される特典で、GUIの職業詳細画面(職業をシフト右クリック)に表示される。各項目は
+# {level, type, value, effect?}:
+#   - pay-bonus: valueがそのジョブの報酬への追加%(leveling.pay-bonus-per-levelと加算)。
+#   - potion: valueが効果のレベル(1=効果I)、effectがPotionEffectType名
+#     (例: FAST_DIGGING、WATER_BREATHING、SPEED)。就職中のみ維持される。
+#   - double-drop: valueが採掘/伐採/収穫したブロックのドロップが倍になる確率(%)。
+#     採掘工/穴掘り/木こり/農家でのみ意味を持つ。
+#   - auto-smelt: valueは未使用。上のauto-smelt-mapに従い、鉱石が精錬済みでドロップする。
+#     採掘工でのみ意味を持つ。
+#   - xp-orb-bonus: valueが1回の行動で得られる*バニラの*経験値(ジョブの経験値とは別)。
+# "level"は実効レベル(レベル + プレステージ回数 × leveling.max-level)なので、プレステージ
+# してもパークが失われることはない。パークを使いたくないジョブは perks を空にする(または
+# 書かない)だけでよい。
 jobs:
   miner:
     actions:
@@ -97,6 +143,11 @@ jobs:
         DEEPSLATE_EMERALD_ORE: { money: 45, xp: 22 }
         NETHER_QUARTZ_ORE: { money: 5, xp: 3 }
         ANCIENT_DEBRIS: { money: 120, xp: 60 }
+    perks:
+      - { level: 15, type: potion, value: 1, effect: FAST_DIGGING }
+      - { level: 30, type: double-drop, value: 15 }
+      - { level: 50, type: pay-bonus, value: 10 }
+      - { level: 100, type: auto-smelt }
 
   digger:
     actions:
@@ -129,6 +180,9 @@ jobs:
         CHERRY_LOG: { money: 3, xp: 2 }
         CRIMSON_STEM: { money: 3, xp: 2 }
         WARPED_STEM: { money: 3, xp: 2 }
+    perks:
+      - { level: 40, type: double-drop, value: 15 }
+      - { level: 80, type: pay-bonus, value: 10 }
 
   farmer:
     actions:
@@ -145,6 +199,9 @@ jobs:
       harvest-tall-plant:
         MELON: { money: 4, xp: 2 }
         PUMPKIN: { money: 4, xp: 2 }
+    perks:
+      - { level: 40, type: double-drop, value: 15 }
+      - { level: 80, type: pay-bonus, value: 10 }
 
   builder:
     actions:
@@ -169,6 +226,10 @@ jobs:
         legendary: { money: 300, xp: 150 }
         mythic: { money: 600, xp: 300 }
         default: { money: 15, xp: 8 }
+    perks:
+      - { level: 20, type: potion, value: 1, effect: WATER_BREATHING }
+      - { level: 60, type: pay-bonus, value: 10 }
+      - { level: 100, type: xp-orb-bonus, value: 3 }
 
   treasurehunter:
     actions:
@@ -377,6 +438,15 @@ messages:
       job-info-entry-money: "&7Money: &f{money}"
       job-info-entry-xp: "&7XP: &f{xp}"
       job-info-explorer-lore: "&7Every &f{distance} &7blocks explored:"
+      job-info-perk-unlocked-title: "&a✔ Level {level} Perk"
+      job-info-perk-locked-title: "&7✘ Level {level} Perk"
+      job-info-perk-levels-away: "&8{levels} more level(s) to unlock"
+      perk-desc-pay-bonus: "&7+{value}% pay for this job"
+      perk-desc-potion: "&7Grants &f{effect} &7while this job is joined"
+      perk-desc-double-drop: "&7{value}% chance to double this job's drops"
+      perk-desc-auto-smelt: "&7Ores from this job drop already smelted"
+      perk-desc-xp-orb-bonus: "&7+{value} bonus vanilla XP per action"
+      perk-desc-unknown: "&7(unrecognized perk)"
       prestige-confirm-title: "Prestige {job}?"
       prestige-confirm-lore: "&7Resets to level 1 (0 xp) in exchange for a permanent pay bonus. This cannot be undone."
       prestige-confirm-yes: "&aConfirm"
@@ -482,6 +552,15 @@ messages:
       job-info-entry-money: "&7お金: &f{money}"
       job-info-entry-xp: "&7経験値: &f{xp}"
       job-info-explorer-lore: "&7&f{distance}&7ブロック探索するごとに:"
+      job-info-perk-unlocked-title: "&a✔ レベル{level}パーク"
+      job-info-perk-locked-title: "&7✘ レベル{level}パーク"
+      job-info-perk-levels-away: "&8あと{levels}レベルで解放"
+      perk-desc-pay-bonus: "&7このジョブの報酬+{value}%"
+      perk-desc-potion: "&7このジョブに就職中は&f{effect}&7の効果を付与"
+      perk-desc-double-drop: "&7{value}%の確率でこのジョブのドロップが倍に"
+      perk-desc-auto-smelt: "&7このジョブで採れる鉱石が精錬済みでドロップ"
+      perk-desc-xp-orb-bonus: "&71回の行動につき経験値+{value}(バニラ)"
+      perk-desc-unknown: "&7(不明なパーク)"
       prestige-confirm-title: "{job}をプレステージしますか？"
       prestige-confirm-lore: "&7永続的な報酬ボーナスと引き換えに、レベル1(経験値0)に戻ります。元に戻すことはできません。"
       prestige-confirm-yes: "&a実行する"

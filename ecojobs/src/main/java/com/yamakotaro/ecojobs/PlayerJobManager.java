@@ -42,12 +42,13 @@ public class PlayerJobManager {
     private final JobStorage storage;
     private final JobOverrides jobOverrides;
     private final BoosterManager boosterManager;
+    private final PerkManager perkManager;
     private final Map<UUID, PlayerJobData> data = new HashMap<>();
     private final Set<UUID> dirtyUuids = new HashSet<>();
     private boolean noEconomyWarned;
 
     public PlayerJobManager(EcoJobsPlugin plugin, JobManager jobManager, EconomyHolder economyHolder, Messages messages,
-                             JobStorage storage, JobOverrides jobOverrides, BoosterManager boosterManager) {
+                             JobStorage storage, JobOverrides jobOverrides, BoosterManager boosterManager, PerkManager perkManager) {
         this.plugin = plugin;
         this.jobManager = jobManager;
         this.economyHolder = economyHolder;
@@ -55,6 +56,7 @@ public class PlayerJobManager {
         this.storage = storage;
         this.jobOverrides = jobOverrides;
         this.boosterManager = boosterManager;
+        this.perkManager = perkManager;
         data.putAll(storage.loadAll());
     }
 
@@ -243,12 +245,14 @@ public class PlayerJobManager {
     }
 
     private void applyReward(Player player, JobDefinition job, PlayerJobProgress progress, double baseMoney, double baseXp) {
+        int effectiveLevel = perkManager.effectiveLevel(progress);
         double levelMultiplier = 1
                 + progress.getLevel() * jobManager.payBonusPerLevel()
-                + progress.getPrestige() * jobManager.prestigeBonusPerPrestige();
+                + progress.getPrestige() * jobManager.prestigeBonusPerPrestige()
+                + perkManager.payBonusMultiplier(job, effectiveLevel);
         // Admin-set per-job multiplier (job-overrides.yml, tuned live from /jobs admin) and any
-        // active booster (see BoosterManager) stack multiplicatively on top of the level/prestige
-        // bonus above.
+        // active booster (see BoosterManager) stack multiplicatively on top of the level/prestige/
+        // perk bonus above.
         double money = baseMoney * levelMultiplier * jobOverrides.payMultiplier(job.getId()) * boosterManager.moneyMultiplierFor(job.getId());
         double xp = baseXp * boosterManager.xpMultiplierFor(job.getId());
 
@@ -271,6 +275,14 @@ public class PlayerJobManager {
             progress.setXp(progress.getXp() + xp);
             checkLevelUp(player, job, progress);
         }
+
+        // xp-orb-bonus perks grant real vanilla xp (the player's Minecraft xp bar), separate from
+        // the job's own leveling xp above.
+        int bonusVanillaXp = perkManager.xpOrbBonus(job, effectiveLevel);
+        if (bonusVanillaXp > 0) {
+            player.giveExp(bonusVanillaXp);
+        }
+
         markDirty(player.getUniqueId());
     }
 

@@ -5,6 +5,8 @@ import com.yamakotaro.ecojobs.JobDefinition;
 import com.yamakotaro.ecojobs.JobManager;
 import com.yamakotaro.ecojobs.JobOverrides;
 import com.yamakotaro.ecojobs.Messages;
+import com.yamakotaro.ecojobs.PerkDefinition;
+import com.yamakotaro.ecojobs.PerkManager;
 import com.yamakotaro.ecojobs.PlayerJobManager;
 import com.yamakotaro.ecojobs.PlayerJobProgress;
 import net.kyori.adventure.text.Component;
@@ -27,7 +29,9 @@ import java.util.TreeMap;
  * one thing the GUI never showed before: what a job actually pays. Mirrors /jobs info's data
  * (same {@link JobDefinition#getActionsByType()}, same alphabetical TreeMap order) but as an icon
  * grid, paginated the same way as the jobs menu itself so a job with an unusually long reward
- * table can never be silently truncated.
+ * table can never be silently truncated. Also lists every {@link PerkDefinition} the job has
+ * (unlocked or not) after its reward entries, so a job's detail screen doubles as the answer to
+ * "what does leveling this up actually get me" - see PerkManager.
  */
 public class JobInfoMenuHolder implements InventoryHolder {
 
@@ -37,7 +41,15 @@ public class JobInfoMenuHolder implements InventoryHolder {
     public static final int NEXT_PAGE_SLOT = 48;
     public static final int CLOSE_SLOT = 49;
 
-    private record Entry(String key, Material icon, ActionReward reward) {
+    /** Exactly one of reward/perk is set - see {@link #ofReward}/{@link #ofPerk}. */
+    private record Entry(String key, Material icon, ActionReward reward, PerkDefinition perk, boolean perkUnlocked, int perkLevelsAway) {
+        static Entry ofReward(String key, Material icon, ActionReward reward) {
+            return new Entry(key, icon, reward, null, false, 0);
+        }
+
+        static Entry ofPerk(PerkDefinition perk, Material icon, boolean unlocked, int levelsAway) {
+            return new Entry(perk.type() + ":" + perk.level(), icon, null, perk, unlocked, levelsAway);
+        }
     }
 
     private final Messages messages;
@@ -60,7 +72,8 @@ public class JobInfoMenuHolder implements InventoryHolder {
         return page;
     }
 
-    public void render(JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides, Player viewer, int requestedPage) {
+    public void render(JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides,
+                        PerkManager perkManager, Player viewer, int requestedPage) {
         inventory.clear();
         MenuUtil.fillBorder(inventory);
         JobDefinition job = jobManager.get(jobId);
@@ -70,7 +83,9 @@ public class JobInfoMenuHolder implements InventoryHolder {
         inventory.setItem(HEADER_SLOT, headerItem(job, jobManager, playerJobManager, jobOverrides, viewer));
 
         this.explorerDistancePerMilestone = jobManager.explorerDistancePerMilestone();
-        List<Entry> entries = buildEntries(job, jobManager);
+        PlayerJobProgress progress = playerJobManager.allProgress(viewer.getUniqueId()).get(jobId);
+        int effectiveLevel = progress != null ? perkManager.effectiveLevel(progress) : 0;
+        List<Entry> entries = buildEntries(job, jobManager, perkManager, effectiveLevel);
         List<Integer> slots = MenuUtil.interiorSlots();
         int pageCount = Math.max(1, (int) Math.ceil(entries.size() / (double) slots.size()));
         this.page = Math.max(0, Math.min(requestedPage, pageCount - 1));
@@ -89,20 +104,25 @@ public class JobInfoMenuHolder implements InventoryHolder {
         inventory.setItem(CLOSE_SLOT, MenuUtil.closeItem(messages));
     }
 
-    private List<Entry> buildEntries(JobDefinition job, JobManager jobManager) {
+    private List<Entry> buildEntries(JobDefinition job, JobManager jobManager, PerkManager perkManager, int effectiveLevel) {
         List<Entry> entries = new ArrayList<>();
         if ("explorer".equals(jobId)) {
             // Explorer has no action-reward table (see JobManager#load) - it pays purely on
             // distance milestones, so build one synthetic entry describing that instead.
-            entries.add(new Entry("milestone", Material.COMPASS,
+            entries.add(Entry.ofReward("milestone", Material.COMPASS,
                     new ActionReward(jobManager.explorerMoneyPerMilestone(), jobManager.explorerXpPerMilestone(), 0, 0)));
-            return entries;
-        }
-        Map<String, Map<String, ActionReward>> actions = new TreeMap<>(job.getActionsByType());
-        for (Map.Entry<String, Map<String, ActionReward>> actionType : actions.entrySet()) {
-            for (Map.Entry<String, ActionReward> rewardEntry : new TreeMap<>(actionType.getValue()).entrySet()) {
-                entries.add(new Entry(rewardEntry.getKey(), iconFor(rewardEntry.getKey()), rewardEntry.getValue()));
+        } else {
+            Map<String, Map<String, ActionReward>> actions = new TreeMap<>(job.getActionsByType());
+            for (Map.Entry<String, Map<String, ActionReward>> actionType : actions.entrySet()) {
+                for (Map.Entry<String, ActionReward> rewardEntry : new TreeMap<>(actionType.getValue()).entrySet()) {
+                    entries.add(Entry.ofReward(rewardEntry.getKey(), iconFor(rewardEntry.getKey()), rewardEntry.getValue()));
+                }
             }
+        }
+        for (PerkDefinition perk : perkManager.allPerks(job)) {
+            boolean unlocked = effectiveLevel >= perk.level();
+            int levelsAway = Math.max(0, perk.level() - effectiveLevel);
+            entries.add(Entry.ofPerk(perk, perkIcon(perk.type()), unlocked, levelsAway));
         }
         return entries;
     }
@@ -115,6 +135,17 @@ public class JobInfoMenuHolder implements InventoryHolder {
         }
         Material spawnEgg = Material.matchMaterial(key + "_SPAWN_EGG");
         return spawnEgg != null ? spawnEgg : Material.PAPER;
+    }
+
+    private Material perkIcon(String type) {
+        return switch (type.toLowerCase(Locale.ROOT)) {
+            case PerkDefinition.PAY_BONUS -> Material.GOLD_NUGGET;
+            case PerkDefinition.POTION -> Material.POTION;
+            case PerkDefinition.DOUBLE_DROP -> Material.HOPPER;
+            case PerkDefinition.AUTO_SMELT -> Material.FURNACE;
+            case PerkDefinition.XP_ORB_BONUS -> Material.EXPERIENCE_BOTTLE;
+            default -> Material.NETHER_STAR;
+        };
     }
 
     private ItemStack headerItem(JobDefinition job, JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides, Player viewer) {
@@ -159,6 +190,10 @@ public class JobInfoMenuHolder implements InventoryHolder {
     }
 
     private ItemStack entryItem(Entry entry) {
+        return entry.perk() != null ? perkItem(entry) : rewardItem(entry);
+    }
+
+    private ItemStack rewardItem(Entry entry) {
         ItemStack stack = new ItemStack(entry.icon());
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
@@ -176,6 +211,45 @@ public class JobInfoMenuHolder implements InventoryHolder {
             stack.setItemMeta(meta);
         }
         return stack;
+    }
+
+    private ItemStack perkItem(Entry entry) {
+        PerkDefinition perk = entry.perk();
+        ItemStack stack = new ItemStack(entry.icon());
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.displayName(messages.get(
+                    entry.perkUnlocked() ? "menu.job-info-perk-unlocked-title" : "menu.job-info-perk-locked-title",
+                    Map.of("level", String.valueOf(perk.level()))));
+            List<Component> lore = new ArrayList<>();
+            lore.add(messages.get(perkDescriptionKey(perk.type()), perkDescriptionArgs(perk)));
+            if (!entry.perkUnlocked()) {
+                lore.add(messages.get("menu.job-info-perk-levels-away", Map.of("levels", String.valueOf(entry.perkLevelsAway()))));
+            }
+            meta.lore(lore);
+            meta.setEnchantmentGlintOverride(entry.perkUnlocked());
+            stack.setItemMeta(meta);
+        }
+        return stack;
+    }
+
+    private String perkDescriptionKey(String type) {
+        return switch (type.toLowerCase(Locale.ROOT)) {
+            case PerkDefinition.PAY_BONUS -> "menu.perk-desc-pay-bonus";
+            case PerkDefinition.POTION -> "menu.perk-desc-potion";
+            case PerkDefinition.DOUBLE_DROP -> "menu.perk-desc-double-drop";
+            case PerkDefinition.AUTO_SMELT -> "menu.perk-desc-auto-smelt";
+            case PerkDefinition.XP_ORB_BONUS -> "menu.perk-desc-xp-orb-bonus";
+            default -> "menu.perk-desc-unknown";
+        };
+    }
+
+    private Map<String, String> perkDescriptionArgs(PerkDefinition perk) {
+        return switch (perk.type().toLowerCase(Locale.ROOT)) {
+            case PerkDefinition.POTION -> Map.of("effect", perk.effect() != null ? perk.effect() : "?");
+            case PerkDefinition.AUTO_SMELT -> Map.of();
+            default -> Map.of("value", String.format("%.0f", perk.value()));
+        };
     }
 
     /** "COAL_ORE" -> "Coal Ore". Reward keys are raw Material/EntityType names with no translation
