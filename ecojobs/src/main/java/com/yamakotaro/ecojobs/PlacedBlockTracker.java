@@ -24,9 +24,20 @@ public class PlacedBlockTracker {
     }
 
     private final Set<BlockKey> placed = new HashSet<>();
+    /**
+     * 建築士の報酬を既に払った座標。{@link #wasPlaced} と違い破壊では消さないのがポイントで、
+     * 「置く→壊す(採掘側はトラッカーで無効)→また置く」を繰り返すだけで建築士の報酬だけが
+     * 無限に入ってしまうのを防ぐ。{@link #clear} のタイマーでのみ解放される。
+     */
+    private final Set<BlockKey> buildPaid = new HashSet<>();
 
     public void markPlaced(Block block) {
         placed.add(BlockKey.of(block));
+    }
+
+    /** @return この座標で建築士の報酬を出すのが初めてなら true (2回目以降は false)。 */
+    public boolean markBuildPaid(Block block) {
+        return buildPaid.add(BlockKey.of(block));
     }
 
     /**
@@ -47,5 +58,6 @@ public class PlacedBlockTracker {
      */
     public void clear() {
         placed.clear();
+        buildPaid.clear();
     }
 }

@@ -128,4 +128,12 @@ public class JobManager {
     public double milestoneBonusMoney() {
         return plugin.config().getDouble("leveling.milestone-bonus-money", 100);
     }
+
+    /**
+     * 同じ相手を倒して戦士の報酬が再び出るまでの待ち時間(ミリ秒)。2人組で殺し合うだけの
+     * 無限稼ぎを防ぐためのもので、0にすると制限なし。
+     */
+    public long playerKillCooldownMillis() {
+        return Math.max(0, plugin.config().getLong("anti-farm.player-kill-cooldown-minutes", 30)) * 60_000L;
+    }
 }

@@ -58,6 +58,14 @@ explorer:
   money-per-milestone: 100
   xp-per-milestone: 60
 
+# 無限稼ぎ対策。
+# - player-kill-cooldown-minutes: 同じ相手を倒して戦士の報酬が再び出るまでの分数。2人組で
+#   延々と殺し合うだけで稼げてしまうのを防ぐ。0にすると制限なし。
+# (日本語) なお、探検家のテレポート/エリトラ移動、建築士の「置いて壊す」繰り返し、弓術師の
+# 動物撃ちは、いずれもコード側で対策済み(設定不要)。
+anti-farm:
+  player-kill-cooldown-minutes: 30
+
 # Every other job: a map of action-type -> (material/entity name, or "default") -> {money, xp}.
 # Material/entity names are the same names used in Java's Material/EntityType enums (as shown in
 # the Bukkit/Paper API docs), case-insensitive. Add or remove entries freely; anything not listed
@@ -153,8 +161,18 @@ jobs:
 
   treasurehunter:
     actions:
+      # 釣りで魚以外が釣れた時。本物のお宝だけを個別に高額で載せ、載っていない物
+      # (棒・革・ボウル・濡れた本などのジャンク)は default の少額になる。
+      # 以前は全部が default の40円だったため、タラ5円に対してゴミが40円という逆転が起き、
+      # 放置釣り機でゴミを釣り続けるのが最も儲かる状態になっていた。
       catch-treasure:
-        default: { money: 40, xp: 25 }
+        NAME_TAG: { money: 80, xp: 35 }
+        SADDLE: { money: 80, xp: 35 }
+        NAUTILUS_SHELL: { money: 70, xp: 30 }
+        ENCHANTED_BOOK: { money: 60, xp: 30 }
+        BOW: { money: 40, xp: 20 }
+        FISHING_ROD: { money: 40, xp: 20 }
+        default: { money: 2, xp: 1 }
 
   hunter:
     actions:

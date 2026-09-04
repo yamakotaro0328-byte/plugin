@@ -46,7 +46,7 @@ public class EcoJobsPlugin extends JavaPlugin {
         PlacedBlockTracker placedBlockTracker = new PlacedBlockTracker();
 
         getServer().getPluginManager().registerEvents(new BlockJobListener(playerJobManager, placedBlockTracker), this);
-        getServer().getPluginManager().registerEvents(new EntityJobListener(playerJobManager), this);
+        getServer().getPluginManager().registerEvents(new EntityJobListener(playerJobManager, jobManager), this);
         getServer().getPluginManager().registerEvents(new CraftingJobListener(playerJobManager), this);
         getServer().getPluginManager().registerEvents(new TradeJobListener(playerJobManager), this);
         getServer().getPluginManager().registerEvents(new ExplorerListener(playerJobManager), this);

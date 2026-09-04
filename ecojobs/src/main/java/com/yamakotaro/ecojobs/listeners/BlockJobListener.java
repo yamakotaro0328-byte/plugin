@@ -30,6 +30,12 @@ public class BlockJobListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         placedBlocks.markPlaced(event.getBlock());
+        // 同じ座標に置き直しただけでは支払わない。採掘側は再破壊がトラッカーで無効になるのに
+        // 建築士は設置のたびに必ず支払われていたため、「置く→壊す→また置く」を繰り返すだけで
+        // (オートクリッカーでも)無限に稼げてしまっていた。
+        if (!placedBlocks.markBuildPaid(event.getBlock())) {
+            return;
+        }
         jobs.reward(event.getPlayer(), "builder", "place-block", event.getBlock().getType().name(), 1);
     }
 

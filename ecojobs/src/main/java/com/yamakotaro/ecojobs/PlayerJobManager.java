@@ -234,8 +234,9 @@ public class PlayerJobManager {
             playerData.setExplorerFarthestDistance(worldName, currentDistance);
             markDirty(player.getUniqueId());
         }
-        int crossed = (int) (currentMilestones - previousMilestones);
-        for (int i = 0; i < crossed; i++) {
+        // 1回の移動でいくつマイルストーンをまたいでいても支払いは1つまで。ネザーポータルのように
+        // 座標が飛ぶ移動で一括payoutが起きるのを防ぐ(テレポート自体は ExplorerListener で除外済み)。
+        if (currentMilestones > previousMilestones) {
             applyReward(player, explorer, progress,
                     jobManager.explorerMoneyPerMilestone(), jobManager.explorerXpPerMilestone());
         }
