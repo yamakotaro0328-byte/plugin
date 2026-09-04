@@ -17,9 +17,9 @@ import java.util.Map;
  * Read-only top-45 leaderboard for one job, opened from three places (the player's own jobs menu,
  * the leaderboard picker, or /jobs admin) - {@link Origin} remembers which one, so the back button
  * (see AdminMenuListener, which owns every LeaderboardMenuHolder click regardless of where it was
- * opened from) returns to the right parent screen. Player heads are looked up by name via
- * Bukkit.getOfflinePlayer - the same pattern used elsewhere in this codebase - since
- * PlayerJobManager.TopEntry only carries names, not UUIDs.
+ * opened from) returns to the right parent screen. Player heads are looked up by UUID via
+ * Bukkit.getOfflinePlayer(UUID) - non-blocking, unlike the by-name overload, which can hit disk/
+ * network for a name Bukkit hasn't cached yet and this screen could call up to 45 times at once.
  */
 public class LeaderboardMenuHolder implements InventoryHolder {
 
@@ -63,7 +63,7 @@ public class LeaderboardMenuHolder implements InventoryHolder {
         ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta meta = stack.getItemMeta();
         if (meta instanceof SkullMeta skullMeta) {
-            skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(entry.name()));
+            skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(entry.uuid()));
             skullMeta.displayName(messages.get("admin.leaderboard-entry", Map.of(
                     "rank", String.valueOf(rank), "player", entry.name())));
             skullMeta.lore(List.of(messages.get("admin.leaderboard-lore", Map.of(

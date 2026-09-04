@@ -32,8 +32,15 @@ public class PlayerJobManager {
 
     public enum PrestigeResult { SUCCESS, UNKNOWN_JOB, NOT_JOINED, NOT_MAX_LEVEL }
 
-    public record TopEntry(String name, int level, double xp, int prestige) {
+    public record TopEntry(UUID uuid, String name, int level, double xp, int prestige) {
     }
+
+    /** A job's full ranking, sorted, as of when it was computed - see {@link #sortedTop}. */
+    private record CachedTop(long computedAtMillis, List<TopEntry> sorted) {
+    }
+
+    /** How long a job's full ranking is reused before being recomputed - see {@link #sortedTop}. */
+    private static final long TOP_CACHE_TTL_MILLIS = 5_000L;
 
     private final EcoJobsPlugin plugin;
     private final JobManager jobManager;
@@ -45,6 +52,7 @@ public class PlayerJobManager {
     private final PerkManager perkManager;
     private final Map<UUID, PlayerJobData> data = new HashMap<>();
     private final Set<UUID> dirtyUuids = new HashSet<>();
+    private final Map<String, CachedTop> topCache = new HashMap<>();
     private boolean noEconomyWarned;
 
     public PlayerJobManager(EcoJobsPlugin plugin, JobManager jobManager, EconomyHolder economyHolder, Messages messages,
@@ -363,19 +371,39 @@ public class PlayerJobManager {
     }
 
     public List<TopEntry> top(String jobId, int limit) {
+        List<TopEntry> sorted = sortedTop(jobId);
+        return sorted.size() > limit ? sorted.subList(0, limit) : sorted;
+    }
+
+    /**
+     * A job's full ranking, sorted, cached for {@link #TOP_CACHE_TTL_MILLIS}. top() is called far
+     * more often than once per rendered leaderboard: EcoJobsPlaceholders asks it once per field
+     * per rank (so a 10-row/3-field scoreboard re-sorts every player's record ~30 times per
+     * refresh) and the GUI leaderboard asks for up to 45 entries at once. A short TTL means all of
+     * those calls within the same few seconds share one sort instead of repeating it.
+     */
+    private List<TopEntry> sortedTop(String jobId) {
+        CachedTop cached = topCache.get(jobId);
+        long now = System.currentTimeMillis();
+        if (cached != null && now - cached.computedAtMillis() < TOP_CACHE_TTL_MILLIS) {
+            return cached.sorted();
+        }
         List<TopEntry> entries = new ArrayList<>();
-        for (PlayerJobData playerData : data.values()) {
+        for (Map.Entry<UUID, PlayerJobData> playerEntry : data.entrySet()) {
             // Ranks by permanent progress, not current join state, so someone's best-ever level
             // still shows on the leaderboard even after they've since left the job.
-            PlayerJobProgress progress = playerData.getProgress().get(jobId);
+            PlayerJobProgress progress = playerEntry.getValue().getProgress().get(jobId);
             if (progress != null) {
-                entries.add(new TopEntry(playerData.getName(), progress.getLevel(), progress.getXp(), progress.getPrestige()));
+                entries.add(new TopEntry(playerEntry.getKey(), playerEntry.getValue().getName(),
+                        progress.getLevel(), progress.getXp(), progress.getPrestige()));
             }
         }
         entries.sort(Comparator.comparingInt(TopEntry::prestige).reversed()
                 .thenComparing(Comparator.comparingInt(TopEntry::level).reversed())
                 .thenComparing(Comparator.comparingDouble(TopEntry::xp).reversed()));
-        return entries.size() > limit ? entries.subList(0, limit) : entries;
+        List<TopEntry> sorted = List.copyOf(entries);
+        topCache.put(jobId, new CachedTop(now, sorted));
+        return sorted;
     }
 
     private PlayerJobData dataFor(Player player) {
