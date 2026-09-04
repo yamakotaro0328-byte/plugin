@@ -19,6 +19,7 @@ import java.util.Map;
  */
 public class LeaderboardPickerMenuHolder implements InventoryHolder {
 
+    public static final int BACK_SLOT = 45;
     public static final int CLOSE_SLOT = 49;
 
     private final Messages messages;
@@ -39,7 +40,7 @@ public class LeaderboardPickerMenuHolder implements InventoryHolder {
         slotToJobId.clear();
         int slot = 0;
         for (String jobId : jobManager.all().keySet()) {
-            if (slot >= CLOSE_SLOT) {
+            if (slot >= BACK_SLOT) {
                 break;
             }
             Material material = JobsMenuHolder.ICONS.getOrDefault(jobId, Material.PAPER);
@@ -53,6 +54,7 @@ public class LeaderboardPickerMenuHolder implements InventoryHolder {
             slotToJobId.put(slot, jobId);
             slot++;
         }
+        inventory.setItem(BACK_SLOT, MenuUtil.backItem(messages));
         inventory.setItem(CLOSE_SLOT, MenuUtil.closeItem(messages));
     }
 

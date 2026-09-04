@@ -26,6 +26,7 @@ import java.util.Map;
  */
 public class AdminMenuHolder implements InventoryHolder {
 
+    public static final int BACK_SLOT = 45;
     public static final int BOOSTER_START_SLOT = 48;
     public static final int BOOSTER_STOP_SLOT = 50;
     public static final int CLOSE_SLOT = 53;
@@ -51,13 +52,14 @@ public class AdminMenuHolder implements InventoryHolder {
         slotToJobId.clear();
         int slot = 0;
         for (String jobId : jobManager.all().keySet()) {
-            if (slot >= BOOSTER_START_SLOT) {
+            if (slot >= BACK_SLOT) {
                 break;
             }
             inventory.setItem(slot, buildJobItem(jobId, jobOverrides, boosterManager));
             slotToJobId.put(slot, jobId);
             slot++;
         }
+        inventory.setItem(BACK_SLOT, MenuUtil.backItem(messages));
         inventory.setItem(BOOSTER_START_SLOT, boosterStartItem());
         inventory.setItem(BOOSTER_STOP_SLOT, boosterStopItem(boosterManager));
         inventory.setItem(CLOSE_SLOT, MenuUtil.closeItem(messages));

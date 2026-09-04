@@ -34,12 +34,8 @@ public class AdminMenuListener implements Listener {
 
     @EventHandler
     public void onClick(InventoryClickEvent event) {
-        if (event.getInventory().getHolder() instanceof LeaderboardMenuHolder) {
-            event.setCancelled(true);
-            if (event.getClickedInventory() == event.getInventory() && event.getSlot() == LeaderboardMenuHolder.CLOSE_SLOT
-                    && event.getWhoClicked() instanceof Player player) {
-                player.closeInventory();
-            }
+        if (event.getInventory().getHolder() instanceof LeaderboardMenuHolder holder) {
+            handleLeaderboardClick(event, holder);
             return;
         }
 
@@ -56,6 +52,13 @@ public class AdminMenuListener implements Listener {
         int slot = event.getSlot();
         if (slot == AdminMenuHolder.CLOSE_SLOT) {
             player.closeInventory();
+            return;
+        }
+        if (slot == AdminMenuHolder.BACK_SLOT) {
+            HubMenuHolder hub = new HubMenuHolder(messages);
+            hub.render(true);
+            player.openInventory(hub.getInventory());
+            playSound(player, Sound.UI_BUTTON_CLICK, 1.2f);
             return;
         }
         if (slot == AdminMenuHolder.BOOSTER_START_SLOT) {
@@ -87,8 +90,7 @@ public class AdminMenuListener implements Listener {
             return;
         }
         if (event.isShiftClick() && event.isLeftClick()) {
-            player.closeInventory();
-            LeaderboardMenuHolder leaderboard = new LeaderboardMenuHolder(messages, jobId);
+            LeaderboardMenuHolder leaderboard = new LeaderboardMenuHolder(messages, jobId, LeaderboardMenuHolder.Origin.ADMIN);
             leaderboard.render(playerJobManager);
             player.openInventory(leaderboard.getInventory());
             playSound(player, Sound.UI_BUTTON_CLICK, 1.4f);
@@ -103,6 +105,39 @@ public class AdminMenuListener implements Listener {
         }
         playSound(player, Sound.UI_BUTTON_CLICK, 1.4f);
         holder.render(jobManager, jobOverrides, boosterManager);
+    }
+
+    private void handleLeaderboardClick(InventoryClickEvent event, LeaderboardMenuHolder holder) {
+        event.setCancelled(true);
+        if (!(event.getWhoClicked() instanceof Player player) || event.getClickedInventory() != event.getInventory()) {
+            return;
+        }
+        int slot = event.getSlot();
+        if (slot == LeaderboardMenuHolder.CLOSE_SLOT) {
+            player.closeInventory();
+            return;
+        }
+        if (slot != LeaderboardMenuHolder.BACK_SLOT) {
+            return;
+        }
+        switch (holder.getOrigin()) {
+            case JOBS_MENU -> {
+                JobsMenuHolder jobsMenu = new JobsMenuHolder(messages);
+                jobsMenu.render(jobManager, playerJobManager, jobOverrides, player);
+                player.openInventory(jobsMenu.getInventory());
+            }
+            case PICKER -> {
+                LeaderboardPickerMenuHolder picker = new LeaderboardPickerMenuHolder(messages);
+                picker.render(jobManager);
+                player.openInventory(picker.getInventory());
+            }
+            case ADMIN -> {
+                AdminMenuHolder admin = new AdminMenuHolder(messages);
+                admin.render(jobManager, jobOverrides, boosterManager);
+                player.openInventory(admin.getInventory());
+            }
+        }
+        playSound(player, Sound.UI_BUTTON_CLICK, 1.2f);
     }
 
     private void playSound(Player player, Sound sound, float pitch) {

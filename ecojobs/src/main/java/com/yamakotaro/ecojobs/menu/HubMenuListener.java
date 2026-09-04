@@ -52,7 +52,6 @@ public class HubMenuListener implements Listener {
             return;
         }
         if (slot == HubMenuHolder.MY_JOBS_SLOT) {
-            player.closeInventory();
             JobsMenuHolder holder = new JobsMenuHolder(messages);
             holder.render(jobManager, playerJobManager, jobOverrides, player);
             player.openInventory(holder.getInventory());
@@ -62,13 +61,11 @@ public class HubMenuListener implements Listener {
                 player.sendMessage(messages.get("general.no-permission", Map.of()));
                 return;
             }
-            player.closeInventory();
             LeaderboardPickerMenuHolder holder = new LeaderboardPickerMenuHolder(messages);
             holder.render(jobManager);
             player.openInventory(holder.getInventory());
             playClick(player);
         } else if (slot == HubMenuHolder.SETTINGS_SLOT) {
-            player.closeInventory();
             SettingsMenuHolder holder = new SettingsMenuHolder(messages);
             holder.render(playerJobManager, player);
             player.openInventory(holder.getInventory());
@@ -78,7 +75,6 @@ public class HubMenuListener implements Listener {
                 player.sendMessage(messages.get("general.no-permission", Map.of()));
                 return;
             }
-            player.closeInventory();
             AdminMenuHolder holder = new AdminMenuHolder(messages);
             holder.render(jobManager, jobOverrides, boosterManager);
             player.openInventory(holder.getInventory());
@@ -94,6 +90,10 @@ public class HubMenuListener implements Listener {
         int slot = event.getSlot();
         if (slot == SettingsMenuHolder.CLOSE_SLOT) {
             player.closeInventory();
+            return;
+        }
+        if (slot == SettingsMenuHolder.BACK_SLOT) {
+            openHub(player);
             return;
         }
         if (slot == SettingsMenuHolder.SOUND_SLOT) {
@@ -116,14 +116,24 @@ public class HubMenuListener implements Listener {
             player.closeInventory();
             return;
         }
+        if (event.getSlot() == LeaderboardPickerMenuHolder.BACK_SLOT) {
+            openHub(player);
+            return;
+        }
         String jobId = holder.jobIdAt(event.getSlot());
         if (jobId == null) {
             return;
         }
-        player.closeInventory();
-        LeaderboardMenuHolder leaderboard = new LeaderboardMenuHolder(messages, jobId);
+        LeaderboardMenuHolder leaderboard = new LeaderboardMenuHolder(messages, jobId, LeaderboardMenuHolder.Origin.PICKER);
         leaderboard.render(playerJobManager);
         player.openInventory(leaderboard.getInventory());
+        playClick(player);
+    }
+
+    private void openHub(Player player) {
+        HubMenuHolder holder = new HubMenuHolder(messages);
+        holder.render(player.hasPermission("ecojobs.admin"));
+        player.openInventory(holder.getInventory());
         playClick(player);
     }
 

@@ -22,4 +22,15 @@ final class MenuUtil {
         }
         return stack;
     }
+
+    /** Every sub-menu but the hub itself needs one of these - see each holder's BACK_SLOT. */
+    static ItemStack backItem(Messages messages) {
+        ItemStack stack = new ItemStack(Material.ARROW);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.displayName(messages.get("menu.back", Map.of()));
+            stack.setItemMeta(meta);
+        }
+        return stack;
+    }
 }

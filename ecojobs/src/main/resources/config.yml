@@ -357,6 +357,7 @@ messages:
     menu:
       title: "EcoJobs"
       close: "&cClose"
+      back: "&7« Back"
       summary-title: "&d{player}"
       summary-lore: "&7Total level: &f{total_level} &7| Jobs: &f{joined}&7/&f{max}"
       job-title: "{job}"
@@ -448,6 +449,7 @@ messages:
     menu:
       title: "EcoJobs"
       close: "&c閉じる"
+      back: "&7« 戻る"
       summary-title: "&d{player}"
       summary-lore: "&7合計レベル: &f{total_level} &7| ジョブ: &f{joined}&7/&f{max}"
       job-title: "{job}"

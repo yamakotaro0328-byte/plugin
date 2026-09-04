@@ -43,6 +43,13 @@ public class JobsMenuListener implements Listener {
             player.closeInventory();
             return;
         }
+        if (slot == JobsMenuHolder.BACK_SLOT) {
+            HubMenuHolder hub = new HubMenuHolder(messages);
+            hub.render(player.hasPermission("ecojobs.admin"));
+            player.openInventory(hub.getInventory());
+            playSuccess(player);
+            return;
+        }
         String jobId = holder.jobIdAt(slot);
         if (jobId == null) {
             return;
@@ -54,8 +61,7 @@ public class JobsMenuListener implements Listener {
                 playDenied(player);
                 return;
             }
-            player.closeInventory();
-            LeaderboardMenuHolder leaderboard = new LeaderboardMenuHolder(messages, jobId);
+            LeaderboardMenuHolder leaderboard = new LeaderboardMenuHolder(messages, jobId, LeaderboardMenuHolder.Origin.JOBS_MENU);
             leaderboard.render(playerJobManager);
             player.openInventory(leaderboard.getInventory());
             playSuccess(player);

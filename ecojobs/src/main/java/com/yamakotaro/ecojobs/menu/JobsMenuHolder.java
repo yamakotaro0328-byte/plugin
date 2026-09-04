@@ -28,6 +28,7 @@ import java.util.Map;
 public class JobsMenuHolder implements InventoryHolder {
 
     public static final int SUMMARY_SLOT = 4;
+    public static final int BACK_SLOT = 45;
     public static final int CLOSE_SLOT = 49;
     private static final int PROGRESS_BAR_LENGTH = 10;
 
@@ -101,6 +102,7 @@ public class JobsMenuHolder implements InventoryHolder {
             inventory.setItem(slot, buildJobItem(jobId, allProgress.get(jobId), active, enabled, canViewLeaderboard, jobManager, playerJobManager));
             slotToJobId.put(slot, jobId);
         }
+        inventory.setItem(BACK_SLOT, MenuUtil.backItem(messages));
         inventory.setItem(CLOSE_SLOT, MenuUtil.closeItem(messages));
     }
 

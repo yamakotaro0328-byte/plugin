@@ -19,6 +19,7 @@ public class SettingsMenuHolder implements InventoryHolder {
 
     public static final int SOUND_SLOT = 11;
     public static final int ACTIONBAR_SLOT = 15;
+    public static final int BACK_SLOT = 18;
     public static final int CLOSE_SLOT = 22;
 
     private final Messages messages;
@@ -33,6 +34,7 @@ public class SettingsMenuHolder implements InventoryHolder {
         inventory.clear();
         inventory.setItem(SOUND_SLOT, toggleItem("menu.settings-sound-title", playerJobManager.isSoundEnabled(viewer)));
         inventory.setItem(ACTIONBAR_SLOT, toggleItem("menu.settings-actionbar-title", playerJobManager.isActionBarEnabled(viewer)));
+        inventory.setItem(BACK_SLOT, MenuUtil.backItem(messages));
         inventory.setItem(CLOSE_SLOT, MenuUtil.closeItem(messages));
     }
 
