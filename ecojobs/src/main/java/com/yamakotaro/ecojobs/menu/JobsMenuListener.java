@@ -217,8 +217,15 @@ public class JobsMenuListener implements Listener {
         player.openInventory(info.getInventory());
     }
 
-    /** Shared join/leave toggle used by both the jobs menu and the job-info header icon. */
+    /** Shared join/leave toggle used by both the jobs menu and the job-info header icon.
+     * /jobs join|leave gate this behind ecojobs.use (see JobsCommand) - the GUI path skipped that
+     * check entirely, so a player denied the permission could still join/leave jobs by clicking. */
     private void handleJoinLeave(Player player, String jobId) {
+        if (!player.hasPermission("ecojobs.use")) {
+            player.sendMessage(messages.get("general.no-permission", Map.of()));
+            playDenied(player);
+            return;
+        }
         if (playerJobManager.isJoined(player.getUniqueId(), jobId)) {
             playerJobManager.leave(player.getUniqueId(), jobId);
             player.sendMessage(messages.get("jobs.left", Map.of("job", messages.jobName(jobId))));

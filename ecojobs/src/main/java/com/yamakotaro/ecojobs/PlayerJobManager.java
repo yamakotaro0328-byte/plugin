@@ -95,6 +95,27 @@ public class PlayerJobManager {
         return playerData != null ? playerData.getProgress() : Map.of();
     }
 
+    /**
+     * Case-insensitive lookup of a player's UUID by their last-known name, over already-loaded
+     * data only - unlike {@code Bukkit.getOfflinePlayer(String)}, this never blocks on a lookup,
+     * and only finds players EcoJobs has actually seen before (used by /jobs stats to resolve
+     * offline players without requiring them to be online).
+     */
+    public UUID findByName(String name) {
+        for (Map.Entry<UUID, PlayerJobData> entry : data.entrySet()) {
+            if (entry.getValue().getName().equalsIgnoreCase(name)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    /** The last-known name for a player EcoJobs has data for, or null if it has none. */
+    public String nameOf(UUID uuid) {
+        PlayerJobData playerData = data.get(uuid);
+        return playerData != null ? playerData.getName() : null;
+    }
+
     public boolean isSoundEnabled(Player player) {
         return soundEnabledFor(player.getUniqueId());
     }

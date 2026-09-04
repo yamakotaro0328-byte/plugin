@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 
 public class JobsCommand implements CommandExecutor, TabCompleter {
 
@@ -146,28 +147,43 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(messages.get("general.no-permission", Map.of()));
             return;
         }
-        Player target;
+        UUID targetUuid;
+        String targetName;
+        boolean self;
         if (args.length >= 2) {
-            target = plugin.getServer().getPlayerExact(args[1]);
-            if (target == null) {
-                sender.sendMessage(messages.get("general.player-not-found", Map.of("player", args[1])));
-                return;
+            Player online = plugin.getServer().getPlayerExact(args[1]);
+            if (online != null) {
+                targetUuid = online.getUniqueId();
+                targetName = online.getName();
+            } else {
+                // Not online right now - fall back to already-loaded data instead of a blocking
+                // Bukkit.getOfflinePlayer(String) lookup, so an offline player's stats can still
+                // be viewed (the leaderboards already show offline players; stats couldn't).
+                targetUuid = playerJobManager.findByName(args[1]);
+                if (targetUuid == null) {
+                    sender.sendMessage(messages.get("general.player-not-found", Map.of("player", args[1])));
+                    return;
+                }
+                targetName = playerJobManager.nameOf(targetUuid);
             }
+            self = sender instanceof Player p && p.getUniqueId().equals(targetUuid);
         } else if (sender instanceof Player player) {
-            target = player;
+            targetUuid = player.getUniqueId();
+            targetName = player.getName();
+            self = true;
         } else {
             sender.sendMessage(messages.get("general.players-only", Map.of()));
             return;
         }
-        Map<String, PlayerJobProgress> allProgress = playerJobManager.allProgress(target.getUniqueId());
+        Map<String, PlayerJobProgress> allProgress = playerJobManager.allProgress(targetUuid);
         if (allProgress.isEmpty()) {
-            sender.sendMessage(messages.get("jobs.stats-none", Map.of()));
+            sender.sendMessage(messages.get(self ? "jobs.stats-none" : "jobs.stats-none-other", Map.of("player", targetName)));
             return;
         }
-        sender.sendMessage(messages.get("jobs.stats-header", Map.of()));
+        sender.sendMessage(messages.get(self ? "jobs.stats-header" : "jobs.stats-header-other", Map.of("player", targetName)));
         for (Map.Entry<String, PlayerJobProgress> entry : allProgress.entrySet()) {
             PlayerJobProgress progress = entry.getValue();
-            boolean active = playerJobManager.isJoined(target.getUniqueId(), entry.getKey());
+            boolean active = playerJobManager.isJoined(targetUuid, entry.getKey());
             sender.sendMessage(messages.get(active ? "jobs.stats-entry" : "jobs.stats-entry-inactive", Map.of(
                     "job", messages.jobName(entry.getKey()),
                     "level", String.valueOf(progress.getLevel()),
@@ -224,6 +240,16 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             return;
         }
         sender.sendMessage(messages.get("jobs.info-header", Map.of("job", messages.jobName(jobId))));
+        if ("explorer".equals(jobId)) {
+            // Explorer has no action-reward table (see JobManager#load) - it pays purely on
+            // distance milestones, so this used to fall through to the generic "no rewards
+            // configured" message, which made a perfectly working job look broken.
+            sender.sendMessage(messages.get("jobs.info-explorer", Map.of(
+                    "distance", String.valueOf((int) jobManager.explorerDistancePerMilestone()),
+                    "money", String.format("%.2f", jobManager.explorerMoneyPerMilestone()),
+                    "xp", String.format("%.2f", jobManager.explorerXpPerMilestone()))));
+            return;
+        }
         // TreeMap for a stable, alphabetical order regardless of the underlying HashMap's order.
         Map<String, Map<String, ActionReward>> actions = new TreeMap<>(job.getActionsByType());
         boolean any = false;
