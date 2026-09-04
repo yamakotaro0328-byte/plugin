@@ -46,8 +46,8 @@ public class MenuItemManager {
     }
 
     private Material material() {
-        Material configured = Material.matchMaterial(plugin.getConfig().getString("menu-item.material", "COMPASS"));
-        return configured != null ? configured : Material.COMPASS;
+        Material configured = Material.matchMaterial(plugin.getConfig().getString("menu-item.material", "CLOCK"));
+        return configured != null ? configured : Material.CLOCK;
     }
 
     public ItemStack createItem() {

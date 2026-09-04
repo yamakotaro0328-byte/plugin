@@ -79,7 +79,7 @@ eco-item:
 # (日本語) 右クリックで /menu と同じGUIを開けるアイテム。参加時に自動配布される
 # (既に持っている場合は渡さない)。
 menu-item:
-  material: COMPASS
+  material: CLOCK
 
 # Broadcasts a thank-you message server-wide whenever /donate succeeds. Recipients can
 # personalize their own message with /donatemessage (placeholders: {player}, {amount}).
