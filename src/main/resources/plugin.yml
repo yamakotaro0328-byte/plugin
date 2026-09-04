@@ -97,8 +97,9 @@ commands:
     description: Show the balance leaderboard
     usage: /baltop
   menu:
-    description: Open the GUI menu (home/spawn/tpa/tphere/pay/baltop by clicking)
-    usage: /menu
+    description: Open the GUI menu (home/spawn/tpa/tphere/pay/baltop by clicking), or
+      toggle your own auto-given menu item (compass) on/off
+    usage: /menu [item <on|off>]
     aliases: [ecomenu]
   ecotp:
     description: Reload config.yml and messages.yml (admin)

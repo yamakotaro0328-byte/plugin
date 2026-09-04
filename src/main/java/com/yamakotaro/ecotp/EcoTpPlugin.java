@@ -162,7 +162,9 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("eco").setExecutor(ecoAdminCommand);
         getCommand("eco").setTabCompleter(ecoAdminCommand);
         getCommand("baltop").setExecutor(new BaltopCommand(this));
-        getCommand("menu").setExecutor(new MenuCommand(this));
+        MenuCommand menuCommand = new MenuCommand(this);
+        getCommand("menu").setExecutor(menuCommand);
+        getCommand("menu").setTabCompleter(menuCommand);
         EcoTpCommand ecoTpCommand = new EcoTpCommand(this);
         getCommand("ecotp").setExecutor(ecoTpCommand);
         getCommand("ecotp").setTabCompleter(ecoTpCommand);

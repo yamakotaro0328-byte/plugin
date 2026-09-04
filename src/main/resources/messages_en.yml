@@ -161,6 +161,8 @@ menu-item:
   name: "&6EcoTP Menu"
   lore:
     - "&7Right-click to open the menu"
+  toggle-on: "&aYou will now automatically receive the menu item on join."
+  toggle-off: "&7You will no longer automatically receive the menu item (it has been removed)."
 
 menu:
   title: "EcoTP Menu"
