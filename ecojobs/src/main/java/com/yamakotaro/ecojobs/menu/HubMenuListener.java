@@ -132,7 +132,7 @@ public class HubMenuListener implements Listener {
 
     private void openHub(Player player) {
         HubMenuHolder holder = new HubMenuHolder(messages);
-        holder.render(player.hasPermission("ecojobs.admin"));
+        holder.render(player.hasPermission("ecojobs.admin"), boosterManager);
         player.openInventory(holder.getInventory());
         playClick(player);
     }

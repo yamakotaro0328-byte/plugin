@@ -1,5 +1,6 @@
 package com.yamakotaro.ecojobs.menu;
 
+import com.yamakotaro.ecojobs.BoosterManager;
 import com.yamakotaro.ecojobs.JobManager;
 import com.yamakotaro.ecojobs.JobOverrides;
 import com.yamakotaro.ecojobs.Messages;
@@ -24,12 +25,15 @@ public class JobsMenuListener implements Listener {
     private final JobManager jobManager;
     private final PlayerJobManager playerJobManager;
     private final JobOverrides jobOverrides;
+    private final BoosterManager boosterManager;
     private final Messages messages;
 
-    public JobsMenuListener(JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides, Messages messages) {
+    public JobsMenuListener(JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides,
+                             BoosterManager boosterManager, Messages messages) {
         this.jobManager = jobManager;
         this.playerJobManager = playerJobManager;
         this.jobOverrides = jobOverrides;
+        this.boosterManager = boosterManager;
         this.messages = messages;
     }
 
@@ -59,7 +63,7 @@ public class JobsMenuListener implements Listener {
         }
         if (slot == JobsMenuHolder.BACK_SLOT) {
             HubMenuHolder hub = new HubMenuHolder(messages);
-            hub.render(player.hasPermission("ecojobs.admin"));
+            hub.render(player.hasPermission("ecojobs.admin"), boosterManager);
             player.openInventory(hub.getInventory());
             playSuccess(player);
             return;

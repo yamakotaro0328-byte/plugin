@@ -56,7 +56,7 @@ public class EcoJobsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CraftingJobListener(playerJobManager), this);
         getServer().getPluginManager().registerEvents(new TradeJobListener(playerJobManager), this);
         getServer().getPluginManager().registerEvents(new ExplorerListener(playerJobManager), this);
-        getServer().getPluginManager().registerEvents(new JobsMenuListener(jobManager, playerJobManager, jobOverrides, messages), this);
+        getServer().getPluginManager().registerEvents(new JobsMenuListener(jobManager, playerJobManager, jobOverrides, boosterManager, messages), this);
         getServer().getPluginManager().registerEvents(
                 new AdminMenuListener(jobManager, playerJobManager, jobOverrides, boosterManager, messages), this);
         getServer().getPluginManager().registerEvents(

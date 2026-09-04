@@ -285,7 +285,7 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             return;
         }
         HubMenuHolder holder = new HubMenuHolder(messages);
-        holder.render(player.hasPermission("ecojobs.admin"));
+        holder.render(player.hasPermission("ecojobs.admin"), boosterManager);
         player.openInventory(holder.getInventory());
     }
 

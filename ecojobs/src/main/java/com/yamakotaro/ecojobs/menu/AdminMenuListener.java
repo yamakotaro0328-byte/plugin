@@ -56,7 +56,7 @@ public class AdminMenuListener implements Listener {
         }
         if (slot == AdminMenuHolder.BACK_SLOT) {
             HubMenuHolder hub = new HubMenuHolder(messages);
-            hub.render(true);
+            hub.render(true, boosterManager);
             player.openInventory(hub.getInventory());
             playSound(player, Sound.UI_BUTTON_CLICK, 1.2f);
             return;
