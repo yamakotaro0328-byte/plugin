@@ -55,19 +55,9 @@ public class JobsMenuHolder implements InventoryHolder {
             Map.entry("merchant", Material.EMERALD),
             Map.entry("explorer", Material.COMPASS));
 
-    private static final List<Integer> JOB_SLOTS = buildJobSlots();
-
-    private static List<Integer> buildJobSlots() {
-        // Rows 1-4, columns 1-7 (columns 0 and 8 are the border) - 28 slots, comfortably more
-        // than the 20 jobs that exist today, with room to add more later.
-        List<Integer> slots = new ArrayList<>();
-        for (int row = 1; row <= 4; row++) {
-            for (int col = 1; col <= 7; col++) {
-                slots.add(row * 9 + col);
-            }
-        }
-        return slots;
-    }
+    // 28 slots (see MenuUtil#interiorSlots), comfortably more than the 20 jobs that exist today,
+    // with room to add more later.
+    private static final List<Integer> JOB_SLOTS = MenuUtil.interiorSlots();
 
     private final Messages messages;
     private final Inventory inventory;
@@ -85,7 +75,7 @@ public class JobsMenuHolder implements InventoryHolder {
     public void render(JobManager jobManager, PlayerJobManager playerJobManager, JobOverrides jobOverrides, Player viewer) {
         inventory.clear();
         slotToJobId.clear();
-        fillBorder();
+        MenuUtil.fillBorder(inventory);
 
         Map<String, PlayerJobProgress> allProgress = playerJobManager.allProgress(viewer.getUniqueId());
         boolean canViewLeaderboard = viewer.hasPermission("ecojobs.top");
@@ -104,17 +94,6 @@ public class JobsMenuHolder implements InventoryHolder {
         }
         inventory.setItem(BACK_SLOT, MenuUtil.backItem(messages));
         inventory.setItem(CLOSE_SLOT, MenuUtil.closeItem(messages));
-    }
-
-    private void fillBorder() {
-        ItemStack filler = fillerItem();
-        for (int slot = 0; slot < inventory.getSize(); slot++) {
-            int row = slot / 9;
-            int col = slot % 9;
-            if (row == 0 || row == 5 || col == 0 || col == 8) {
-                inventory.setItem(slot, filler);
-            }
-        }
     }
 
     private ItemStack summaryItem(Player viewer, JobManager jobManager, PlayerJobManager playerJobManager, Map<String, PlayerJobProgress> allProgress) {
@@ -180,8 +159,12 @@ public class JobsMenuHolder implements InventoryHolder {
             } else {
                 lore.add(messages.get("menu.lore-click-join", Map.of()));
             }
+            lore.add(messages.get("menu.lore-click-info", Map.of()));
             if (canViewLeaderboard) {
                 lore.add(messages.get("menu.lore-click-leaderboard", Map.of()));
+            }
+            if (active && maxed) {
+                lore.add(messages.get("menu.lore-click-prestige", Map.of()));
             }
             meta.lore(lore);
             // Joined jobs glint so it's obvious at a glance which ones are currently active
@@ -204,16 +187,6 @@ public class JobsMenuHolder implements InventoryHolder {
     private static int progressPercent(double xp, double nextXp) {
         double ratio = nextXp > 0 ? Math.min(1.0, xp / nextXp) : 0;
         return (int) Math.round(ratio * 100);
-    }
-
-    private static ItemStack fillerItem() {
-        ItemStack stack = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta meta = stack.getItemMeta();
-        if (meta != null) {
-            meta.displayName(Component.empty());
-            stack.setItemMeta(meta);
-        }
-        return stack;
     }
 
     @Override
