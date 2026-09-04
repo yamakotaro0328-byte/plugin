@@ -152,7 +152,7 @@ public class JobsMenuListener implements Listener {
             return;
         }
         handleJoinLeave(player, jobId);
-        holder.render(jobManager, playerJobManager, jobOverrides, player, holder.getPage());
+        holder.render(jobManager, playerJobManager, jobOverrides, perkManager, player, holder.getPage());
     }
 
     private void handlePrestigeConfirmClick(InventoryClickEvent event, PrestigeConfirmMenuHolder holder) {
