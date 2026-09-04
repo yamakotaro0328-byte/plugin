@@ -1,0 +1,184 @@
+# EcoPotions configuration
+# Language for messages below: "en" or "ja".
+# (日本語) 以下のメッセージの言語。"en" または "ja"。
+language: ja
+
+# Note on encoding: this file (and any file this plugin owns) is always read/written as UTF-8
+# by this plugin's own loader, never via Bukkit's getConfig()/saveConfig() - those fall back to
+# the JVM's platform default charset for files already on disk, which can silently corrupt
+# non-ASCII text (see EcoTP's YamlIo class for the same fix, applied here from the start).
+# (日本語) 文字コードについて: このファイルは必ずこのプラグイン自身の読み込み処理でUTF-8として
+# 扱う。Bukkitの getConfig()/saveConfig() はディスク上の既存ファイルをJVMの「プラットフォームの
+# デフォルト文字コード」で読み書きしてしまい、非ASCII文字を静かに文字化けさせることがあるため
+# 使わない(EcoTPのYamlIoで直したのと同じ対策を最初から)。
+
+# Each entry under "potions" is one purchasable bottled potion. Unlike vanilla brewing (one
+# potion = one effect, chosen from a fixed recipe tree), a single bottle here can carry any
+# combination of effects at any amplifier/duration - the whole point of this shop.
+# - price: cost in the server's Vault economy (e.g. EcoTP). Buying gives one drinkable potion
+#   item; nothing is applied until the player actually drinks it (normal potion-drinking).
+# - color: potion liquid color as a hex RRGGBB string (cosmetic only).
+# - duration-seconds: how long every effect in this potion lasts once drunk.
+# - effects: list of {type, amplifier}. type is a vanilla PotionEffectType name (e.g. HASTE,
+#   NIGHT_VISION); amplifier 0 = level I, 1 = level II, etc.
+#
+# (日本語) potions以下の各項目が1つの購入可能なポーション。バニラの醸造(1本=1効果、決まった
+# レシピのみ)と違い、ここでは1本に好きな効果の組み合わせを自由に詰められる(これがこの
+# ショップの目的そのもの)。
+# - price: Vault経済(EcoTP等)での価格。購入すると飲むタイプのポーションアイテムを1本渡す。
+#   実際に飲む(通常のポーション飲用)まで効果は発動しない。
+# - color: ポーションの液体の色 (16進数RRGGBB、見た目だけ)。
+# - duration-seconds: 飲んだ際の全効果の持続時間(秒)。
+# - effects: {type, amplifier} のリスト。typeはバニラのPotionEffectType名 (例: HASTE,
+#   NIGHT_VISION)、amplifier 0=レベルI、1=レベルII…。
+potions:
+  mining_elixir:
+    display-name: "&6採掘の秘薬"
+    color: "E8A33D"
+    price: 800.0
+    duration-seconds: 180
+    effects:
+      - type: HASTE
+        amplifier: 1
+      - type: NIGHT_VISION
+        amplifier: 0
+  deep_sea_ward:
+    display-name: "&b深海の守り"
+    color: "3DA5E8"
+    price: 1200.0
+    duration-seconds: 240
+    effects:
+      - type: WATER_BREATHING
+        amplifier: 0
+      - type: NIGHT_VISION
+        amplifier: 0
+      - type: DOLPHINS_GRACE
+        amplifier: 0
+  swift_elixir:
+    display-name: "&e疾風の霊薬"
+    color: "F5F56A"
+    price: 700.0
+    duration-seconds: 180
+    effects:
+      - type: SPEED
+        amplifier: 1
+      - type: JUMP_BOOST
+        amplifier: 1
+  berserker_draught:
+    display-name: "&c剛力の秘薬"
+    color: "C23B3B"
+    price: 1500.0
+    duration-seconds: 180
+    effects:
+      - type: STRENGTH
+        amplifier: 1
+      - type: RESISTANCE
+        amplifier: 0
+  phoenix_tonic:
+    display-name: "&6不死鳥の秘薬"
+    color: "E8622D"
+    price: 2000.0
+    duration-seconds: 150
+    effects:
+      - type: REGENERATION
+        amplifier: 1
+      - type: FIRE_RESISTANCE
+        amplifier: 0
+  ghost_walk:
+    display-name: "&8幽体の秘薬"
+    color: "6E6E6E"
+    price: 2500.0
+    duration-seconds: 120
+    effects:
+      - type: INVISIBILITY
+        amplifier: 0
+      - type: SLOW_FALLING
+        amplifier: 0
+  fortune_brew:
+    display-name: "&a幸運の醸造酒"
+    color: "5FC75F"
+    price: 1000.0
+    duration-seconds: 300
+    effects:
+      - type: LUCK
+        amplifier: 1
+      - type: SATURATION
+        amplifier: 0
+
+messages:
+  en:
+    general:
+      no-permission: "&cYou don't have permission to do that."
+      players-only: "&cOnly players can use this command."
+      no-economy: "&cNo economy is available right now. Try again later."
+    shop:
+      title: "Potion Shop"
+      close: "&cClose"
+      price-line: "&7Price: &f{price}"
+      duration-line: "&7Duration: &f{seconds}s"
+      buy-hint: "&7Click to buy 1"
+      bought: "&aBought {name} for &f{price}&a!"
+      insufficient-funds: "&cYou don't have enough money. (needed: {price})"
+      inventory-full: "&cYour inventory is full."
+    command:
+      usage: "&cUsage: /potionshop [give <player> <potion id> [quantity]|reload]"
+      give-usage: "&cUsage: /potionshop give <player> <potion id> [quantity]"
+      unknown-potion: "&cNo potion named '{id}'."
+      player-offline: "&cThat player is not online."
+      invalid-quantity: "&cQuantity must be a positive number."
+      given: "&aGave {player} x{quantity} {name}."
+      received: "&aYou received x{quantity} {name}!"
+      reloaded: "&aConfiguration reloaded."
+    effects:
+      haste: "Haste"
+      night_vision: "Night Vision"
+      water_breathing: "Water Breathing"
+      dolphins_grace: "Dolphin's Grace"
+      speed: "Speed"
+      jump_boost: "Jump Boost"
+      strength: "Strength"
+      resistance: "Resistance"
+      regeneration: "Regeneration"
+      fire_resistance: "Fire Resistance"
+      invisibility: "Invisibility"
+      slow_falling: "Slow Falling"
+      luck: "Luck"
+      saturation: "Saturation"
+  ja:
+    general:
+      no-permission: "&cこの操作を行う権限がありません。"
+      players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
+      no-economy: "&c現在、経済システムが利用できません。しばらくしてから再度お試しください。"
+    shop:
+      title: "ポーション屋"
+      close: "&c閉じる"
+      price-line: "&7価格: &f{price}"
+      duration-line: "&7持続時間: &f{seconds}秒"
+      buy-hint: "&7クリックで1本購入"
+      bought: "&a{name}を&f{price}&aで購入しました！"
+      insufficient-funds: "&c所持金が足りません。(必要: {price})"
+      inventory-full: "&cインベントリがいっぱいです。"
+    command:
+      usage: "&c使い方: /potionshop [give <プレイヤー名> <ポーションID> [本数]|reload]"
+      give-usage: "&c使い方: /potionshop give <プレイヤー名> <ポーションID> [本数]"
+      unknown-potion: "&c「{id}」という名前のポーションは見つかりません。"
+      player-offline: "&cそのプレイヤーはオンラインではありません。"
+      invalid-quantity: "&c本数には正の数を指定してください。"
+      given: "&a{player}に{name}を{quantity}本渡しました。"
+      received: "&a{name}を{quantity}本受け取りました！"
+      reloaded: "&a設定を再読み込みしました。"
+    effects:
+      haste: "採掘速度上昇"
+      night_vision: "暗視"
+      water_breathing: "水中呼吸"
+      dolphins_grace: "イルカの好意"
+      speed: "移動速度上昇"
+      jump_boost: "跳躍力上昇"
+      strength: "攻撃力上昇"
+      resistance: "耐性"
+      regeneration: "再生能力"
+      fire_resistance: "火炎耐性"
+      invisibility: "透明化"
+      slow_falling: "落下速度低下"
+      luck: "幸運"
+      saturation: "満腹度回復"

@@ -1,0 +1,22 @@
+name: EcoPotions
+version: '${project.version}'
+main: com.yamakotaro.ecopotions.EcoPotionsPlugin
+api-version: '26.2'
+author: yamakotaro0328
+description: Custom potion shop - buy bottled effect combinations vanilla brewing can't
+  produce in one potion, priced with a Vault economy (e.g. EcoTP).
+softdepend: [Vault]
+
+commands:
+  potionshop:
+    description: Open the custom potion shop (buy bottled multi-effect potions)
+    usage: /potionshop [give <player> <potion id> [quantity]|reload]
+    aliases: [potions, pshop]
+
+permissions:
+  ecopotions.use:
+    description: Can open /potionshop and buy potions
+    default: true
+  ecopotions.admin:
+    description: Can use /potionshop give and /potionshop reload (admin)
+    default: op
