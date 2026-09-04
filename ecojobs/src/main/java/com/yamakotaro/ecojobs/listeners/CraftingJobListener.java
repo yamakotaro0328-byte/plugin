@@ -7,6 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.FurnaceExtractEvent;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * Handles smelter/crafter/enchanter.
@@ -21,7 +22,10 @@ public class CraftingJobListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onFurnaceExtract(FurnaceExtractEvent event) {
-        jobs.reward(event.getPlayer(), "smelter", "smelt-item", event.getItemType().name(), 1);
+        // Scaled by how many items were actually pulled out, not a flat 1 - otherwise taking a
+        // full stack out in one click would pay the same as taking a single item, rewarding the
+        // tedious "grab one at a time" approach over normal play.
+        jobs.reward(event.getPlayer(), "smelter", "smelt-item", event.getItemType().name(), event.getItemAmount());
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -29,10 +33,13 @@ public class CraftingJobListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        if (event.getRecipe().getResult().getType().isAir()) {
+        ItemStack result = event.getRecipe().getResult();
+        if (result.getType().isAir()) {
             return;
         }
-        jobs.reward(player, "crafter", "craft-item", event.getRecipe().getResult().getType().name(), 1);
+        // Some recipes yield more than 1 per craft (e.g. 4 torches) - scale by that yield so a
+        // higher-yield recipe pays proportionally more, not the same as a single-item one.
+        jobs.reward(player, "crafter", "craft-item", result.getType().name(), result.getAmount());
     }
 
     @EventHandler(ignoreCancelled = true)

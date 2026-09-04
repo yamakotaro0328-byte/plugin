@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerHarvestBlockEvent;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * Handles the miner/digger/woodcutter/farmer/builder/beekeeper jobs, all of which are triggered
@@ -65,11 +66,17 @@ public class BlockJobListener implements Listener {
 
     /**
      * Fires for "harvest without destroying the block" interactions - most relevantly, taking
-     * honey/honeycomb from a beehive/bee nest with a bottle or shears.
+     * honey/honeycomb from a beehive/bee nest with a bottle or shears. A full hive can hand over
+     * several honeycombs in one harvest, so this scales by the actual item count rather than
+     * paying a flat 1 regardless of how much came out.
      */
     @EventHandler(ignoreCancelled = true)
     public void onHarvestBlock(PlayerHarvestBlockEvent event) {
-        jobs.reward(event.getPlayer(), "beekeeper", "harvest-block", event.getHarvestedBlock().getType().name(), 1);
+        int amount = event.getItemsHarvested().stream().mapToInt(ItemStack::getAmount).sum();
+        if (amount <= 0) {
+            return;
+        }
+        jobs.reward(event.getPlayer(), "beekeeper", "harvest-block", event.getHarvestedBlock().getType().name(), amount);
     }
 
     private boolean isFullyGrownCrop(Block block) {
