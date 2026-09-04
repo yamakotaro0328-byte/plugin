@@ -4,7 +4,10 @@ main: com.yamakotaro.ecojobs.EcoJobsPlugin
 api-version: '1.20'
 author: yamakotaro0328
 description: 20 jobs that pay players for everyday survival actions, with per-job levels.
-softdepend: [Vault, PlaceholderAPI]
+# EvenMoreFish は任意連携 (導入されていればカスタム魚をレア度別に支払う)。EcoJobsより先に
+# 読み込ませたいので softdepend に入れているが、コンパイル時の依存は無くリフレクションのみ
+# (listeners/EvenMoreFishBridge 参照) なので、未導入でも問題なく動く。
+softdepend: [Vault, PlaceholderAPI, EvenMoreFish]
 
 commands:
   jobs:

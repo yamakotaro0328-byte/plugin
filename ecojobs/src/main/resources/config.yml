@@ -158,6 +158,17 @@ jobs:
         SALMON: { money: 6, xp: 3 }
         PUFFERFISH: { money: 8, xp: 4 }
         TROPICAL_FISH: { money: 9, xp: 5 }
+      # EvenMoreFish が導入されている場合のみ使う。キーはEMF側のレア度名(小文字)で、
+      # そちらで独自のレア度を追加しているならここに同じ名前で足せばよい。名前が一致しない
+      # レア度は default が使われる。EMF未導入なら、この欄はまったく使われない。
+      catch-emf-fish:
+        common: { money: 10, xp: 5 }
+        uncommon: { money: 25, xp: 12 }
+        rare: { money: 60, xp: 30 }
+        epic: { money: 120, xp: 60 }
+        legendary: { money: 300, xp: 150 }
+        mythic: { money: 600, xp: 300 }
+        default: { money: 15, xp: 8 }
 
   treasurehunter:
     actions:

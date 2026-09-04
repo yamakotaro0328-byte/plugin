@@ -7,6 +7,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityBreedEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -29,12 +30,14 @@ public class EntityJobListener implements Listener {
 
     private final PlayerJobManager jobs;
     private final JobManager jobManager;
+    private final EvenMoreFishBridge evenMoreFish;
     /** 直近に報酬を出した「倒した側 -> 倒された側」の組。2人でのキル交換による無限稼ぎを防ぐ。 */
     private final Map<UUID, Map<UUID, Long>> recentPlayerKills = new HashMap<>();
 
-    public EntityJobListener(PlayerJobManager jobs, JobManager jobManager) {
+    public EntityJobListener(PlayerJobManager jobs, JobManager jobManager, EvenMoreFishBridge evenMoreFish) {
         this.jobs = jobs;
         this.jobManager = jobManager;
+        this.evenMoreFish = evenMoreFish;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -119,12 +122,19 @@ public class EntityJobListener implements Listener {
         jobs.reward(event.getPlayer(), "shearer", "shear-entity", event.getEntity().getType().name(), 1);
     }
 
-    @EventHandler(ignoreCancelled = true)
+    // EMFは自分のPlayerFishEventハンドラから独自イベントを発火するため、こちらを後ろ
+    // (HIGHEST)に回して、EMF側で支払い済みかどうかを見てから判断できるようにする。
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onFish(PlayerFishEvent event) {
         if (event.getState() != PlayerFishEvent.State.CAUGHT_FISH) {
             return;
         }
         if (!(event.getCaught() instanceof Item item)) {
+            return;
+        }
+        // EvenMoreFishのカスタム魚はレア度別にEMF側で支払い済みなので、ここでは何もしない
+        // (1回の釣りで二重に支払われないように)。
+        if (evenMoreFish.handledRecently(event.getPlayer()) || evenMoreFish.isEvenMoreFishItem(item.getItemStack())) {
             return;
         }
         String material = item.getItemStack().getType().name();

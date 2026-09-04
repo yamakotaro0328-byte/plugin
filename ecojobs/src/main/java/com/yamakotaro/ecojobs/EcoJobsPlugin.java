@@ -4,6 +4,7 @@ import com.yamakotaro.ecojobs.commands.JobsCommand;
 import com.yamakotaro.ecojobs.listeners.BlockJobListener;
 import com.yamakotaro.ecojobs.listeners.CraftingJobListener;
 import com.yamakotaro.ecojobs.listeners.EntityJobListener;
+import com.yamakotaro.ecojobs.listeners.EvenMoreFishBridge;
 import com.yamakotaro.ecojobs.listeners.ExplorerListener;
 import com.yamakotaro.ecojobs.listeners.TradeJobListener;
 import com.yamakotaro.ecojobs.menu.AdminMenuListener;
@@ -45,8 +46,13 @@ public class EcoJobsPlugin extends JavaPlugin {
         this.playerJobManager = new PlayerJobManager(this, jobManager, economyHolder, messages, storage, jobOverrides, boosterManager);
         PlacedBlockTracker placedBlockTracker = new PlacedBlockTracker();
 
+        // EvenMoreFish が入っていればカスタム魚をレア度別に支払う。未導入なら register() は何もせず、
+        // EntityJobListener 側の問い合わせも常に false を返すだけなので、通常の釣り報酬に影響しない。
+        EvenMoreFishBridge evenMoreFish = new EvenMoreFishBridge(this, playerJobManager);
+        evenMoreFish.register();
+
         getServer().getPluginManager().registerEvents(new BlockJobListener(playerJobManager, placedBlockTracker), this);
-        getServer().getPluginManager().registerEvents(new EntityJobListener(playerJobManager, jobManager), this);
+        getServer().getPluginManager().registerEvents(new EntityJobListener(playerJobManager, jobManager, evenMoreFish), this);
         getServer().getPluginManager().registerEvents(new CraftingJobListener(playerJobManager), this);
         getServer().getPluginManager().registerEvents(new TradeJobListener(playerJobManager), this);
         getServer().getPluginManager().registerEvents(new ExplorerListener(playerJobManager), this);
