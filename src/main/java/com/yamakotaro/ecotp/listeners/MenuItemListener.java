@@ -1,33 +1,27 @@
 package com.yamakotaro.ecotp.listeners;
 
 import com.yamakotaro.ecotp.EcoTpPlugin;
-import com.yamakotaro.ecotp.MenuItemManager;
 import com.yamakotaro.ecotp.gui.MainMenuHolder;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.Inventory;
 
 /**
  * メニューアイテム (コンパス) の配布・使用を扱う。右クリックで /menu と同じGUIを開く
  * (feature/permission チェックは MenuCommand と同じ) - MenuItemManager 参照。
  *
- * このアイテムは「メニューを開く」以外の用途に一切使えないようにする: 通常の
- * 右クリック使用 (羅針盤としてのロードストーン追従設定等) はもちろん、ドロップ、
- * エンティティへの使用 (額縁への設置等)、そして自分のインベントリの外
- * (作業台/かまど/金床/エンチャント台/チェスト/村人取引など、あらゆる別インベントリ)
- * への移動・投入も禁止する。死亡時にドロップさせない(戦利品として奪われない)。
+ * 通常の右クリック使用 (ロードストーンに追従させる等、羅針盤本来の機能) は右クリックを
+ * 常に無効化していることで結果的に一切発生しない。それ以外は普通のアイテムとして
+ * ドロップ・保管・取引などを行えるが、クラフト (自分の2x2欄・作業台の3x3欄への投入) だけは
+ * 別途禁止する: 何かのレシピの材料になって消費されてしまうのを防ぐため。
  */
 public class MenuItemListener implements Listener {
 
@@ -39,11 +33,6 @@ public class MenuItemListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        plugin.getMenuItemManager().giveOnJoinIfMissing(event.getPlayer());
-    }
-
-    @EventHandler
-    public void onRespawn(PlayerRespawnEvent event) {
         plugin.getMenuItemManager().giveOnJoinIfMissing(event.getPlayer());
     }
 
@@ -62,7 +51,7 @@ public class MenuItemListener implements Listener {
             return;
         }
 
-        Player player = event.getPlayer();
+        var player = event.getPlayer();
         plugin.getMenuItemManager().refreshExisting(player);
         if (!plugin.isFeatureEnabled("menu")) {
             player.sendMessage(plugin.msg("general.feature-disabled"));
@@ -76,42 +65,32 @@ public class MenuItemListener implements Listener {
     }
 
     @EventHandler
-    public void onInteractEntity(PlayerInteractEntityEvent event) {
-        ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
-        if (plugin.getMenuItemManager().isMenuItem(item) || plugin.getMenuItemManager().isMenuItem(event.getPlayer().getInventory().getItemInOffHand())) {
+    public void onCraft(CraftItemEvent event) {
+        if (containsMenuItem(event.getInventory())) {
             event.setCancelled(true);
         }
-    }
-
-    @EventHandler
-    public void onDrop(PlayerDropItemEvent event) {
-        if (plugin.getMenuItemManager().isMenuItem(event.getItemDrop().getItemStack())) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onDeath(PlayerDeathEvent event) {
-        MenuItemManager manager = plugin.getMenuItemManager();
-        event.getDrops().removeIf(manager::isMenuItem);
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        MenuItemManager manager = plugin.getMenuItemManager();
-        boolean involvesMenuItem = manager.isMenuItem(event.getCurrentItem()) || manager.isMenuItem(event.getCursor());
+        boolean involvesMenuItem = plugin.getMenuItemManager().isMenuItem(event.getCurrentItem())
+                || plugin.getMenuItemManager().isMenuItem(event.getCursor());
         if (!involvesMenuItem) {
             return;
         }
-        InventoryType topType = event.getView().getTopInventory().getType();
-        if (topType == InventoryType.PLAYER || topType == InventoryType.CRAFTING) {
-            // 自分のインベントリ内 (Eキー) での並べ替えだけなので許可する。
+        Inventory top = event.getView().getTopInventory();
+        if (!(top instanceof CraftingInventory)) {
             return;
         }
-        // それ以外 (作業台/金床/エンチャント台/チェスト/村人取引/EcoTP自身のGUI等) には
-        // 一切出し入れさせない。EcoTP自身のメニューGUIは元々全クリックを無効化しているので
-        // ここで二重にキャンセルしても問題ない。
-        event.setCancelled(true);
+        // slot 0 は完成品スロットなので、材料欄 (1以降) への出し入れだけを禁止する。
+        int rawSlot = event.getRawSlot();
+        boolean targetsMatrix = rawSlot >= 1 && rawSlot < top.getSize();
+        boolean shiftClickIntoMatrix = event.isShiftClick()
+                && event.getClickedInventory() != null
+                && !event.getClickedInventory().equals(top);
+        if (targetsMatrix || shiftClickIntoMatrix) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
@@ -119,10 +98,24 @@ public class MenuItemListener implements Listener {
         if (!plugin.getMenuItemManager().isMenuItem(event.getOldCursor())) {
             return;
         }
-        InventoryType topType = event.getView().getTopInventory().getType();
-        if (topType == InventoryType.PLAYER || topType == InventoryType.CRAFTING) {
+        Inventory top = event.getView().getTopInventory();
+        if (!(top instanceof CraftingInventory)) {
             return;
         }
-        event.setCancelled(true);
+        for (int rawSlot : event.getRawSlots()) {
+            if (rawSlot >= 1 && rawSlot < top.getSize()) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    private boolean containsMenuItem(CraftingInventory inventory) {
+        for (var stack : inventory.getMatrix()) {
+            if (plugin.getMenuItemManager().isMenuItem(stack)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
