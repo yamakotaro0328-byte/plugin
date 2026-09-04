@@ -16,7 +16,7 @@
 # 初回生成時だけでなく、後からこの値を変更して /ecotp reload (または再起動) すると、
 # その言語の同梱テンプレートで messages.yml が再生成されます (それまでの編集内容は
 # 上書きされます)。この値を変えない限り、messages.yml の編集内容はそのまま残ります。
-language: en
+language: ja
 
 # Chat prefix (supports & color codes).
 # (日本語) チャットに表示する接頭辞 (& でカラーコード使用可)

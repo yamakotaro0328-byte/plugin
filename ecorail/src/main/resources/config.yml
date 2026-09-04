@@ -1,7 +1,7 @@
 # EcoRail configuration
 # Language for messages below: "en" or "ja".
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
-language: en
+language: ja
 
 # EcoRail has no route data of its own - the rails you build ARE the route. Every minecart on the
 # server is managed automatically the moment it exists: EcoRail keeps it running forever, never

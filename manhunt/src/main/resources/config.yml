@@ -1,7 +1,7 @@
 # Manhunt configuration
 # Language for messages below: "en" or "ja".
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
-language: en
+language: ja
 
 # head-start-seconds: how long hunters are frozen in place after /manhunt start, giving runners
 #   time to scatter before the chase begins. Hunters can still look around, just not move.

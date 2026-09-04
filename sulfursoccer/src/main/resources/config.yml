@@ -1,7 +1,7 @@
 # SulfurSoccer configuration
 # Language for messages below: "en" or "ja".
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
-language: en
+language: ja
 
 # match.goals-to-win: first team to reach this score wins immediately.
 # match.time-limit-minutes: match ends (higher score wins, or a draw) after this many minutes

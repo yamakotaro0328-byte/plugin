@@ -1,7 +1,7 @@
 # EcoJobs configuration
 # Language for messages below: "en" or "ja".
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
-language: en
+language: ja
 
 # How many jobs a single player can be in at the same time.
 # (日本語) 1人のプレイヤーが同時に加入できるジョブ数。

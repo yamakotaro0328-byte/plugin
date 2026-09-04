@@ -1,7 +1,7 @@
 # EcoTP-QuickActions configuration
 # Language for messages below: "en" or "ja".
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
-language: en
+language: ja
 
 admin-shop:
   # Turn the whole admin shop feature on/off (/adminshop, /adminshop admin, and the

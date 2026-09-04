@@ -1,7 +1,7 @@
 # EcoBan-Velocity configuration
 # Language for messages below: "en" or "ja".
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
-language: en
+language: ja
 
 # Where punishments are stored. MUST be "mysql" - SQLite is a single-process file database and
 # cannot be shared between this proxy and every backend server's EcoBan plugin. Point this at the

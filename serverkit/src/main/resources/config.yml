@@ -1,5 +1,5 @@
 # en / ja, same convention as EcoTP / EcoTP-QuickActions.
-language: en
+language: ja
 
 modules:
   staff: true

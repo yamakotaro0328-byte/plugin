@@ -1,7 +1,7 @@
 # EcoBan configuration
 # Language for messages below: "en" or "ja".
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
-language: en
+language: ja
 
 # Where punishments are stored. "sqlite" (default) needs no setup but only works for a single
 # process. Use "mysql" if EcoBan also runs on a Velocity proxy (see ecoban-velocity) alongside

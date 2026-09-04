@@ -1,7 +1,7 @@
 # EcoBoss configuration
 # Language for messages below: "en" or "ja".
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
-language: en
+language: ja
 
 # announcement-lead-time-seconds: for WORLD/EVENT bosses, how long the "boss incoming" warning is
 #   shown before it actually spawns.

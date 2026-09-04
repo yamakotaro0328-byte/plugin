@@ -1,7 +1,7 @@
 # EcoEvents configuration
 # Language for messages below: "en" or "ja".
 # (日本語) 以下のメッセージの言語。"en" または "ja"。
-language: en
+language: ja
 
 # schedule.min/max-interval-minutes: after each event (and at startup), the next one fires after a
 #   random delay in this range. Nothing fires while no one is online.
