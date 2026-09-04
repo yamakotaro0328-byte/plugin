@@ -24,8 +24,17 @@ storage:
 leveling:
   # xp required to go from level N to N+1 = base-xp-to-level * N ^ growth-exponent
   # (日本語) レベルNからN+1に必要な経験値 = base-xp-to-level * N ^ growth-exponent
-  base-xp-to-level: 50
-  growth-exponent: 1.35
+  #
+  # At the defaults below, reaching max-level (100) takes ~74,250 total xp. The previous defaults
+  # (50 / 1.35) needed ~1.04 million - effectively unreachable (roughly 300k blocks for a 0.2xp
+  # digger action), which meant nobody ever saw the level milestones, prestige, or the job-perks
+  # system (see jobs.<job>.perks below) that unlock deep into a job's levels.
+  # (日本語) 上のデフォルト値では、最大レベル(100)到達に必要な経験値は合計約74,250。旧デフォルト
+  # (50 / 1.35) では約104万必要で、事実上到達不可能だった(0.2xpの穴掘り行動なら約30万ブロック)。
+  # その結果、レベルマイルストーンもプレステージも、深いレベルで解放される職業パーク
+  # (下のjobs.<job>.perksを参照)も誰の目にも触れないままだった。
+  base-xp-to-level: 15
+  growth-exponent: 1.0
   # Money earned per action is multiplied by (1 + level * pay-bonus-per-level), so a level 40
   # miner earns 20% more per action than a level 0 miner at the default 0.005 (0.5%/level).
   # (日本語) 1回の行動で得るお金は (1 + レベル * pay-bonus-per-level) 倍される。デフォルトの
@@ -151,21 +160,27 @@ jobs:
 
   digger:
     actions:
+      # xp raised 5x over money-equivalent digger/builder had the lowest xp of any job by far
+      # (0.2-0.4/block) - combined with the old leveling curve, digging alone needed ~300,000
+      # blocks to hit max level. Money is untouched (no economy inflation), only xp moved.
+      # (日本語) 穴掘り/建築士は、お金に対して経験値だけが他のどのジョブより低かった
+      # (1ブロックあたり0.2〜0.4)。旧レベル曲線と組み合わさると、穴掘りだけで最大レベルまで
+      # 約30万ブロック必要だった。お金はそのまま(経済インフレ回避)、経験値だけを5倍にした。
       break-block:
-        DIRT: { money: 0.2, xp: 0.2 }
-        GRASS_BLOCK: { money: 0.2, xp: 0.2 }
-        SAND: { money: 0.2, xp: 0.2 }
-        RED_SAND: { money: 0.2, xp: 0.2 }
-        GRAVEL: { money: 0.3, xp: 0.3 }
-        CLAY: { money: 0.5, xp: 0.4 }
-        STONE: { money: 0.3, xp: 0.3 }
-        COBBLESTONE: { money: 0.3, xp: 0.3 }
-        DEEPSLATE: { money: 0.3, xp: 0.3 }
-        COBBLED_DEEPSLATE: { money: 0.3, xp: 0.3 }
-        NETHERRACK: { money: 0.2, xp: 0.2 }
-        SOUL_SAND: { money: 0.4, xp: 0.3 }
-        SOUL_SOIL: { money: 0.4, xp: 0.3 }
-        END_STONE: { money: 0.4, xp: 0.3 }
+        DIRT: { money: 0.2, xp: 1 }
+        GRASS_BLOCK: { money: 0.2, xp: 1 }
+        SAND: { money: 0.2, xp: 1 }
+        RED_SAND: { money: 0.2, xp: 1 }
+        GRAVEL: { money: 0.3, xp: 1.5 }
+        CLAY: { money: 0.5, xp: 2 }
+        STONE: { money: 0.3, xp: 1.5 }
+        COBBLESTONE: { money: 0.3, xp: 1.5 }
+        DEEPSLATE: { money: 0.3, xp: 1.5 }
+        COBBLED_DEEPSLATE: { money: 0.3, xp: 1.5 }
+        NETHERRACK: { money: 0.2, xp: 1 }
+        SOUL_SAND: { money: 0.4, xp: 1.5 }
+        SOUL_SOIL: { money: 0.4, xp: 1.5 }
+        END_STONE: { money: 0.4, xp: 1.5 }
 
   woodcutter:
     actions:
@@ -205,8 +220,9 @@ jobs:
 
   builder:
     actions:
+      # xp raised 5x over money for the same reason as digger above (see its comment).
       place-block:
-        default: { money: 0.15, xp: 0.1 }
+        default: { money: 0.15, xp: 0.5 }
 
   fisherman:
     actions:
