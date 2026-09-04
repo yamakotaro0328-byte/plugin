@@ -1,0 +1,22 @@
+name: EcoCosmetics
+version: '${project.version}'
+main: com.yamakotaro.ecocosmetics.EcoCosmeticsPlugin
+api-version: '26.2'
+author: yamakotaro0328
+description: Cosmetics shop - particle trails, join effects, and chat titles - purchasable with
+  a Vault economy (e.g. EcoTP).
+softdepend: [Vault]
+
+commands:
+  cosmetics:
+    description: Open the cosmetics shop (buy/equip particle trails, join effects, titles)
+    usage: /cosmetics [give <player> <cosmetic id>]
+    aliases: [cos, cosmetic]
+
+permissions:
+  ecocosmetics.use:
+    description: Can open /cosmetics and buy/equip cosmetics
+    default: true
+  ecocosmetics.admin:
+    description: Can use /cosmetics give (admin)
+    default: op

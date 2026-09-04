@@ -1,0 +1,182 @@
+# EcoCosmetics configuration
+# Language for messages below: "en" or "ja".
+# (日本語) 以下のメッセージの言語。"en" または "ja"。
+language: ja
+
+# Note on encoding: this file (and player-data.yml) is always read/written as UTF-8 by this
+# plugin's own loader, never via Bukkit's getConfig()/saveConfig() - those fall back to the
+# JVM's platform default charset for files already on disk, which can silently corrupt
+# non-ASCII text (see EcoTP's YamlIo class for the same fix, applied here from the start).
+# (日本語) 文字コードについて: このファイル(と player-data.yml)は必ずこのプラグイン自身の
+# 読み込み処理でUTF-8として扱う。Bukkitの getConfig()/saveConfig() はディスク上の既存ファイルを
+# JVMの「プラットフォームのデフォルト文字コード」で読み書きしてしまい、非ASCII文字を
+# 静かに文字化けさせることがあるため使わない(EcoTPのYamlIoで直したのと同じ対策を最初から)。
+
+# Each entry under "cosmetics" is one purchasable cosmetic.
+# - category: PARTICLE (a trail that follows the player around), JOIN_EFFECT (plays once when
+#   the player joins the server), or TITLE (a colored tag shown before the player's name in chat).
+# - price: cost in the server's Vault economy (e.g. EcoTP).
+# - icon: the Material shown for this cosmetic in the shop GUI.
+# - particle: (PARTICLE/JOIN_EFFECT only) one of Bukkit's Particle enum names.
+# - prefix: (TITLE only) the exact text inserted before the player's name in chat (& color codes).
+#
+# (日本語) cosmetics以下の各項目が1つの購入可能コスメティック。
+# - category: PARTICLE(常時ついてくるパーティクル)、JOIN_EFFECT(サーバー参加時に1回再生)、
+#   TITLE(チャットで名前の前につく色付きタグ)のいずれか。
+# - price: Vault経済(EcoTP等)での価格。
+# - icon: ショップGUIでの表示アイテム。
+# - particle: (PARTICLE/JOIN_EFFECTのみ) BukkitのParticle列挙名。
+# - prefix: (TITLEのみ) チャットで名前の前に挿入される文字列(&でカラーコード)。
+cosmetics:
+  flame_trail:
+    category: PARTICLE
+    display-name: "&6Flame Trail"
+    icon: BLAZE_POWDER
+    price: 5000.0
+    particle: FLAME
+  heart_trail:
+    category: PARTICLE
+    display-name: "&dHeart Trail"
+    icon: POPPY
+    price: 5000.0
+    particle: HEART
+  snow_trail:
+    category: PARTICLE
+    display-name: "&fSnow Trail"
+    icon: SNOWBALL
+    price: 5000.0
+    particle: SNOWFLAKE
+  portal_trail:
+    category: PARTICLE
+    display-name: "&5Portal Trail"
+    icon: ENDER_PEARL
+    price: 8000.0
+    particle: PORTAL
+  note_trail:
+    category: PARTICLE
+    display-name: "&bMusic Notes"
+    icon: NOTE_BLOCK
+    price: 6000.0
+    particle: NOTE
+  soul_trail:
+    category: PARTICLE
+    display-name: "&3Soul Trail"
+    icon: SOUL_LANTERN
+    price: 9000.0
+    particle: SOUL
+  witch_trail:
+    category: PARTICLE
+    display-name: "&2Witch Brew"
+    icon: BREWING_STAND
+    price: 7000.0
+    particle: WITCH
+
+  firework_entrance:
+    category: JOIN_EFFECT
+    display-name: "&eFirework Entrance"
+    icon: FIREWORK_ROCKET
+    price: 10000.0
+    particle: FIREWORK
+  totem_entrance:
+    category: JOIN_EFFECT
+    display-name: "&aTotem Flash"
+    icon: TOTEM_OF_UNDYING
+    price: 8000.0
+    particle: TOTEM_OF_UNDYING
+  cloud_entrance:
+    category: JOIN_EFFECT
+    display-name: "&fCloud Puff"
+    icon: WHITE_WOOL
+    price: 6000.0
+    particle: CLOUD
+  lightning_entrance:
+    category: JOIN_EFFECT
+    display-name: "&eThunder Arrival"
+    icon: TRIDENT
+    price: 12000.0
+    particle: ELECTRIC_SPARK
+
+  title_vip:
+    category: TITLE
+    display-name: "&6[VIP]"
+    icon: GOLD_INGOT
+    price: 20000.0
+    prefix: "&6[VIP]&r "
+  title_star:
+    category: TITLE
+    display-name: "&b[Star]"
+    icon: DIAMOND
+    price: 30000.0
+    prefix: "&b[Star]&r "
+  title_legend:
+    category: TITLE
+    display-name: "&c[Legend]"
+    icon: NETHER_STAR
+    price: 50000.0
+    prefix: "&c&l[Legend]&r "
+  title_shadow:
+    category: TITLE
+    display-name: "&8[Shadow]"
+    icon: WITHER_SKELETON_SKULL
+    price: 40000.0
+    prefix: "&8[Shadow]&r "
+
+messages:
+  en:
+    general:
+      no-permission: "&cYou don't have permission to do that."
+      players-only: "&cOnly players can use this command."
+      no-economy: "&cNo economy is available right now. Try again later."
+    shop:
+      title: "Cosmetics Shop"
+      category-particle: "&6Particle Trails"
+      category-join: "&eJoin Effects"
+      category-title: "&bTitles"
+      close: "&cClose"
+      back: "&7« Back to categories"
+      owned: "&7Owned"
+      equipped: "&aEquipped (click to unequip)"
+      not-owned: "&7Price: &f{price}"
+      buy-hint: "&7Click to buy"
+      equip-hint: "&7Click to equip"
+      bought: "&aBought {name} for &f{price}&a!"
+      insufficient-funds: "&cYou don't have enough money. (needed: {price})"
+      equipped-message: "&a{name} equipped."
+      unequipped-message: "&7{name} unequipped."
+    command:
+      usage: "&cUsage: /cosmetics [give <player> <id>]"
+      give-usage: "&cUsage: /cosmetics give <player> <cosmetic id>"
+      unknown-cosmetic: "&cNo cosmetic named '{id}'."
+      player-offline: "&cThat player is not online."
+      given: "&aGave {player} the cosmetic '{name}'."
+      received: "&aYou received the cosmetic '{name}'! Open /cosmetics to equip it."
+      reloaded: "&aConfiguration reloaded."
+  ja:
+    general:
+      no-permission: "&cこの操作を行う権限がありません。"
+      players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
+      no-economy: "&c現在、経済システムが利用できません。しばらくしてから再度お試しください。"
+    shop:
+      title: "コスメティックショップ"
+      category-particle: "&6パーティクルトレイル"
+      category-join: "&e参加エフェクト"
+      category-title: "&b称号"
+      close: "&c閉じる"
+      back: "&7« カテゴリ一覧に戻る"
+      owned: "&7所持済み"
+      equipped: "&a装備中 (クリックで解除)"
+      not-owned: "&7価格: &f{price}"
+      buy-hint: "&7クリックして購入"
+      equip-hint: "&7クリックして装備"
+      bought: "&a{name}を&f{price}&aで購入しました！"
+      insufficient-funds: "&c所持金が足りません。(必要: {price})"
+      equipped-message: "&a{name}を装備しました。"
+      unequipped-message: "&7{name}の装備を解除しました。"
+    command:
+      usage: "&c使い方: /cosmetics [give <プレイヤー名> <ID>]"
+      give-usage: "&c使い方: /cosmetics give <プレイヤー名> <コスメティックID>"
+      unknown-cosmetic: "&c「{id}」という名前のコスメティックは見つかりません。"
+      player-offline: "&cそのプレイヤーはオンラインではありません。"
+      given: "&a{player}にコスメティック「{name}」を渡しました。"
+      received: "&aコスメティック「{name}」を受け取りました！/cosmetics から装備できます。"
+      reloaded: "&a設定を再読み込みしました。"
