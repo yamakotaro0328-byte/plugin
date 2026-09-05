@@ -163,16 +163,16 @@ public class JobsMenuHolder implements InventoryHolder {
             if (canViewLeaderboard) {
                 lore.add(messages.get("menu.lore-click-leaderboard", Map.of()));
             }
-            if (active && maxed) {
-                lore.add(messages.get("menu.lore-click-prestige", Map.of()));
-            }
+            // Prestige isn't offered directly from this list even when maxed - right-click always
+            // opens the info screen now (see JobsMenuListener), and that screen's own header shows
+            // the prestige prompt when eligible. Advertising it here too would be a 4th, redundant
+            // meaning for the same right-click gesture.
             meta.lore(lore);
-            // Joined jobs glint so it's obvious at a glance which ones are currently active
-            // (rather than merely having past progress); a maxed-out job keeps glinting even
-            // after being left, as a small trophy for genuine mastery - Paper's override skips
-            // needing a fake enchantment (and the tooltip line it would otherwise force onto the
-            // item).
-            meta.setEnchantmentGlintOverride(active || maxed);
+            // Glint means exactly one thing: this job is currently active (holding one of the
+            // player's job slots). A maxed-but-left job used to glint too as a "trophy", but that
+            // made a shiny icon ambiguous between "working this now" and "mastered this once" -
+            // maxed status is already visible in the level line, so it doesn't need the glint too.
+            meta.setEnchantmentGlintOverride(active);
             stack.setItemMeta(meta);
         }
         return stack;

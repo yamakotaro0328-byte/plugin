@@ -76,11 +76,12 @@ public class JobsMenuListener implements Listener {
             return;
         }
 
-        if (event.isShiftClick() && event.isRightClick()) {
-            openJobInfo(player, jobId, 0);
-            playSuccess(player);
-            return;
-        }
+        // Three gestures, matching JobInfoMenuHolder's header exactly: plain click always
+        // toggles join/leave, shift-click always views the leaderboard, right-click always opens
+        // the info screen. Prestige used to be a 4th gesture (right-click) directly from this
+        // list, but that meant right-click did two different things depending on screen - it's
+        // now only reachable from inside the info screen (itself one right-click away), where the
+        // reward table you're about to give up is right there on screen.
         if (event.isShiftClick()) {
             if (!player.hasPermission("ecojobs.top")) {
                 player.sendMessage(messages.get("general.no-permission", Map.of()));
@@ -94,7 +95,8 @@ public class JobsMenuListener implements Listener {
             return;
         }
         if (event.isRightClick()) {
-            attemptPrestige(player, jobId, PrestigeConfirmMenuHolder.Origin.JOBS_MENU);
+            openJobInfo(player, jobId, 0);
+            playSuccess(player);
             return;
         }
 
@@ -148,7 +150,7 @@ public class JobsMenuListener implements Listener {
             return;
         }
         if (event.isRightClick()) {
-            attemptPrestige(player, jobId, PrestigeConfirmMenuHolder.Origin.JOB_INFO);
+            attemptPrestige(player, jobId);
             return;
         }
         handleJoinLeave(player, jobId);
@@ -186,7 +188,7 @@ public class JobsMenuListener implements Listener {
     }
 
     /** Opens the confirmation screen, but only once eligibility is actually verified. */
-    private void attemptPrestige(Player player, String jobId, PrestigeConfirmMenuHolder.Origin origin) {
+    private void attemptPrestige(Player player, String jobId) {
         PlayerJobProgress progress = playerJobManager.allProgress(player.getUniqueId()).get(jobId);
         boolean active = playerJobManager.isJoined(player.getUniqueId(), jobId);
         if (!active || progress == null || progress.getLevel() < jobManager.maxLevel()) {
@@ -195,20 +197,15 @@ public class JobsMenuListener implements Listener {
             playDenied(player);
             return;
         }
-        PrestigeConfirmMenuHolder confirm = new PrestigeConfirmMenuHolder(messages, jobId, origin);
+        PrestigeConfirmMenuHolder confirm = new PrestigeConfirmMenuHolder(messages, jobId);
         confirm.render();
         player.openInventory(confirm.getInventory());
         playSuccess(player);
     }
 
+    /** Prestige is only ever offered from the job info screen, so confirming or cancelling always returns there. */
     private void returnFromPrestigeConfirm(Player player, PrestigeConfirmMenuHolder holder) {
-        if (holder.getOrigin() == PrestigeConfirmMenuHolder.Origin.JOB_INFO) {
-            openJobInfo(player, holder.getJobId(), 0);
-        } else {
-            JobsMenuHolder jobsMenu = new JobsMenuHolder(messages);
-            jobsMenu.render(jobManager, playerJobManager, jobOverrides, player);
-            player.openInventory(jobsMenu.getInventory());
-        }
+        openJobInfo(player, holder.getJobId(), 0);
     }
 
     private void openJobInfo(Player player, String jobId, int page) {

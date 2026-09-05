@@ -13,36 +13,28 @@ import java.util.Map;
 
 /**
  * A confirmation step before actually prestiging a job (see PlayerJobManager#prestige) - resetting
- * to level 1 is permanent, so it's never triggered by a single accidental click. {@link Origin}
- * remembers whether this was opened from the main jobs menu or a job's detail screen (see
- * JobInfoMenuHolder), so confirming or cancelling returns to the right place - see
- * JobsMenuListener, which owns every click on this holder.
+ * to level 1 is permanent, so it's never triggered by a single accidental click. Only ever opened
+ * from a job's detail screen (see JobInfoMenuHolder) - prestige isn't offered directly from the
+ * main jobs menu - so confirming or cancelling always returns there. JobsMenuListener owns every
+ * click on this holder.
  */
 public class PrestigeConfirmMenuHolder implements InventoryHolder {
-
-    public enum Origin { JOBS_MENU, JOB_INFO }
 
     public static final int CONFIRM_SLOT = 11;
     public static final int CANCEL_SLOT = 15;
 
     private final Messages messages;
     private final String jobId;
-    private final Origin origin;
     private final Inventory inventory;
 
-    public PrestigeConfirmMenuHolder(Messages messages, String jobId, Origin origin) {
+    public PrestigeConfirmMenuHolder(Messages messages, String jobId) {
         this.messages = messages;
         this.jobId = jobId;
-        this.origin = origin;
         this.inventory = Bukkit.createInventory(this, 27, messages.get("menu.prestige-confirm-title", Map.of("job", messages.jobName(jobId))));
     }
 
     public String getJobId() {
         return jobId;
-    }
-
-    public Origin getOrigin() {
-        return origin;
     }
 
     public void render() {

@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A per-job payout screen, reached by shift-right-clicking a job in {@link JobsMenuHolder} - the
+ * A per-job payout screen, reached by right-clicking a job in {@link JobsMenuHolder} - the
  * one thing the GUI never showed before: what a job actually pays. Mirrors /jobs info's data
  * (same {@link JobDefinition#getActionsByType()}, same alphabetical TreeMap order) but as an icon
  * grid, paginated the same way as the jobs menu itself so a job with an unusually long reward
@@ -184,7 +184,9 @@ public class JobInfoMenuHolder implements InventoryHolder {
             lore.add(messages.get("menu.lore-click-prestige", Map.of()));
         }
         meta.lore(lore);
-        meta.setEnchantmentGlintOverride(active || maxed);
+        // Glint means "currently active" only - see JobsMenuHolder#buildJobItem for why a maxed
+        // job no longer keeps glinting after being left.
+        meta.setEnchantmentGlintOverride(active);
         stack.setItemMeta(meta);
         return stack;
     }
