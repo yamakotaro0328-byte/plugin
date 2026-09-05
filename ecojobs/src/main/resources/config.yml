@@ -630,44 +630,51 @@ messages:
 # instead of showing as plain white - see Messages#jobName and its callers.
 job-names:
   en:
+    # Colors are assigned by theme family, not per-job at random - 20 jobs can't each get a
+    # unique legacy color (only 15 are legible against the GUI's dark tooltip background; &0
+    # black is unreadable there), so where two jobs share a color it's a deliberate pairing
+    # within the same family: hunter/slayer (kill-based combat), builder/beekeeper (warm
+    # earth tones), woodcutter/crafter (wood), farmer/merchant (growth and value are both
+    # "green" in Minecraft's own visual language), fisherman/explorer (outdoor/adventure).
     miner: "&7Miner&r"
-    digger: "&6Digger&r"
+    digger: "&8Digger&r"
     woodcutter: "&2Woodcutter&r"
     farmer: "&aFarmer&r"
-    builder: "&cBuilder&r"
+    builder: "&6Builder&r"
     fisherman: "&bFisherman&r"
     treasurehunter: "&eTreasure Hunter&r"
     hunter: "&4Hunter&r"
     archer: "&3Archer&r"
-    slayer: "&5Slayer&r"
+    slayer: "&4Slayer&r"
     warrior: "&9Warrior&r"
     breeder: "&dBreeder&r"
-    tamer: "&fTamer&r"
-    shearer: "&eShearer&r"
+    tamer: "&1Tamer&r"
+    shearer: "&fShearer&r"
     beekeeper: "&6Beekeeper&r"
     enchanter: "&5Enchanter&r"
     smelter: "&cSmelter&r"
-    crafter: "&6Crafter&r"
+    crafter: "&2Crafter&r"
     merchant: "&aMerchant&r"
     explorer: "&bExplorer&r"
   ja:
+    # Same color-family scheme as job-names.en above - keep both in sync.
     miner: "&7採掘工&r"
-    digger: "&6穴掘り師&r"
+    digger: "&8穴掘り師&r"
     woodcutter: "&2木こり&r"
     farmer: "&a農家&r"
-    builder: "&c建築士&r"
+    builder: "&6建築士&r"
     fisherman: "&b漁師&r"
     treasurehunter: "&eお宝ハンター&r"
     hunter: "&4ハンター&r"
     archer: "&3弓術師&r"
-    slayer: "&5討伐者&r"
+    slayer: "&4討伐者&r"
     warrior: "&9戦士&r"
     breeder: "&d繁殖家&r"
-    tamer: "&f調教師&r"
-    shearer: "&e毛刈り師&r"
+    tamer: "&1調教師&r"
+    shearer: "&f毛刈り師&r"
     beekeeper: "&6養蜂家&r"
     enchanter: "&5魔道士&r"
     smelter: "&c製錬工&r"
-    crafter: "&6職人&r"
+    crafter: "&2職人&r"
     merchant: "&a商人&r"
     explorer: "&b探検家&r"

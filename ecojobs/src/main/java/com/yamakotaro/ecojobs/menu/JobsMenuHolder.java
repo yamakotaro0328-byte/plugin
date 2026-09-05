@@ -43,9 +43,18 @@ public class JobsMenuHolder implements InventoryHolder {
             Map.entry("treasurehunter", Material.CHEST),
             Map.entry("hunter", Material.IRON_SWORD),
             Map.entry("archer", Material.BOW),
-            Map.entry("slayer", Material.NETHERITE_SWORD),
-            Map.entry("warrior", Material.DIAMOND_SWORD),
-            Map.entry("breeder", Material.WHEAT_SEEDS),
+            // slayer/warrior used to be NETHERITE_SWORD/DIAMOND_SWORD - at the small size Minecraft
+            // renders GUI icons, three sword jobs (hunter/slayer/warrior) were nearly
+            // indistinguishable. Slayer's actual job is boss kills, and a wither/ender dragon kill
+            // drops a nether star in vanilla, so that's both a clearer and a more on-theme icon;
+            // warrior fights other players, and a shield reads as "PvP" at a glance in a way a 4th
+            // sword icon never would.
+            Map.entry("slayer", Material.NETHER_STAR),
+            Map.entry("warrior", Material.SHIELD),
+            // breeder used to share WHEAT_SEEDS with farmer's WHEAT - nearly the same texture at
+            // GUI icon size, despite breeder being about animal breeding, not crops. An egg is the
+            // standard "breeding" item in vanilla (chickens) and shares nothing visually with wheat.
+            Map.entry("breeder", Material.EGG),
             Map.entry("tamer", Material.BONE),
             Map.entry("shearer", Material.SHEARS),
             Map.entry("beekeeper", Material.HONEYCOMB),
