@@ -98,20 +98,24 @@ public class BallPhysicsTask extends BukkitRunnable {
 
         if (x < minX || x > maxX + 1) {
             vel.setX(-vel.getX());
+            org.bukkit.Location loc = ball.getLocation();
             if (x < minX) {
-                ball.teleport(ball.getLocation().setX(minX + 0.5));
+                loc.setX(minX + 0.5);
             } else {
-                ball.teleport(ball.getLocation().setX(maxX + 0.5));
+                loc.setX(maxX + 0.5);
             }
+            ball.teleport(loc);
         }
 
         if (z < minZ || z > maxZ + 1) {
             vel.setZ(-vel.getZ());
+            org.bukkit.Location loc = ball.getLocation();
             if (z < minZ) {
-                ball.teleport(ball.getLocation().setZ(minZ + 0.5));
+                loc.setZ(minZ + 0.5);
             } else {
-                ball.teleport(ball.getLocation().setZ(maxZ + 0.5));
+                loc.setZ(maxZ + 0.5);
             }
+            ball.teleport(loc);
         }
 
         ball.setVelocity(vel);
