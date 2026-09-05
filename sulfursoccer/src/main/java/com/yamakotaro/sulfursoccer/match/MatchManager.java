@@ -181,9 +181,7 @@ public class MatchManager {
 
     private void scheduleCountdownTick(Arena arena, Match match, int secondsRemaining) {
         if (secondsRemaining > 0) {
-            Component countdownComponent = Component.text(String.valueOf(secondsRemaining));
-            Component subtitleComponent = messages.get("match.countdown-subtitle", Map.of("seconds", String.valueOf(secondsRemaining)));
-            titleToMatch(match, messages.get("match.countdown-title", Map.of("seconds", String.valueOf(secondsRemaining))), subtitleComponent);
+            titleToMatch(match, messages.get("match.countdown-title", Map.of("seconds", String.valueOf(secondsRemaining))), messages.get("match.countdown-subtitle", Map.of()));
             soundToMatch(match, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 0.5f + (secondsRemaining * 0.3f));
 
             int nextSecond = secondsRemaining - 1;
