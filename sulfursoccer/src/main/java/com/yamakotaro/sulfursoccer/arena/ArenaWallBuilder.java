@@ -43,8 +43,8 @@ public class ArenaWallBuilder {
             return;
         }
         Block block = world.getBlockAt(x, y, z);
-        // Only fills in empty space, same convention as ArenaTreeBuilder - a boundary the admin
-        // already built out of real blocks is left alone.
+        // Only fills in empty space - a boundary the admin already built out of real blocks is
+        // left alone.
         if (block.getType() == Material.AIR) {
             block.setType(Material.BARRIER);
         }

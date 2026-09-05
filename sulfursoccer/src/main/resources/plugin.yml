@@ -8,7 +8,7 @@ description: Team soccer matches played with a Sulfur Cube as the ball - wand-se
 commands:
   soccer:
     description: Set up an arena, join a team, and start/stop matches
-    usage: /soccer <wand|arena <create|setgoal|setspawn|setkickoff|setfield|tree|remove|list>|join [arena]|leave|start [arena]|stop [arena]>
+    usage: /soccer <wand|arena <create|setgoal|setspawn|setkickoff|setfield|remove|list>|join [arena]|leave|start [arena]|stop [arena]>
 
 permissions:
   sulfursoccer.admin:

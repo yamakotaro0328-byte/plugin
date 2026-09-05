@@ -8,11 +8,16 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.time.Duration;
@@ -144,6 +149,15 @@ public class MatchManager {
         // moved, from kickoff or from being hit. Leaving AI on lets our forced velocity (applied
         // every match.physics-interval-ticks) actually take effect; any residual AI-driven
         // movement is overwritten by that same velocity update a couple of ticks later at most.
+        if (ball instanceof LivingEntity livingEntity) {
+            EntityEquipment equipment = livingEntity.getEquipment();
+            if (equipment != null) {
+                // The birch look-and-feel goes on the ball itself, not as scenery in the arena -
+                // equipping a birch log in the body slot makes the ball visibly birch-textured
+                // wherever it rolls, the same way a llama wears a carpet or a wolf wears armor.
+                equipment.setItem(EquipmentSlot.BODY, new ItemStack(Material.BIRCH_LOG));
+            }
+        }
         match.setBallEntityId(ball.getUniqueId());
     }
 
