@@ -7,14 +7,32 @@ language: ja
 # match.time-limit-minutes: match ends (higher score wins, or a draw) after this many minutes
 #   even if nobody has reached goals-to-win yet. 0 disables the time limit.
 # match.tick-interval-ticks: how often (in ticks) the ball's position is checked for a goal.
+# match.physics-interval-ticks: how often (in ticks) the ball physics are updated (kick, friction, bounce).
+# match.kick-radius: the radius (in blocks) around each player that the ball can be kicked from.
+# match.kick-force: the force applied to the ball's velocity when near a player.
+# match.max-speed: the maximum horizontal speed the ball can move at.
+# match.friction: the dampening factor applied to horizontal velocity each tick (0-1, lower = more friction).
+# match.countdown-seconds: how many seconds to count down before the match starts.
 # (日本語) match.goals-to-win: 先にこの得点に達したチームが即座に勝利する。
 # match.time-limit-minutes: goals-to-winに達していなくても、この分数が経過したら
 #   試合終了(得点が高い方の勝ち、同点なら引き分け)。0で時間制限なし。
 # match.tick-interval-ticks: ボールの位置(ゴール判定)を何tickごとに確認するか。
+# match.physics-interval-ticks: ボール物理(キック、摩擦、バウンド)を何tickごとに更新するか。
+# match.kick-radius: 各プレイヤーの周り(ブロック単位)でボールをキックできる範囲。
+# match.kick-force: プレイヤーの近くでボールに与える力。
+# match.max-speed: ボールが移動できる最大水平速度。
+# match.friction: 毎tickの水平速度に適用される減衰係数(0-1、低いほど摩擦が大きい)。
+# match.countdown-seconds: 試合開始前のカウントダウン秒数。
 match:
   goals-to-win: 5
   time-limit-minutes: 10
   tick-interval-ticks: 10
+  physics-interval-ticks: 2
+  kick-radius: 1.2
+  kick-force: 0.55
+  max-speed: 1.3
+  friction: 0.9
+  countdown-seconds: 3
 
 messages:
   en:
@@ -28,7 +46,7 @@ messages:
       corner2-set: "&aCorner 2 set."
       selection-incomplete: "&cSelect both corners with the wand first (left-click, then right-click)."
     arena:
-      usage: "&cUsage: /soccer arena <create|setgoal|setspawn|setkickoff|setfield|remove|list>"
+      usage: "&cUsage: /soccer arena <create|setgoal|setspawn|setkickoff|setfield|tree|remove|list>"
       create-usage: "&cUsage: /soccer arena create <name>"
       already-exists: "&cAn arena named '{name}' already exists."
       created: "&aCreated arena '{name}' in this world."
@@ -36,6 +54,7 @@ messages:
       setspawn-usage: "&cUsage: /soccer arena setspawn <name> <a|b>"
       setkickoff-usage: "&cUsage: /soccer arena setkickoff <name>"
       setfield-usage: "&cUsage: /soccer arena setfield <name> (with both wand corners selected)"
+      tree-usage: "&cUsage: /soccer arena tree <name> (stand where you want the tree root)"
       remove-usage: "&cUsage: /soccer arena remove <name>"
       not-found: "&cNo arena named '{name}'."
       name-required: "&cMultiple arenas exist - specify which one, e.g. /soccer join <arena>."
@@ -44,6 +63,7 @@ messages:
       spawn-set: "&aSet team {team}'s spawn for arena '{name}'."
       kickoff-set: "&aSet the kickoff point for arena '{name}'."
       field-set: "&aSet the field boundary for arena '{name}' - the ball bounces off the edge of this area."
+      tree-placed: "&aPlaced a birch tree in arena '{name}' at your location."
       removed: "&aRemoved arena '{name}'."
       list-header: "&7--- Arenas ({count}) ---"
       list-empty: "&7No arenas registered."
@@ -56,13 +76,18 @@ messages:
       usage: "&cUsage: /soccer <wand|arena ...|join [arena]|leave|start [arena]|stop [arena]>"
       joined: "&aJoined team {team} in arena '{name}'."
       left: "&aLeft your current match."
-      started: "&aStarted the match in arena '{name}'!"
+      started: "&aStarted countdown for arena '{name}'."
       stopped-manually: "&7The match was stopped."
     match:
-      already-running: "&cThat arena's match is already running."
+      already-running: "&cThat arena's match is already running or counting down."
       need-both-teams: "&cBoth teams need at least one player before starting."
       not-running: "&cThat arena doesn't have a match running."
       arena-missing: "&cThe arena was removed - the match has ended."
+      countdown-title: "&e{seconds}"
+      countdown-subtitle: "&7Get ready!"
+      kickoff-title: "&aKickoff!"
+      kickoff-subtitle: "&aGo!"
+      started-chat: "&a⚽ Match started in arena '{name}'! Let's play!"
       goal-a: "&a⚽ Team A scores! &7({scoreA} - {scoreB})"
       goal-b: "&a⚽ Team B scores! &7({scoreA} - {scoreB})"
       winner-a: "&6Team A wins! &7(Final score: {scoreA} - {scoreB})"
@@ -79,7 +104,7 @@ messages:
       corner2-set: "&a2点目を設定しました。"
       selection-incomplete: "&c先にワンドで2点とも選択してください(左クリック→右クリック)。"
     arena:
-      usage: "&c使い方: /soccer arena <create|setgoal|setspawn|setkickoff|setfield|remove|list>"
+      usage: "&c使い方: /soccer arena <create|setgoal|setspawn|setkickoff|setfield|tree|remove|list>"
       create-usage: "&c使い方: /soccer arena create <名前>"
       already-exists: "&c「{name}」という名前のアリーナは既に存在します。"
       created: "&aこのワールドにアリーナ「{name}」を作成しました。"
@@ -87,6 +112,7 @@ messages:
       setspawn-usage: "&c使い方: /soccer arena setspawn <名前> <a|b>"
       setkickoff-usage: "&c使い方: /soccer arena setkickoff <名前>"
       setfield-usage: "&c使い方: /soccer arena setfield <名前> (ワンドで2点選択済みであること)"
+      tree-usage: "&c使い方: /soccer arena tree <名前> (木を設置したい場所に立って実行)"
       remove-usage: "&c使い方: /soccer arena remove <名前>"
       not-found: "&cアリーナ「{name}」が見つかりません。"
       name-required: "&c複数のアリーナが存在します。名前を指定してください。例: /soccer join <アリーナ名>"
@@ -95,6 +121,7 @@ messages:
       spawn-set: "&aアリーナ「{name}」のチーム{team}のスポーン地点を設定しました。"
       kickoff-set: "&aアリーナ「{name}」のキックオフ地点を設定しました。"
       field-set: "&aアリーナ「{name}」のフィールド境界を設定しました - この範囲の端でボールが跳ね返ります。"
+      tree-placed: "&aアリーナ「{name}」の現在地に白樺の木を設置しました。"
       removed: "&aアリーナ「{name}」を削除しました。"
       list-header: "&7--- アリーナ一覧 ({count}) ---"
       list-empty: "&7登録されているアリーナはありません。"
@@ -107,13 +134,18 @@ messages:
       usage: "&c使い方: /soccer <wand|arena ...|join [アリーナ名]|leave|start [アリーナ名]|stop [アリーナ名]>"
       joined: "&aアリーナ「{name}」のチーム{team}に参加しました。"
       left: "&a試合から抜けました。"
-      started: "&aアリーナ「{name}」で試合を開始しました!"
+      started: "&aアリーナ「{name}」のカウントダウンを開始しました。"
       stopped-manually: "&7試合が停止されました。"
     match:
-      already-running: "&cそのアリーナの試合は既に進行中です。"
+      already-running: "&cそのアリーナの試合は既に進行中またはカウントダウン中です。"
       need-both-teams: "&c開始するには両チームに1人以上必要です。"
       not-running: "&cそのアリーナで進行中の試合はありません。"
       arena-missing: "&cアリーナが削除されたため試合が終了しました。"
+      countdown-title: "&e{seconds}"
+      countdown-subtitle: "&7準備してください!"
+      kickoff-title: "&aキックオフ!"
+      kickoff-subtitle: "&aスタート!"
+      started-chat: "&a⚽ アリーナ「{name}」で試合が開始されました! 頑張りましょう!"
       goal-a: "&a⚽ Aチームが得点! &7({scoreA} - {scoreB})"
       goal-b: "&a⚽ Bチームが得点! &7({scoreA} - {scoreB})"
       winner-a: "&6Aチームの勝利! &7(最終スコア: {scoreA} - {scoreB})"

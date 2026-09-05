@@ -4,6 +4,7 @@ import com.yamakotaro.sulfursoccer.arena.ArenaManager;
 import com.yamakotaro.sulfursoccer.commands.SoccerCommand;
 import com.yamakotaro.sulfursoccer.listeners.BallDeathListener;
 import com.yamakotaro.sulfursoccer.listeners.SelectionListener;
+import com.yamakotaro.sulfursoccer.match.BallPhysicsTask;
 import com.yamakotaro.sulfursoccer.match.MatchManager;
 import com.yamakotaro.sulfursoccer.match.SoccerTickTask;
 import com.yamakotaro.sulfursoccer.selection.SelectionManager;
@@ -14,6 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class SulfurSoccerPlugin extends JavaPlugin {
 
     private SoccerTickTask soccerTickTask;
+    private BallPhysicsTask ballPhysicsTask;
 
     @Override
     public void onEnable() {
@@ -21,7 +23,7 @@ public class SulfurSoccerPlugin extends JavaPlugin {
         Messages messages = new Messages(this);
         ArenaManager arenaManager = new ArenaManager(this);
         SelectionManager selectionManager = new SelectionManager();
-        MatchManager matchManager = new MatchManager(arenaManager, messages);
+        MatchManager matchManager = new MatchManager(this, arenaManager, messages);
         NamespacedKey wandKey = new NamespacedKey(this, "wand");
 
         getServer().getPluginManager().registerEvents(new SelectionListener(this, selectionManager, messages), this);
@@ -35,12 +37,19 @@ public class SulfurSoccerPlugin extends JavaPlugin {
         long tickInterval = getConfig().getLong("match.tick-interval-ticks", 10);
         this.soccerTickTask = new SoccerTickTask(this, arenaManager, matchManager);
         soccerTickTask.runTaskTimer(this, tickInterval, tickInterval);
+
+        long physicsInterval = getConfig().getLong("match.physics-interval-ticks", 2);
+        this.ballPhysicsTask = new BallPhysicsTask(this, arenaManager, matchManager);
+        ballPhysicsTask.runTaskTimer(this, 0, physicsInterval);
     }
 
     @Override
     public void onDisable() {
         if (soccerTickTask != null) {
             soccerTickTask.cancel();
+        }
+        if (ballPhysicsTask != null) {
+            ballPhysicsTask.cancel();
         }
     }
 }

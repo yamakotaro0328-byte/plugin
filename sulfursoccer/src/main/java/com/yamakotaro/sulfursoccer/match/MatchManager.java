@@ -4,18 +4,24 @@ import com.yamakotaro.sulfursoccer.Messages;
 import com.yamakotaro.sulfursoccer.arena.Arena;
 import com.yamakotaro.sulfursoccer.arena.ArenaManager;
 import com.yamakotaro.sulfursoccer.arena.Point;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -25,11 +31,13 @@ import java.util.UUID;
  */
 public class MatchManager {
 
+    private final JavaPlugin plugin;
     private final ArenaManager arenaManager;
     private final Messages messages;
     private final Map<String, Match> matchesByArena = new HashMap<>();
 
-    public MatchManager(ArenaManager arenaManager, Messages messages) {
+    public MatchManager(JavaPlugin plugin, ArenaManager arenaManager, Messages messages) {
+        this.plugin = plugin;
         this.arenaManager = arenaManager;
         this.messages = messages;
     }
@@ -77,7 +85,7 @@ public class MatchManager {
             return "arena.not-ready";
         }
         Match match = getOrCreateMatch(arena.id());
-        if (match.isRunning()) {
+        if (match.isRunning() || match.isCountdownActive()) {
             return "match.already-running";
         }
         if (match.getTeamA().isEmpty() || match.getTeamB().isEmpty()) {
@@ -87,16 +95,14 @@ public class MatchManager {
         if (world == null) {
             return "arena.world-not-loaded";
         }
-        for (UUID playerId : match.getTeamA()) {
-            teleportIfOnline(playerId, world, arena.spawnA());
-        }
-        for (UUID playerId : match.getTeamB()) {
-            teleportIfOnline(playerId, world, arena.spawnB());
-        }
-        match.resetScores();
-        match.setStartedAtMillis(System.currentTimeMillis());
-        match.setRunning(true);
-        spawnBall(arena, match);
+        teleportTeam(match.getTeamA(), world, arena.spawnA());
+        teleportTeam(match.getTeamB(), world, arena.spawnB());
+
+        int countdownSeconds = plugin.getConfig().getInt("match.countdown-seconds", 3);
+        long countdownEndTime = System.currentTimeMillis() + (countdownSeconds * 1000L);
+        match.setCountdownEndMillis(countdownEndTime);
+
+        scheduleCountdownTick(arena, match, countdownSeconds);
         return null;
     }
 
@@ -135,7 +141,7 @@ public class MatchManager {
         Location location = new Location(world, kickoff.centerX(), kickoff.y(), kickoff.centerZ());
         Entity ball = world.spawnEntity(location, EntityType.SULFUR_CUBE);
         if (ball instanceof Mob mob) {
-            mob.setAI(false); // physics/knockback still apply - only independent wandering is disabled
+            mob.setAI(false); // only independent wandering/AI is disabled; BallPhysicsTask sets velocity every tick
         }
         match.setBallEntityId(ball.getUniqueId());
     }
@@ -157,10 +163,72 @@ public class MatchManager {
         match.setBallEntityId(null);
     }
 
-    private void teleportIfOnline(UUID playerId, World world, Point point) {
-        Player player = Bukkit.getPlayer(playerId);
-        if (player != null) {
-            player.teleport(new Location(world, point.centerX(), point.y(), point.centerZ()));
+    private void teleportTeam(Set<UUID> team, World world, Point spawnPoint) {
+        int index = 0;
+        for (UUID playerId : team) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) {
+                double offsetX = (index % 3) * 1.5 - 1.5;
+                double offsetZ = (index / 3) * 1.5 - 1.5;
+                Location loc = new Location(world, spawnPoint.centerX() + offsetX, spawnPoint.y(), spawnPoint.centerZ() + offsetZ);
+                loc.setDirection(new Location(world, spawnPoint.centerX(), spawnPoint.y(), spawnPoint.centerZ()).toVector()
+                        .subtract(loc.toVector()).normalize());
+                player.teleport(loc);
+            }
+            index++;
+        }
+    }
+
+    private void scheduleCountdownTick(Arena arena, Match match, int secondsRemaining) {
+        if (secondsRemaining > 0) {
+            Component countdownComponent = Component.text(String.valueOf(secondsRemaining));
+            Component subtitleComponent = messages.get("match.countdown-subtitle", Map.of("seconds", String.valueOf(secondsRemaining)));
+            titleToMatch(match, messages.get("match.countdown-title", Map.of("seconds", String.valueOf(secondsRemaining))), subtitleComponent);
+            soundToMatch(match, Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 0.5f + (secondsRemaining * 0.3f));
+
+            int nextSecond = secondsRemaining - 1;
+            Bukkit.getScheduler().runTaskLater(plugin, () -> scheduleCountdownTick(arena, match, nextSecond), 20L);
+        } else {
+            match.resetScores();
+            match.setStartedAtMillis(System.currentTimeMillis());
+            match.setRunning(true);
+            spawnBall(arena, match);
+
+            titleToMatch(match, messages.get("match.kickoff-title", Map.of()), messages.get("match.kickoff-subtitle", Map.of()));
+            soundToMatch(match, Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1.0f, 1.0f);
+            announceToMatch(match, "match.started-chat", Map.of("name", arena.id()));
+        }
+    }
+
+    private void titleToMatch(Match match, Component title, Component subtitle) {
+        for (UUID playerId : match.getTeamA()) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) {
+                Title titleObj = Title.title(title, subtitle, Title.Times.of(Duration.ofMillis(500), Duration.ofMillis(1500), Duration.ofMillis(500)));
+                player.showTitle(titleObj);
+            }
+        }
+        for (UUID playerId : match.getTeamB()) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) {
+                Title titleObj = Title.title(title, subtitle, Title.Times.of(Duration.ofMillis(500), Duration.ofMillis(1500), Duration.ofMillis(500)));
+                player.showTitle(titleObj);
+            }
+        }
+    }
+
+    private void soundToMatch(Match match, Sound sound, float volume, float pitch) {
+        for (UUID playerId : match.getTeamA()) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) {
+                player.playSound(player.getLocation(), sound, volume, pitch);
+            }
+        }
+        for (UUID playerId : match.getTeamB()) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) {
+                player.playSound(player.getLocation(), sound, volume, pitch);
+            }
         }
     }
 

@@ -15,6 +15,7 @@ public class Match {
     private int scoreB;
     private UUID ballEntityId;
     private long startedAtMillis;
+    private long countdownEndMillis;
 
     public Match(String arenaId) {
         this.arenaId = arenaId;
@@ -79,5 +80,17 @@ public class Match {
 
     public void setStartedAtMillis(long startedAtMillis) {
         this.startedAtMillis = startedAtMillis;
+    }
+
+    public long getCountdownEndMillis() {
+        return countdownEndMillis;
+    }
+
+    public void setCountdownEndMillis(long countdownEndMillis) {
+        this.countdownEndMillis = countdownEndMillis;
+    }
+
+    public boolean isCountdownActive() {
+        return System.currentTimeMillis() < countdownEndMillis;
     }
 }
