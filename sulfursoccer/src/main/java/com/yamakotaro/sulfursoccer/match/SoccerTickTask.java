@@ -11,17 +11,20 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.Map;
 import java.util.Optional;
 
-/** Runs every match.tick-interval-ticks: goal detection, win condition, and time limit for every running match. */
+/** Runs every match.tick-interval-ticks: goal detection, win condition, time limit, and the sidebar
+ * scoreboard refresh for every running match. */
 public class SoccerTickTask extends BukkitRunnable {
 
     private final JavaPlugin plugin;
     private final ArenaManager arenaManager;
     private final MatchManager matchManager;
+    private final MatchScoreboard matchScoreboard;
 
-    public SoccerTickTask(JavaPlugin plugin, ArenaManager arenaManager, MatchManager matchManager) {
+    public SoccerTickTask(JavaPlugin plugin, ArenaManager arenaManager, MatchManager matchManager, MatchScoreboard matchScoreboard) {
         this.plugin = plugin;
         this.arenaManager = arenaManager;
         this.matchManager = matchManager;
+        this.matchScoreboard = matchScoreboard;
     }
 
     @Override
@@ -52,9 +55,15 @@ public class SoccerTickTask extends BukkitRunnable {
                 continue;
             }
 
-            if (timeLimitMinutes > 0 && now - match.getStartedAtMillis() > timeLimitMinutes * 60_000L) {
+            long remainingMillis = timeLimitMinutes > 0
+                    ? (match.getStartedAtMillis() + timeLimitMinutes * 60_000L) - now
+                    : -1;
+            if (timeLimitMinutes > 0 && remainingMillis <= 0) {
                 matchManager.stopWithMessage(match.getArenaId(), winnerKey(match));
+                continue;
             }
+
+            matchScoreboard.update(match, arena.id(), remainingMillis);
         }
     }
 

@@ -37,12 +37,14 @@ public class MatchManager {
     private final JavaPlugin plugin;
     private final ArenaManager arenaManager;
     private final Messages messages;
+    private final MatchScoreboard matchScoreboard;
     private final Map<String, Match> matchesByArena = new HashMap<>();
 
-    public MatchManager(JavaPlugin plugin, ArenaManager arenaManager, Messages messages) {
+    public MatchManager(JavaPlugin plugin, ArenaManager arenaManager, Messages messages, MatchScoreboard matchScoreboard) {
         this.plugin = plugin;
         this.arenaManager = arenaManager;
         this.messages = messages;
+        this.matchScoreboard = matchScoreboard;
     }
 
     private Match getOrCreateMatch(String arenaId) {
@@ -60,8 +62,10 @@ public class MatchManager {
     /** Removes the player from whichever match they were in, on either team - a no-op if they weren't in one. */
     public void leave(UUID playerId) {
         for (Match match : matchesByArena.values()) {
-            match.getTeamA().remove(playerId);
-            match.getTeamB().remove(playerId);
+            boolean wasPlaying = match.getTeamA().remove(playerId) | match.getTeamB().remove(playerId);
+            if (wasPlaying && match.isRunning()) {
+                matchScoreboard.clear(playerId);
+            }
         }
     }
 
@@ -121,6 +125,7 @@ public class MatchManager {
     void endMatch(Match match, String announcementKey) {
         match.setRunning(false);
         removeBall(match);
+        matchScoreboard.clearAll(match);
         announceToMatch(match, announcementKey, Map.of(
                 "scoreA", String.valueOf(match.getScoreA()), "scoreB", String.valueOf(match.getScoreB())));
     }

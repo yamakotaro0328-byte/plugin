@@ -89,6 +89,10 @@ messages:
       winner-a: "&6Team A wins! &7(Final score: {scoreA} - {scoreB})"
       winner-b: "&6Team B wins! &7(Final score: {scoreA} - {scoreB})"
       draw: "&6It's a draw! &7({scoreA} - {scoreB})"
+      scoreboard-title: "&a⚽ {name}"
+      scoreboard-score: "&fTeam A &7{scoreA} &7- &fTeam B &7{scoreB}"
+      scoreboard-time: "&7Time left: &f{time}"
+      scoreboard-no-limit: "&7No time limit"
   ja:
     general:
       no-permission: "&cこの操作を行う権限がありません。"
@@ -146,3 +150,7 @@ messages:
       winner-a: "&6Aチームの勝利! &7(最終スコア: {scoreA} - {scoreB})"
       winner-b: "&6Bチームの勝利! &7(最終スコア: {scoreA} - {scoreB})"
       draw: "&6引き分け! &7({scoreA} - {scoreB})"
+      scoreboard-title: "&a⚽ {name}"
+      scoreboard-score: "&fAチーム &7{scoreA} &7- &fBチーム &7{scoreB}"
+      scoreboard-time: "&7残り時間: &f{time}"
+      scoreboard-no-limit: "&7時間制限なし"

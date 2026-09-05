@@ -5,6 +5,7 @@ import com.yamakotaro.sulfursoccer.commands.SoccerCommand;
 import com.yamakotaro.sulfursoccer.listeners.BallDeathListener;
 import com.yamakotaro.sulfursoccer.listeners.SelectionListener;
 import com.yamakotaro.sulfursoccer.match.MatchManager;
+import com.yamakotaro.sulfursoccer.match.MatchScoreboard;
 import com.yamakotaro.sulfursoccer.match.SoccerTickTask;
 import com.yamakotaro.sulfursoccer.selection.SelectionManager;
 import org.bukkit.NamespacedKey;
@@ -21,7 +22,8 @@ public class SulfurSoccerPlugin extends JavaPlugin {
         Messages messages = new Messages(this);
         ArenaManager arenaManager = new ArenaManager(this);
         SelectionManager selectionManager = new SelectionManager();
-        MatchManager matchManager = new MatchManager(this, arenaManager, messages);
+        MatchScoreboard matchScoreboard = new MatchScoreboard(messages);
+        MatchManager matchManager = new MatchManager(this, arenaManager, messages, matchScoreboard);
         NamespacedKey wandKey = new NamespacedKey(this, "wand");
 
         getServer().getPluginManager().registerEvents(new SelectionListener(this, selectionManager, messages), this);
@@ -33,7 +35,7 @@ public class SulfurSoccerPlugin extends JavaPlugin {
         command.setTabCompleter(soccerCommand);
 
         long tickInterval = getConfig().getLong("match.tick-interval-ticks", 10);
-        this.soccerTickTask = new SoccerTickTask(this, arenaManager, matchManager);
+        this.soccerTickTask = new SoccerTickTask(this, arenaManager, matchManager, matchScoreboard);
         soccerTickTask.runTaskTimer(this, tickInterval, tickInterval);
     }
 
