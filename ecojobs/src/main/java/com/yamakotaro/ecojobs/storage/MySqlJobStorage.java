@@ -28,6 +28,7 @@ public class MySqlJobStorage implements JobStorage {
     private final String playersTable;
     private final String progressTable;
     private final String explorerTable;
+    private final String milestonesTable;
 
     public MySqlJobStorage(EcoJobsPlugin plugin) {
         this.plugin = plugin;
@@ -36,6 +37,7 @@ public class MySqlJobStorage implements JobStorage {
         this.playersTable = prefix + "players";
         this.progressTable = prefix + "progress";
         this.explorerTable = prefix + "explorer";
+        this.milestonesTable = prefix + "milestones";
         createTables();
     }
 
@@ -63,6 +65,14 @@ public class MySqlJobStorage implements JobStorage {
                     + "world VARCHAR(64), "
                     + "distance DOUBLE NOT NULL DEFAULT 0, "
                     + "PRIMARY KEY (uuid, world))");
+            // One row per job+level milestone this player has ever had server-wide-broadcast for -
+            // see PlayerJobManager#awardMilestone. Rows are only ever inserted, never updated or
+            // deleted (a milestone once announced stays announced).
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS " + milestonesTable + " ("
+                    + "uuid VARCHAR(36), "
+                    + "job_id VARCHAR(64), "
+                    + "level INT NOT NULL, "
+                    + "PRIMARY KEY (uuid, job_id, level))");
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to create EcoJobs tables", e);
         }
@@ -115,6 +125,18 @@ public class MySqlJobStorage implements JobStorage {
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to load EcoJobs explorer distances", e);
         }
+        try (Statement statement = conn.createStatement();
+             ResultSet rs = statement.executeQuery("SELECT uuid, job_id, level FROM " + milestonesTable)) {
+            while (rs.next()) {
+                PlayerJobData playerData = data.get(UUID.fromString(rs.getString("uuid")));
+                if (playerData == null) {
+                    continue;
+                }
+                playerData.getAnnouncedMilestones().add(rs.getString("job_id") + ":" + rs.getInt("level"));
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to load EcoJobs announced milestones", e);
+        }
         return data;
     }
 
@@ -135,7 +157,12 @@ public class MySqlJobStorage implements JobStorage {
                              + "ON DUPLICATE KEY UPDATE level = VALUES(level), xp = VALUES(xp), prestige = VALUES(prestige), joined = VALUES(joined)");
              PreparedStatement explorerStatement = conn.prepareStatement(
                      "INSERT INTO " + explorerTable + " (uuid, world, distance) VALUES (?, ?, ?) "
-                             + "ON DUPLICATE KEY UPDATE distance = VALUES(distance)")) {
+                             + "ON DUPLICATE KEY UPDATE distance = VALUES(distance)");
+             // IGNORE, not ON DUPLICATE KEY UPDATE: a milestone once announced never changes, and
+             // every dirty player's full announced-milestones set is (re-)inserted each save since
+             // dirtyUuids doesn't track which entries are actually new.
+             PreparedStatement milestoneStatement = conn.prepareStatement(
+                     "INSERT IGNORE INTO " + milestonesTable + " (uuid, job_id, level) VALUES (?, ?, ?)")) {
             for (UUID uuid : dirtyUuids) {
                 PlayerJobData playerData = allData.get(uuid);
                 if (playerData == null) {
@@ -164,10 +191,22 @@ public class MySqlJobStorage implements JobStorage {
                     explorerStatement.setDouble(3, entry.getValue());
                     explorerStatement.addBatch();
                 }
+
+                for (String milestoneKey : playerData.getAnnouncedMilestones()) {
+                    int separator = milestoneKey.lastIndexOf(':');
+                    if (separator < 0) {
+                        continue;
+                    }
+                    milestoneStatement.setString(1, uuid.toString());
+                    milestoneStatement.setString(2, milestoneKey.substring(0, separator));
+                    milestoneStatement.setInt(3, Integer.parseInt(milestoneKey.substring(separator + 1)));
+                    milestoneStatement.addBatch();
+                }
             }
             playerStatement.executeBatch();
             progressStatement.executeBatch();
             explorerStatement.executeBatch();
+            milestoneStatement.executeBatch();
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to save EcoJobs data (MySQL)", e);
         }

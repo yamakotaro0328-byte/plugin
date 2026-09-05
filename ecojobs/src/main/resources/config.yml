@@ -394,6 +394,7 @@ messages:
       reloaded: "&aEcoJobs config reloaded."
     jobs:
       usage: "&cUsage: /jobs <join|leave|list|stats|top|menu|info|prestige|admin|booster|reload> [args]"
+      page-footer: "&7--- Page {page}/{pages} - add a page number to see more ---"
       unknown-job: "&cUnknown job '{job}'. Use /jobs list to see available jobs."
       job-disabled: "&cThe {job} job is currently disabled by an admin."
       already-joined: "&cYou're already in the {job} job."
@@ -424,6 +425,7 @@ messages:
       prestige-not-max-level: "&cYou must reach level {max} in {job} before you can prestige."
       prestige-broadcast: "&d★ &f{player} &dprestiged &f{job} &dto Prestige {prestige}!"
       milestone-broadcast: "&6✦ &f{player} &6reached level &f{level} &6in &f{job} &6and earned a &f{money} &6bonus!"
+      milestone-repeat: "&6✦ &6You reached level &f{level} &6in &f{job} &6again and earned a &f{money} &6bonus!"
       booster-usage: "&cUsage: /jobs booster <start <job|all> <money multiplier> <xp multiplier> <minutes> | stop <job|all> | list>"
       booster-invalid-number: "&cInvalid number."
       booster-scope-all: "All jobs"
@@ -511,6 +513,7 @@ messages:
       reloaded: "&aEcoJobsの設定を再読み込みしました。"
     jobs:
       usage: "&c使い方: /jobs <join|leave|list|stats|top|menu|info|prestige|admin|booster|reload> [引数]"
+      page-footer: "&7--- {page}/{pages}ページ - ページ番号を指定すると続きが見られます ---"
       unknown-job: "&c不明なジョブ「{job}」です。/jobs list で一覧を確認してください。"
       job-disabled: "&c{job}は現在、管理者により無効化されています。"
       already-joined: "&cすでに{job}に加入しています。"
@@ -541,6 +544,7 @@ messages:
       prestige-not-max-level: "&c{job}をプレステージするにはレベル{max}に到達する必要があります。"
       prestige-broadcast: "&d★ &f{player} &dが{job}をプレステージ{prestige}にしました！"
       milestone-broadcast: "&6✦ &f{player} &6が&f{job}&6でレベル&f{level}&6に到達し、&f{money}&6のボーナスを獲得しました！"
+      milestone-repeat: "&6✦ &6{job}&6で再びレベル&f{level}&6に到達し、&f{money}&6のボーナスを獲得しました！"
       booster-usage: "&c使い方: /jobs booster <start <ジョブ名|all> <お金倍率> <経験値倍率> <分数> | stop <ジョブ名|all> | list>"
       booster-invalid-number: "&c数値が不正です。"
       booster-scope-all: "全ジョブ"

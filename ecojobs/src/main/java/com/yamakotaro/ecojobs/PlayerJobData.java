@@ -24,6 +24,10 @@ public class PlayerJobData {
     private final Map<String, PlayerJobProgress> progress = new LinkedHashMap<>();
     private final Set<String> joined = new LinkedHashSet<>();
     private final Map<String, Double> explorerDistanceByWorld = new HashMap<>();
+    // "<jobId>:<level>" entries this player has already had server-wide-broadcast for - see
+    // PlayerJobManager#awardMilestone. Without this, prestiging replays the same milestone levels
+    // and re-broadcasts each one server-wide every single time.
+    private final Set<String> announcedMilestones = new LinkedHashSet<>();
     private boolean soundEnabled = true;
     private boolean actionBarEnabled = true;
 
@@ -57,6 +61,10 @@ public class PlayerJobData {
 
     public Map<String, Double> getExplorerDistanceByWorld() {
         return explorerDistanceByWorld;
+    }
+
+    public Set<String> getAnnouncedMilestones() {
+        return announcedMilestones;
     }
 
     public boolean isSoundEnabled() {

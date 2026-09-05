@@ -204,7 +204,7 @@ public class JobInfoMenuHolder implements InventoryHolder {
                         Map.of("distance", String.valueOf((int) explorerDistancePerMilestone))));
             }
             lore.add(messages.get("menu.job-info-entry-money", Map.of(
-                    "money", MenuUtil.formatReward(entry.reward().money(), entry.reward().moneyPerLevel()))));
+                    "money", MenuUtil.formatMoneyReward(entry.reward().money(), entry.reward().moneyPerLevel()))));
             lore.add(messages.get("menu.job-info-entry-xp", Map.of(
                     "xp", MenuUtil.formatReward(entry.reward().xp(), entry.reward().xpPerLevel()))));
             meta.lore(lore);

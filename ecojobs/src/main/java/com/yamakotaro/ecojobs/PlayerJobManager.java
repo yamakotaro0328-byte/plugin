@@ -53,6 +53,10 @@ public class PlayerJobManager {
     private final Map<UUID, PlayerJobData> data = new HashMap<>();
     private final Set<UUID> dirtyUuids = new HashSet<>();
     private final Map<String, CachedTop> topCache = new HashMap<>();
+    // Per-player, per-job earned money not yet shown on the action bar - see
+    // #queueEarnedActionBar/#flushEarnedActionBars. Batching these avoids the action bar
+    // flickering once per action (e.g. once per ore mined in a vein of 20 within a second).
+    private final Map<UUID, Map<String, Double>> pendingEarnings = new HashMap<>();
     private boolean noEconomyWarned;
 
     public PlayerJobManager(EcoJobsPlugin plugin, JobManager jobManager, EconomyHolder economyHolder, Messages messages,
@@ -290,9 +294,7 @@ public class PlayerJobManager {
             if (economy != null) {
                 economy.depositPlayer(player, money);
                 if (isActionBarEnabled(player)) {
-                    player.sendActionBar(messages.get("jobs.earned", Map.of(
-                            "money", String.format("%.2f", money),
-                            "job", messages.jobName(job.getId()))));
+                    queueEarnedActionBar(player.getUniqueId(), job.getId(), money);
                 }
             } else if (!noEconomyWarned) {
                 noEconomyWarned = true;
@@ -313,6 +315,33 @@ public class PlayerJobManager {
         }
 
         markDirty(player.getUniqueId());
+    }
+
+    private void queueEarnedActionBar(UUID uuid, String jobId, double money) {
+        pendingEarnings.computeIfAbsent(uuid, k -> new HashMap<>()).merge(jobId, money, Double::sum);
+    }
+
+    /**
+     * Flushes batched per-job earnings into one action-bar update per job, instead of one per
+     * action - mining a vein of 20 ore used to flicker the action bar 20 times within a second.
+     * Called on a short heartbeat (see {@link EcoJobsPlugin}), not per-action.
+     */
+    public void flushEarnedActionBars() {
+        if (pendingEarnings.isEmpty()) {
+            return;
+        }
+        for (Map.Entry<UUID, Map<String, Double>> playerEntry : pendingEarnings.entrySet()) {
+            Player player = Bukkit.getPlayer(playerEntry.getKey());
+            if (player == null) {
+                continue;
+            }
+            for (Map.Entry<String, Double> jobEntry : playerEntry.getValue().entrySet()) {
+                player.sendActionBar(messages.get("jobs.earned", Map.of(
+                        "money", MoneyFormat.format(jobEntry.getValue()),
+                        "job", messages.jobName(jobEntry.getKey()))));
+            }
+        }
+        pendingEarnings.clear();
     }
 
     private void checkLevelUp(Player player, JobDefinition job, PlayerJobProgress progress) {
@@ -343,10 +372,13 @@ public class PlayerJobManager {
     }
 
     /**
-     * A one-time server-wide fanfare (bonus money, broadcast, and a toast-style sound) whenever a
-     * job reaches one of config.yml's leveling.milestone-levels. Re-triggers naturally on a later
-     * prestige cycle's relevel through the same levels - that's intentional, not a bug: prestige
-     * exists precisely to be replayed.
+     * A fanfare (bonus money and a toast-style sound, every time) whenever a job reaches one of
+     * config.yml's leveling.milestone-levels - but the server-wide broadcast only fires the very
+     * first time this player has ever reached this job+level combination. Prestige naturally
+     * replays through the same milestone levels on every cycle (that's intentional - prestige
+     * exists precisely to be replayed), and without this check every one of those replays used to
+     * re-announce the same milestone to the whole server; a repeat crossing now just tells the
+     * player themselves.
      */
     private void awardMilestone(Player player, JobDefinition job, int level) {
         double money = jobManager.milestoneBonusMoney();
@@ -356,14 +388,34 @@ public class PlayerJobManager {
                 economy.depositPlayer(player, money);
             }
         }
-        Bukkit.getServer().sendMessage(messages.get("jobs.milestone-broadcast", Map.of(
-                "player", player.getName(),
-                "job", messages.jobName(job.getId()),
-                "level", String.valueOf(level),
-                "money", String.format("%.2f", money))));
+        if (markMilestoneAnnounced(player.getUniqueId(), job.getId(), level)) {
+            Bukkit.getServer().sendMessage(messages.get("jobs.milestone-broadcast", Map.of(
+                    "player", player.getName(),
+                    "job", messages.jobName(job.getId()),
+                    "level", String.valueOf(level),
+                    "money", MoneyFormat.format(money))));
+        } else {
+            player.sendMessage(messages.get("jobs.milestone-repeat", Map.of(
+                    "job", messages.jobName(job.getId()),
+                    "level", String.valueOf(level),
+                    "money", MoneyFormat.format(money))));
+        }
         if (soundEnabledFor(player.getUniqueId())) {
             player.playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1f, 1f);
         }
+    }
+
+    /** @return true the first time this player crosses this job+level milestone, false on every later prestige replay. */
+    private boolean markMilestoneAnnounced(UUID uuid, String jobId, int level) {
+        PlayerJobData playerData = data.get(uuid);
+        if (playerData == null) {
+            return true; // shouldn't happen at this point, but announcing beats silently dropping it
+        }
+        boolean firstTime = playerData.getAnnouncedMilestones().add(jobId + ":" + level);
+        if (firstTime) {
+            markDirty(uuid);
+        }
+        return firstTime;
     }
 
     public double xpToNextLevel(int level) {

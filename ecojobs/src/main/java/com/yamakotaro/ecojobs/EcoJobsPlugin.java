@@ -29,6 +29,7 @@ public class EcoJobsPlugin extends JavaPlugin {
     private static final long SAVE_INTERVAL_TICKS = 20L * 60 * 5; // every 5 minutes
     private static final long PLACED_BLOCK_CLEAR_INTERVAL_TICKS = 20L * 60 * 30; // every 30 minutes
     private static final long PERK_HEARTBEAT_INTERVAL_TICKS = 20L * 5; // every 5 seconds
+    private static final long ACTION_BAR_FLUSH_INTERVAL_TICKS = 5L; // every 0.25 seconds
 
     private PlayerJobManager playerJobManager;
     private YamlConfiguration config;
@@ -87,6 +88,10 @@ public class EcoJobsPlugin extends JavaPlugin {
         // separate cleanup on leave/logout.
         getServer().getScheduler().runTaskTimer(this,
                 new PerkHeartbeatTask(jobManager, playerJobManager, perkManager), PERK_HEARTBEAT_INTERVAL_TICKS, PERK_HEARTBEAT_INTERVAL_TICKS);
+        // Batches the "you earned X" action bar instead of sending it on every single reward -
+        // see PlayerJobManager#flushEarnedActionBars.
+        getServer().getScheduler().runTaskTimer(this, playerJobManager::flushEarnedActionBars,
+                ACTION_BAR_FLUSH_INTERVAL_TICKS, ACTION_BAR_FLUSH_INTERVAL_TICKS);
     }
 
     @Override

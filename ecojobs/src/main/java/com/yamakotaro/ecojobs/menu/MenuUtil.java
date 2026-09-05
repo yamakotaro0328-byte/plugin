@@ -1,6 +1,7 @@
 package com.yamakotaro.ecojobs.menu;
 
 import com.yamakotaro.ecojobs.Messages;
+import com.yamakotaro.ecojobs.MoneyFormat;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
@@ -105,5 +106,14 @@ final class MenuUtil {
             return String.format("%.2f/enchant-level", perLevel);
         }
         return String.format("%.2f", flat);
+    }
+
+    /** Same rule as {@link #formatReward}, but for a genuine currency amount (comma-formatted via
+     * {@link MoneyFormat}) rather than xp or any other plain number. */
+    static String formatMoneyReward(double flat, double perLevel) {
+        if (perLevel > 0) {
+            return MoneyFormat.format(perLevel) + "/enchant-level";
+        }
+        return MoneyFormat.format(flat);
     }
 }

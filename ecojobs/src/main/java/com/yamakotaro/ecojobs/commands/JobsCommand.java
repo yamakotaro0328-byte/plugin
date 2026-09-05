@@ -7,11 +7,13 @@ import com.yamakotaro.ecojobs.JobDefinition;
 import com.yamakotaro.ecojobs.JobManager;
 import com.yamakotaro.ecojobs.JobOverrides;
 import com.yamakotaro.ecojobs.Messages;
+import com.yamakotaro.ecojobs.MoneyFormat;
 import com.yamakotaro.ecojobs.PlayerJobManager;
 import com.yamakotaro.ecojobs.PlayerJobProgress;
 import com.yamakotaro.ecojobs.TabCompleteUtil;
 import com.yamakotaro.ecojobs.menu.AdminMenuHolder;
 import com.yamakotaro.ecojobs.menu.HubMenuHolder;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -57,7 +59,7 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
         switch (args[0].toLowerCase()) {
             case "join" -> handleJoin(sender, args);
             case "leave" -> handleLeave(sender, args);
-            case "list" -> handleList(sender);
+            case "list" -> handleList(sender, args);
             case "stats" -> handleStats(sender, args);
             case "top" -> handleTop(sender, args);
             case "menu" -> handleMenu(sender);
@@ -116,7 +118,7 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
         }
     }
 
-    private void handleList(CommandSender sender) {
+    private void handleList(CommandSender sender, String[] args) {
         if (!sender.hasPermission("ecojobs.use")) {
             sender.sendMessage(messages.get("general.no-permission", Map.of()));
             return;
@@ -124,22 +126,25 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
         Player player = sender instanceof Player p ? p : null;
         Map<String, PlayerJobProgress> allProgress = player != null
                 ? playerJobManager.allProgress(player.getUniqueId()) : Map.of();
-        sender.sendMessage(messages.get("jobs.list-header", Map.of()));
+        List<Component> entries = new ArrayList<>();
         for (String jobId : jobManager.all().keySet()) {
             PlayerJobProgress progress = allProgress.get(jobId);
             if (progress == null) {
-                sender.sendMessage(messages.get("jobs.list-entry-not-joined", Map.of("job", messages.jobName(jobId))));
+                entries.add(messages.get("jobs.list-entry-not-joined", Map.of("job", messages.jobName(jobId))));
                 continue;
             }
             String key = player != null && playerJobManager.isJoined(player.getUniqueId(), jobId)
                     ? "jobs.list-entry-joined" : "jobs.list-entry-left";
-            sender.sendMessage(messages.get(key, Map.of(
+            entries.add(messages.get(key, Map.of(
                     "job", messages.jobName(jobId),
                     "level", String.valueOf(progress.getLevel()),
                     "prestige", String.valueOf(progress.getPrestige()),
                     "xp", String.format("%.0f", progress.getXp()),
                     "next_xp", String.format("%.0f", playerJobManager.xpToNextLevel(progress.getLevel())))));
         }
+        // /jobs list [page] - 20 jobs used to always dump as one unpaged, header-plus-20-line
+        // block, which scrolled past the default 10-line chat window before it could be read.
+        sendPaged(sender, messages.get("jobs.list-header", Map.of()), entries, parsePage(args, 1));
     }
 
     private void handleStats(CommandSender sender, String[] args) {
@@ -180,17 +185,22 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(messages.get(self ? "jobs.stats-none" : "jobs.stats-none-other", Map.of("player", targetName)));
             return;
         }
-        sender.sendMessage(messages.get(self ? "jobs.stats-header" : "jobs.stats-header-other", Map.of("player", targetName)));
+        List<Component> entries = new ArrayList<>();
         for (Map.Entry<String, PlayerJobProgress> entry : allProgress.entrySet()) {
             PlayerJobProgress progress = entry.getValue();
             boolean active = playerJobManager.isJoined(targetUuid, entry.getKey());
-            sender.sendMessage(messages.get(active ? "jobs.stats-entry" : "jobs.stats-entry-inactive", Map.of(
+            entries.add(messages.get(active ? "jobs.stats-entry" : "jobs.stats-entry-inactive", Map.of(
                     "job", messages.jobName(entry.getKey()),
                     "level", String.valueOf(progress.getLevel()),
                     "prestige", String.valueOf(progress.getPrestige()),
                     "xp", String.format("%.0f", progress.getXp()),
                     "next_xp", String.format("%.0f", playerJobManager.xpToNextLevel(progress.getLevel())))));
         }
+        // /jobs stats <player> [page] - a page number is only ever the 3rd argument, never
+        // inferred from a bare 2nd argument, so a player whose name happens to be numeric can
+        // still always be looked up as /jobs stats <name> unambiguously.
+        sendPaged(sender, messages.get(self ? "jobs.stats-header" : "jobs.stats-header-other", Map.of("player", targetName)),
+                entries, parsePage(args, 2));
     }
 
     private void handleTop(CommandSender sender, String[] args) {
@@ -229,7 +239,7 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(messages.get("general.no-permission", Map.of()));
             return;
         }
-        if (args.length != 2) {
+        if (args.length < 2) {
             sender.sendMessage(messages.get("jobs.usage", Map.of()));
             return;
         }
@@ -239,33 +249,46 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(messages.get("jobs.unknown-job", Map.of("job", jobId)));
             return;
         }
-        sender.sendMessage(messages.get("jobs.info-header", Map.of("job", messages.jobName(jobId))));
         if ("explorer".equals(jobId)) {
+            sender.sendMessage(messages.get("jobs.info-header", Map.of("job", messages.jobName(jobId))));
             // Explorer has no action-reward table (see JobManager#load) - it pays purely on
             // distance milestones, so this used to fall through to the generic "no rewards
             // configured" message, which made a perfectly working job look broken.
             sender.sendMessage(messages.get("jobs.info-explorer", Map.of(
                     "distance", String.valueOf((int) jobManager.explorerDistancePerMilestone()),
-                    "money", String.format("%.2f", jobManager.explorerMoneyPerMilestone()),
+                    "money", MoneyFormat.format(jobManager.explorerMoneyPerMilestone()),
                     "xp", String.format("%.2f", jobManager.explorerXpPerMilestone()))));
             return;
         }
         // TreeMap for a stable, alphabetical order regardless of the underlying HashMap's order.
         Map<String, Map<String, ActionReward>> actions = new TreeMap<>(job.getActionsByType());
-        boolean any = false;
+        List<Component> entries = new ArrayList<>();
         for (Map.Entry<String, Map<String, ActionReward>> actionType : actions.entrySet()) {
             for (Map.Entry<String, ActionReward> rewardEntry : new TreeMap<>(actionType.getValue()).entrySet()) {
-                any = true;
                 ActionReward reward = rewardEntry.getValue();
-                sender.sendMessage(messages.get("jobs.info-entry", Map.of(
+                entries.add(messages.get("jobs.info-entry", Map.of(
                         "key", rewardEntry.getKey(),
-                        "money", formatReward(reward.money(), reward.moneyPerLevel()),
+                        "money", formatMoneyReward(reward.money(), reward.moneyPerLevel()),
                         "xp", formatReward(reward.xp(), reward.xpPerLevel()))));
             }
         }
-        if (!any) {
+        if (entries.isEmpty()) {
+            sender.sendMessage(messages.get("jobs.info-header", Map.of("job", messages.jobName(jobId))));
             sender.sendMessage(messages.get("jobs.info-empty", Map.of()));
+            return;
         }
+        // /jobs info <job> [page] - a job with a long reward table (20+ entries) used to always
+        // dump every entry unpaged, well past the default 10-line chat window.
+        sendPaged(sender, messages.get("jobs.info-header", Map.of("job", messages.jobName(jobId))), entries, parsePage(args, 2));
+    }
+
+    /** Same rule as {@link #formatReward}, but for a genuine currency amount (comma-formatted via
+     * {@link MoneyFormat}) rather than xp or any other plain number. */
+    private static String formatMoneyReward(double flat, double perLevel) {
+        if (perLevel > 0) {
+            return MoneyFormat.format(perLevel) + "/enchant-level";
+        }
+        return MoneyFormat.format(flat);
     }
 
     private static String formatReward(double flat, double perLevel) {
@@ -273,6 +296,46 @@ public class JobsCommand implements CommandExecutor, TabCompleter {
             return String.format("%.2f/enchant-level", perLevel);
         }
         return String.format("%.2f", flat);
+    }
+
+    /** How many entries /jobs list|stats|info show per page - see {@link #sendPaged}. */
+    private static final int CHAT_PAGE_SIZE = 8;
+
+    /**
+     * Sends `header`, then one page (of {@link #CHAT_PAGE_SIZE} entries) of `entries`, then a
+     * page-indicator footer if there's more than one page. Used by /jobs list|stats|info, which
+     * used to always dump every entry unpaged (up to 20+ lines) straight past the default 10-line
+     * chat window.
+     */
+    private void sendPaged(CommandSender sender, Component header, List<Component> entries, int requestedPage) {
+        sender.sendMessage(header);
+        int pageCount = Math.max(1, (int) Math.ceil(entries.size() / (double) CHAT_PAGE_SIZE));
+        int page = Math.max(0, Math.min(requestedPage - 1, pageCount - 1));
+        int start = page * CHAT_PAGE_SIZE;
+        int end = Math.min(entries.size(), start + CHAT_PAGE_SIZE);
+        for (int i = start; i < end; i++) {
+            sender.sendMessage(entries.get(i));
+        }
+        if (pageCount > 1) {
+            sender.sendMessage(messages.get("jobs.page-footer", Map.of(
+                    "page", String.valueOf(page + 1), "pages", String.valueOf(pageCount))));
+        }
+    }
+
+    /** Parses a 1-based page number from args[index], defaulting to 1 if absent or not a valid positive integer. */
+    private static int parsePage(String[] args, int index) {
+        if (args.length > index) {
+            try {
+                int page = Integer.parseInt(args[index]);
+                if (page > 0) {
+                    return page;
+                }
+            } catch (NumberFormatException ignored) {
+                // Not a page number - callers that also accept an optional trailing argument for
+                // something else (there are none currently) would need to check this themselves.
+            }
+        }
+        return 1;
     }
 
     private void handlePrestige(CommandSender sender, String[] args) {

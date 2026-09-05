@@ -9,6 +9,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -60,6 +61,7 @@ public class YamlJobStorage implements JobStorage {
                     playerData.setExplorerFarthestDistance(worldName, explorerSection.getDouble(worldName, 0));
                 }
             }
+            playerData.getAnnouncedMilestones().addAll(playerSection.getStringList("announced-milestones"));
             ConfigurationSection jobsSection = playerSection.getConfigurationSection("jobs");
             if (jobsSection != null) {
                 for (String jobId : jobsSection.getKeys(false)) {
@@ -92,6 +94,9 @@ public class YamlJobStorage implements JobStorage {
             yaml.set(base + ".settings.actionbar", playerData.isActionBarEnabled());
             for (Map.Entry<String, Double> distanceEntry : playerData.getExplorerDistanceByWorld().entrySet()) {
                 yaml.set(base + ".explorer-distance." + distanceEntry.getKey(), distanceEntry.getValue());
+            }
+            if (!playerData.getAnnouncedMilestones().isEmpty()) {
+                yaml.set(base + ".announced-milestones", new ArrayList<>(playerData.getAnnouncedMilestones()));
             }
             for (Map.Entry<String, PlayerJobProgress> jobEntry : playerData.getProgress().entrySet()) {
                 String jobBase = base + ".jobs." + jobEntry.getKey();
