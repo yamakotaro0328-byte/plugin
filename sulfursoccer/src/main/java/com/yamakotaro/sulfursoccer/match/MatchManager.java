@@ -20,7 +20,6 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -144,11 +143,11 @@ public class MatchManager {
         Point kickoff = arena.kickoff();
         Location location = new Location(world, kickoff.centerX(), kickoff.y(), kickoff.centerZ());
         Entity ball = world.spawnEntity(location, EntityType.SULFUR_CUBE);
-        // setAI(false) used to be set here to stop independent wandering, but it silently
-        // suppressed BallPhysicsTask's own setVelocity() calls too - the ball never actually
-        // moved, from kickoff or from being hit. Leaving AI on lets our forced velocity (applied
-        // every match.physics-interval-ticks) actually take effect; any residual AI-driven
-        // movement is overwritten by that same velocity update a couple of ticks later at most.
+        // No setAI(false) here, and no custom velocity code anywhere in this plugin - a Sulfur
+        // Cube stops moving on its own the moment it's holding an absorbed block (see the
+        // equipment set below) and becomes a pure physics object instead: hitting it converts all
+        // combat damage into knockback launched opposite the hit, and it ricochets and decelerates
+        // through vanilla's own "Bouncy" archetype. There is nothing left for this plugin to drive.
         if (ball instanceof LivingEntity livingEntity) {
             EntityEquipment equipment = livingEntity.getEquipment();
             if (equipment != null) {

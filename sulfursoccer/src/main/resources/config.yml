@@ -7,31 +7,28 @@ language: ja
 # match.time-limit-minutes: match ends (higher score wins, or a draw) after this many minutes
 #   even if nobody has reached goals-to-win yet. 0 disables the time limit.
 # match.tick-interval-ticks: how often (in ticks) the ball's position is checked for a goal.
-# match.physics-interval-ticks: how often (in ticks) the ball physics are updated (kick, friction, bounce).
-# match.kick-radius: the radius (in blocks) around each player that the ball can be kicked from.
-# match.kick-force: the force applied to the ball's velocity when near a player.
-# match.max-speed: the maximum horizontal speed the ball can move at.
-# match.friction: the dampening factor applied to horizontal velocity each tick (0-1, lower = more friction).
 # match.countdown-seconds: how many seconds to count down before the match starts.
+#
+# The ball itself has no custom physics code - it's a Sulfur Cube holding an absorbed birch log
+# (see MatchManager#spawnBall), which is vanilla's own "Bouncy" archetype: kicking is just hitting
+# it (all combat damage becomes knockback, launched opposite the hit and scaled by weapon damage),
+# and it ricochets off walls/floor and decelerates entirely through the engine's own physics. There
+# is nothing here to configure for that - see ArenaWallBuilder for the barrier walls the ball
+# bounces off of.
 # (日本語) match.goals-to-win: 先にこの得点に達したチームが即座に勝利する。
 # match.time-limit-minutes: goals-to-winに達していなくても、この分数が経過したら
 #   試合終了(得点が高い方の勝ち、同点なら引き分け)。0で時間制限なし。
 # match.tick-interval-ticks: ボールの位置(ゴール判定)を何tickごとに確認するか。
-# match.physics-interval-ticks: ボール物理(キック、摩擦、バウンド)を何tickごとに更新するか。
-# match.kick-radius: 各プレイヤーの周り(ブロック単位)でボールをキックできる範囲。
-# match.kick-force: プレイヤーの近くでボールに与える力。
-# match.max-speed: ボールが移動できる最大水平速度。
-# match.friction: 毎tickの水平速度に適用される減衰係数(0-1、低いほど摩擦が大きい)。
 # match.countdown-seconds: 試合開始前のカウントダウン秒数。
+#
+# ボール自体にカスタムの物理コードは無い - 白樺の丸太を吸収したサルファーキューブ(MatchManager#spawnBall参照)は
+# バニラの「Bouncy」アーキタイプそのものなので、キックは殴るだけで良い(戦闘ダメージは全てノックバックに変換され、
+# 殴った反対方向に武器のダメージ量に応じて飛ぶ)、壁・床への跳ね返りや減速もゲームエンジン自身の物理で完結する。
+# ここで設定する項目は無い - ボールが跳ね返るバリアの壁についてはArenaWallBuilderを参照。
 match:
   goals-to-win: 5
   time-limit-minutes: 10
   tick-interval-ticks: 10
-  physics-interval-ticks: 2
-  kick-radius: 1.2
-  kick-force: 0.55
-  max-speed: 1.3
-  friction: 0.9
   countdown-seconds: 3
 
 messages:
