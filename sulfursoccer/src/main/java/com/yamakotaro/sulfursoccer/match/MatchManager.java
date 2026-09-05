@@ -199,17 +199,16 @@ public class MatchManager {
     }
 
     private void titleToMatch(Match match, Component title, Component subtitle) {
+        Title titleObj = Title.title(title, subtitle, Title.Times.of(Duration.ofMillis(500), Duration.ofMillis(1500), Duration.ofMillis(500)));
         for (UUID playerId : match.getTeamA()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null) {
-                Title titleObj = Title.title(title, subtitle, Title.Times.of(Duration.ofMillis(500), Duration.ofMillis(1500), Duration.ofMillis(500)));
                 player.showTitle(titleObj);
             }
         }
         for (UUID playerId : match.getTeamB()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null) {
-                Title titleObj = Title.title(title, subtitle, Title.Times.of(Duration.ofMillis(500), Duration.ofMillis(1500), Duration.ofMillis(500)));
                 player.showTitle(titleObj);
             }
         }
