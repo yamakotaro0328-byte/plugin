@@ -12,7 +12,6 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -140,9 +139,11 @@ public class MatchManager {
         Point kickoff = arena.kickoff();
         Location location = new Location(world, kickoff.centerX(), kickoff.y(), kickoff.centerZ());
         Entity ball = world.spawnEntity(location, EntityType.SULFUR_CUBE);
-        if (ball instanceof Mob mob) {
-            mob.setAI(false); // only independent wandering/AI is disabled; BallPhysicsTask sets velocity every tick
-        }
+        // setAI(false) used to be set here to stop independent wandering, but it silently
+        // suppressed BallPhysicsTask's own setVelocity() calls too - the ball never actually
+        // moved, from kickoff or from being hit. Leaving AI on lets our forced velocity (applied
+        // every match.physics-interval-ticks) actually take effect; any residual AI-driven
+        // movement is overwritten by that same velocity update a couple of ticks later at most.
         match.setBallEntityId(ball.getUniqueId());
     }
 

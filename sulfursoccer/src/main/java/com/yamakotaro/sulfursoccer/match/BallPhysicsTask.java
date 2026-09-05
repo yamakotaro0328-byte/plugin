@@ -89,10 +89,10 @@ public class BallPhysicsTask extends BukkitRunnable {
     private void bounceOffFieldBoundary(Entity ball, Box field) {
         double x = ball.getLocation().getX();
         double z = ball.getLocation().getZ();
-        int minX = Math.min(field.corner1().x(), field.corner2().x());
-        int maxX = Math.max(field.corner1().x(), field.corner2().x());
-        int minZ = Math.min(field.corner1().z(), field.corner2().z());
-        int maxZ = Math.max(field.corner1().z(), field.corner2().z());
+        int minX = field.minX();
+        int maxX = field.maxX();
+        int minZ = field.minZ();
+        int maxZ = field.maxZ();
 
         Vector vel = ball.getVelocity();
 

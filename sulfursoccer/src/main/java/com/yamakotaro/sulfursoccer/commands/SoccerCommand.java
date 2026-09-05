@@ -4,15 +4,18 @@ import com.yamakotaro.sulfursoccer.Messages;
 import com.yamakotaro.sulfursoccer.arena.Arena;
 import com.yamakotaro.sulfursoccer.arena.ArenaManager;
 import com.yamakotaro.sulfursoccer.arena.ArenaTreeBuilder;
+import com.yamakotaro.sulfursoccer.arena.ArenaWallBuilder;
 import com.yamakotaro.sulfursoccer.arena.Box;
 import com.yamakotaro.sulfursoccer.arena.Point;
 import com.yamakotaro.sulfursoccer.match.JoinResult;
 import com.yamakotaro.sulfursoccer.match.MatchManager;
 import com.yamakotaro.sulfursoccer.selection.SelectionManager;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -161,8 +164,10 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
         }
         char team = args[3].toLowerCase().charAt(0);
         Arena arena = arenaOpt.get();
-        arenaManager.update(team == 'a' ? arena.withGoalA(selection.get()) : arena.withGoalB(selection.get()));
+        Arena updated = team == 'a' ? arena.withGoalA(selection.get()) : arena.withGoalB(selection.get());
+        arenaManager.update(updated);
         sender.sendMessage(messages.get("arena.goal-set", Map.of("name", arena.id(), "team", args[3].toUpperCase())));
+        maybeBuildWalls(sender, updated);
     }
 
     private void handleArenaSetSpawn(CommandSender sender, String[] args) {
@@ -225,8 +230,25 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
             return;
         }
         Arena arena = arenaOpt.get();
-        arenaManager.update(arena.withField(selection.get()));
+        Arena updated = arena.withField(selection.get());
+        arenaManager.update(updated);
         sender.sendMessage(messages.get("arena.field-set", Map.of("name", arena.id())));
+        maybeBuildWalls(sender, updated);
+    }
+
+    /** Once field, goalA, and goalB are all set (in any order), wraps the field in real barrier
+     * walls - see ArenaWallBuilder. Called after every setfield/setgoal so the walls always match
+     * whichever piece was set last (e.g. moving a goal after the field was already walled). */
+    private void maybeBuildWalls(CommandSender sender, Arena arena) {
+        if (arena.field() == null || arena.goalA() == null || arena.goalB() == null) {
+            return;
+        }
+        World world = Bukkit.getWorld(arena.world());
+        if (world == null) {
+            return;
+        }
+        ArenaWallBuilder.build(world, arena.field(), arena.goalA(), arena.goalB());
+        sender.sendMessage(messages.get("arena.walls-built", Map.of("name", arena.id())));
     }
 
     private void handleArenaTree(CommandSender sender, String[] args) {
