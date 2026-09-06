@@ -13,6 +13,12 @@ const searchInput = document.getElementById("search-input");
 const typeFilter = document.getElementById("type-filter");
 const refreshButton = document.getElementById("refresh-button");
 const punishmentsBody = document.getElementById("punishments-body");
+const tableSpinner = document.getElementById("table-spinner");
+const emptyState = document.getElementById("empty-state");
+const statTotal = document.getElementById("stat-total");
+const statBans = document.getElementById("stat-bans");
+const statMutes = document.getElementById("stat-mutes");
+const statWarns = document.getElementById("stat-warns");
 
 let loggedIn = false;
 
@@ -105,6 +111,7 @@ issueForm.addEventListener("submit", async (event) => {
       issueResult.textContent = "Issued successfully.";
       issueForm.reset();
       loadPunishments();
+      loadStats();
     }
   } catch (e) {
     // openLogin() already ran if this was a 401.
@@ -133,14 +140,37 @@ async function loadPunishments() {
   if (type) {
     params.set("type", type);
   }
-  // Browsing needs no auth, so a plain fetch here (never triggers the login overlay).
-  const response = await fetch("/api/punishments?" + params.toString());
+  tableSpinner.hidden = false;
+  try {
+    // Browsing needs no auth, so a plain fetch here (never triggers the login overlay).
+    const response = await fetch("/api/punishments?" + params.toString());
+    const punishments = await response.json();
+    renderPunishments(punishments);
+  } finally {
+    tableSpinner.hidden = true;
+  }
+}
+
+/** A separate, unfiltered fetch just for the summary tiles, so searching/filtering the table
+ * below doesn't make the overall counts look like they changed. */
+async function loadStats() {
+  const response = await fetch("/api/punishments?limit=1000");
   const punishments = await response.json();
-  renderPunishments(punishments);
+  const isBan = (t) => t === "BAN" || t === "TEMPBAN" || t === "IPBAN";
+  const isMute = (t) => t === "MUTE" || t === "TEMPMUTE";
+  statTotal.textContent = punishments.length;
+  statBans.textContent = punishments.filter((p) => isBan(p.type)).length;
+  statMutes.textContent = punishments.filter((p) => isMute(p.type)).length;
+  statWarns.textContent = punishments.filter((p) => p.type === "WARN").length;
+}
+
+function typeBadgeClass(type) {
+  return "type-badge type-" + type.toLowerCase();
 }
 
 function renderPunishments(punishments) {
   punishmentsBody.innerHTML = "";
+  emptyState.hidden = punishments.length > 0;
   for (const p of punishments) {
     const row = document.createElement("tr");
 
@@ -148,9 +178,9 @@ function renderPunishments(punishments) {
     const expires = p.permanent ? "Permanent" : new Date(p.expiresAt).toLocaleString();
 
     row.innerHTML = `
-      <td>${p.type}</td>
-      <td>${escapeHtml(target)}</td>
-      <td>${escapeHtml(p.reason || "")}</td>
+      <td><span class="${typeBadgeClass(p.type)}">${p.type}</span></td>
+      <td class="target-cell">${escapeHtml(target)}</td>
+      <td class="reason-cell">${escapeHtml(p.reason || "")}</td>
       <td>${escapeHtml(p.operatorName || "")}</td>
       <td>${new Date(p.createdAt).toLocaleString()}</td>
       <td>${expires}</td>
@@ -187,6 +217,7 @@ async function liftPunishment(punishment) {
   try {
     await api(path, { method: "POST", body: JSON.stringify(body) });
     loadPunishments();
+    loadStats();
   } catch (e) {
     // openLogin() already ran if this was a 401.
   }
@@ -201,3 +232,4 @@ function escapeHtml(text) {
 // The punishments list loads for everyone; the session check just decides whether to
 // reveal the issue form and Lift buttons (the cookie, if any, survives a page reload).
 fetch("/api/session").then((response) => setLoggedIn(response.ok)).finally(loadPunishments);
+loadStats();
