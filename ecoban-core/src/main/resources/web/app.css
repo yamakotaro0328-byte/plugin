@@ -48,7 +48,7 @@ body {
   display: none !important;
 }
 
-.login-card {
+.modal-card {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -59,8 +59,14 @@ body {
   gap: 12px;
 }
 
-.login-card h2 {
+.modal-card h2 {
   margin: 0 0 8px;
+}
+
+.modal-subtitle {
+  margin: -6px 0 2px;
+  font-size: 13px;
+  color: var(--muted);
 }
 
 .modal-actions {
@@ -117,6 +123,14 @@ button.ghost:hover {
   background: var(--panel-raised);
 }
 
+button.danger {
+  background: var(--danger);
+}
+
+button.danger:hover {
+  background: #c94a40;
+}
+
 button.small {
   padding: 4px 8px;
   font-size: 12px;
@@ -144,6 +158,14 @@ input:hover, select:hover {
   min-height: 18px;
   font-size: 13px;
   color: var(--muted);
+}
+
+.result.success {
+  color: var(--success);
+}
+
+.result.error {
+  color: var(--danger);
 }
 
 header {
@@ -283,6 +305,29 @@ main {
   font-size: 13px;
   padding: 28px 0;
   margin: 0;
+}
+
+.truncation-hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 10px 0 0;
+  margin: 0;
+}
+
+.duration-group {
+  display: flex;
+  gap: 6px;
+}
+
+.duration-group input {
+  flex: 1;
+  min-width: 0;
+}
+
+.duration-group select {
+  flex-shrink: 0;
+  width: 92px;
 }
 
 .issue-form {

@@ -23,7 +23,7 @@
 </header>
 
 <div id="login-overlay" class="overlay" hidden>
-  <form id="login-form" class="login-card">
+  <form id="login-form" class="modal-card">
     <h2>Sign in</h2>
     <label>Username<input type="text" id="login-username" autocomplete="username" required></label>
     <label>Password<input type="password" id="login-password" autocomplete="current-password" required></label>
@@ -32,6 +32,18 @@
       <button type="submit">Sign in</button>
     </div>
     <p id="login-error" class="error" hidden></p>
+  </form>
+</div>
+
+<div id="lift-overlay" class="overlay" hidden>
+  <form id="lift-form" class="modal-card">
+    <h2>Lift punishment</h2>
+    <p class="modal-subtitle" id="lift-summary"></p>
+    <label>Reason (optional)<input type="text" id="lift-reason" placeholder="e.g. appealed, mistake"></label>
+    <div class="modal-actions">
+      <button type="button" id="lift-cancel" class="ghost">Cancel</button>
+      <button type="submit" class="danger">Lift punishment</button>
+    </div>
   </form>
 </div>
 
@@ -68,7 +80,15 @@
       <input type="text" id="issue-uuid" placeholder="Player UUID">
       <input type="text" id="issue-name" placeholder="Player name (optional)">
       <input type="text" id="issue-ip" placeholder="IP address (IP Ban only)" hidden>
-      <input type="number" id="issue-duration" placeholder="Duration (minutes, blank = permanent)">
+      <div class="duration-group">
+        <input type="number" id="issue-duration" placeholder="Duration (blank = permanent)" min="0">
+        <select id="issue-duration-unit">
+          <option value="minutes">Minutes</option>
+          <option value="hours">Hours</option>
+          <option value="days" selected>Days</option>
+          <option value="weeks">Weeks</option>
+        </select>
+      </div>
       <input type="text" id="issue-reason" placeholder="Reason" class="wide">
       <button type="submit">Issue</button>
     </form>
@@ -117,6 +137,7 @@
         <tbody id="punishments-body"></tbody>
       </table>
       <p class="empty-state" id="empty-state" hidden>No punishments match here.</p>
+      <p class="truncation-hint" id="truncation-hint" hidden>Showing the first 100 results - narrow your search to see more.</p>
     </div>
   </section>
 </main>

@@ -15,10 +15,18 @@ const refreshButton = document.getElementById("refresh-button");
 const punishmentsBody = document.getElementById("punishments-body");
 const tableSpinner = document.getElementById("table-spinner");
 const emptyState = document.getElementById("empty-state");
+const truncationHint = document.getElementById("truncation-hint");
 const statTotal = document.getElementById("stat-total");
 const statBans = document.getElementById("stat-bans");
 const statMutes = document.getElementById("stat-mutes");
 const statWarns = document.getElementById("stat-warns");
+const issueDurationUnit = document.getElementById("issue-duration-unit");
+const liftOverlay = document.getElementById("lift-overlay");
+const liftForm = document.getElementById("lift-form");
+const liftCancel = document.getElementById("lift-cancel");
+const liftReasonInput = document.getElementById("lift-reason");
+const liftSummary = document.getElementById("lift-summary");
+let pendingLift = null;
 
 let loggedIn = false;
 
@@ -85,15 +93,17 @@ issueType.addEventListener("change", () => {
   issueIp.hidden = issueType.value !== "ipban";
 });
 
+const DURATION_UNIT_MILLIS = { minutes: 60_000, hours: 3_600_000, days: 86_400_000, weeks: 604_800_000 };
+
 issueForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const type = issueType.value;
   const uuid = document.getElementById("issue-uuid").value.trim();
   const name = document.getElementById("issue-name").value.trim();
   const ip = issueIp.value.trim();
-  const durationMinutes = document.getElementById("issue-duration").value.trim();
+  const durationValue = document.getElementById("issue-duration").value.trim();
   const reason = document.getElementById("issue-reason").value.trim();
-  const durationMillis = durationMinutes ? Number(durationMinutes) * 60 * 1000 : 0;
+  const durationMillis = durationValue ? Number(durationValue) * DURATION_UNIT_MILLIS[issueDurationUnit.value] : 0;
 
   const body = { uuid, name: name || null, reason: reason || null, durationMillis };
   let path = "/api/" + type;
@@ -106,9 +116,9 @@ issueForm.addEventListener("submit", async (event) => {
     const response = await api(path, { method: "POST", body: JSON.stringify(body) });
     const data = await response.json();
     if (!response.ok) {
-      issueResult.textContent = "Error: " + (data.error || "unknown error");
+      setIssueResult("Error: " + (data.error || "unknown error"), "error");
     } else {
-      issueResult.textContent = "Issued successfully.";
+      setIssueResult("Issued successfully.", "success");
       issueForm.reset();
       loadPunishments();
       loadStats();
@@ -117,6 +127,14 @@ issueForm.addEventListener("submit", async (event) => {
     // openLogin() already ran if this was a 401.
   }
 });
+
+function setIssueResult(text, state) {
+  issueResult.textContent = text;
+  issueResult.classList.remove("success", "error");
+  if (state) {
+    issueResult.classList.add(state);
+  }
+}
 
 searchInput.addEventListener("input", debounce(loadPunishments, 300));
 typeFilter.addEventListener("change", loadPunishments);
@@ -171,6 +189,9 @@ function typeBadgeClass(type) {
 function renderPunishments(punishments) {
   punishmentsBody.innerHTML = "";
   emptyState.hidden = punishments.length > 0;
+  // The API defaults to a 100-row limit when no explicit limit is given (see loadPunishments) -
+  // hitting that count exactly is the only signal the client has that more rows exist.
+  truncationHint.hidden = punishments.length < 100;
   for (const p of punishments) {
     const row = document.createElement("tr");
 
@@ -200,8 +221,32 @@ function renderPunishments(punishments) {
   }
 }
 
-async function liftPunishment(punishment) {
-  const reason = prompt("Reason for lifting this punishment (optional):") || null;
+/** Opens the themed confirmation modal instead of a native prompt() - the actual API call happens
+ * in liftForm's submit handler once the operator confirms. */
+function liftPunishment(punishment) {
+  pendingLift = punishment;
+  const target = punishment.targetName || punishment.targetUuid || punishment.ip || "(unknown)";
+  liftSummary.textContent = `${punishment.type} on ${target}`;
+  liftReasonInput.value = "";
+  liftOverlay.hidden = false;
+  liftReasonInput.focus();
+}
+
+function closeLiftModal() {
+  liftOverlay.hidden = true;
+  pendingLift = null;
+}
+
+liftCancel.addEventListener("click", closeLiftModal);
+
+liftForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const punishment = pendingLift;
+  const reason = liftReasonInput.value.trim() || null;
+  closeLiftModal();
+  if (!punishment) {
+    return;
+  }
   let path;
   const body = { reason };
   if (punishment.type === "IPBAN") {
@@ -221,7 +266,7 @@ async function liftPunishment(punishment) {
   } catch (e) {
     // openLogin() already ran if this was a 401.
   }
-}
+});
 
 function escapeHtml(text) {
   const div = document.createElement("div");
