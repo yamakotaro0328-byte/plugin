@@ -31,6 +31,21 @@ match:
   tick-interval-ticks: 10
   countdown-seconds: 3
 
+# gimmick.interval-ticks: how often (in ticks) GimmickTask re-checks BUMP/WIND/WARP gimmicks -
+#   see /soccer arena gimmick add. ICE and BOUNCE need no interval, they're a one-time floor swap.
+# gimmick.bump-period-seconds: how long a BUMP gimmick's floor stays up, and separately stays down,
+#   each half of the cycle (so the full up-then-down cycle takes twice this).
+# gimmick.wind-force: velocity added to the ball, per tick, while it's over a WIND gimmick.
+# (日本語) gimmick.interval-ticks: BUMP/WIND/WARPギミックを何tickごとに再確認するか
+#   (/soccer arena gimmick add 参照)。ICEとBOUNCEは床を一度置き換えるだけなので間隔は不要。
+# gimmick.bump-period-seconds: BUMPギミックの床が上がっている/下がっている、それぞれの継続秒数
+#   (上下1サイクルの合計時間はこの2倍になる)。
+# gimmick.wind-force: WINDギミックの範囲内にボールがある間、毎tick加算される速度。
+gimmick:
+  interval-ticks: 5
+  bump-period-seconds: 3
+  wind-force: 0.15
+
 messages:
   en:
     general:
@@ -43,7 +58,7 @@ messages:
       corner2-set: "&aCorner 2 set."
       selection-incomplete: "&cSelect both corners with the wand first (left-click, then right-click)."
     arena:
-      usage: "&cUsage: /soccer arena <create|setgoal|setspawn|setkickoff|setfield|remove|list>"
+      usage: "&cUsage: /soccer arena <create|setgoal|setspawn|setkickoff|setfield|gimmick|remove|list>"
       create-usage: "&cUsage: /soccer arena create <name>"
       already-exists: "&cAn arena named '{name}' already exists."
       created: "&aCreated arena '{name}' in this world."
@@ -51,6 +66,17 @@ messages:
       setspawn-usage: "&cUsage: /soccer arena setspawn <name> <a|b>"
       setkickoff-usage: "&cUsage: /soccer arena setkickoff <name>"
       setfield-usage: "&cUsage: /soccer arena setfield <name> (with both wand corners selected)"
+      gimmick-usage: "&cUsage: /soccer arena gimmick <add|remove|list> <name> ..."
+      gimmick-add-usage: "&cUsage: /soccer arena gimmick add <name> <id> <bump|wind|ice|bounce|warp> (with both wand corners selected)"
+      gimmick-remove-usage: "&cUsage: /soccer arena gimmick remove <name> <id>"
+      gimmick-list-usage: "&cUsage: /soccer arena gimmick list <name>"
+      gimmick-invalid-type: "&cUnknown gimmick type '{type}'. Use one of: bump, wind, ice, bounce, warp."
+      gimmick-duplicate-id: "&cA gimmick with id '{id}' already exists in this arena."
+      gimmick-added: "&aAdded {type} gimmick '{id}' to arena '{name}'."
+      gimmick-removed: "&aRemoved gimmick '{id}' from arena '{name}'."
+      gimmick-not-found: "&cNo gimmick '{id}' in arena '{name}'."
+      gimmick-list-header: "&7--- Gimmicks in '{name}' ({count}) ---"
+      gimmick-list-entry: "&f{id} &7- {type}"
       remove-usage: "&cUsage: /soccer arena remove <name>"
       not-found: "&cNo arena named '{name}'."
       name-required: "&cMultiple arenas exist - specify which one, e.g. /soccer join <arena>."
@@ -104,7 +130,7 @@ messages:
       corner2-set: "&a2点目を設定しました。"
       selection-incomplete: "&c先にワンドで2点とも選択してください(左クリック→右クリック)。"
     arena:
-      usage: "&c使い方: /soccer arena <create|setgoal|setspawn|setkickoff|setfield|remove|list>"
+      usage: "&c使い方: /soccer arena <create|setgoal|setspawn|setkickoff|setfield|gimmick|remove|list>"
       create-usage: "&c使い方: /soccer arena create <名前>"
       already-exists: "&c「{name}」という名前のアリーナは既に存在します。"
       created: "&aこのワールドにアリーナ「{name}」を作成しました。"
@@ -112,6 +138,17 @@ messages:
       setspawn-usage: "&c使い方: /soccer arena setspawn <名前> <a|b>"
       setkickoff-usage: "&c使い方: /soccer arena setkickoff <名前>"
       setfield-usage: "&c使い方: /soccer arena setfield <名前> (ワンドで2点選択済みであること)"
+      gimmick-usage: "&c使い方: /soccer arena gimmick <add|remove|list> <名前> ..."
+      gimmick-add-usage: "&c使い方: /soccer arena gimmick add <名前> <ID> <bump|wind|ice|bounce|warp> (ワンドで2点選択済みであること)"
+      gimmick-remove-usage: "&c使い方: /soccer arena gimmick remove <名前> <ID>"
+      gimmick-list-usage: "&c使い方: /soccer arena gimmick list <名前>"
+      gimmick-invalid-type: "&c不明なギミック種類「{type}」です。bump, wind, ice, bounce, warp のいずれかを指定してください。"
+      gimmick-duplicate-id: "&cID「{id}」のギミックはこのアリーナに既に存在します。"
+      gimmick-added: "&aアリーナ「{name}」に{type}ギミック「{id}」を追加しました。"
+      gimmick-removed: "&aアリーナ「{name}」からギミック「{id}」を削除しました。"
+      gimmick-not-found: "&cアリーナ「{name}」にギミック「{id}」は存在しません。"
+      gimmick-list-header: "&7--- 「{name}」のギミック一覧 ({count}) ---"
+      gimmick-list-entry: "&f{id} &7- {type}"
       remove-usage: "&c使い方: /soccer arena remove <名前>"
       not-found: "&cアリーナ「{name}」が見つかりません。"
       name-required: "&c複数のアリーナが存在します。名前を指定してください。例: /soccer join <アリーナ名>"

@@ -2,6 +2,8 @@ package com.yamakotaro.sulfursoccer;
 
 import com.yamakotaro.sulfursoccer.arena.ArenaManager;
 import com.yamakotaro.sulfursoccer.commands.SoccerCommand;
+import com.yamakotaro.sulfursoccer.gimmick.GimmickManager;
+import com.yamakotaro.sulfursoccer.gimmick.GimmickTask;
 import com.yamakotaro.sulfursoccer.listeners.BallDeathListener;
 import com.yamakotaro.sulfursoccer.listeners.SelectionListener;
 import com.yamakotaro.sulfursoccer.match.MatchManager;
@@ -15,6 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class SulfurSoccerPlugin extends JavaPlugin {
 
     private SoccerTickTask soccerTickTask;
+    private GimmickTask gimmickTask;
 
     @Override
     public void onEnable() {
@@ -22,6 +25,7 @@ public class SulfurSoccerPlugin extends JavaPlugin {
         Messages messages = new Messages(this);
         ArenaManager arenaManager = new ArenaManager(this);
         SelectionManager selectionManager = new SelectionManager();
+        GimmickManager gimmickManager = new GimmickManager(this);
         MatchScoreboard matchScoreboard = new MatchScoreboard(messages);
         MatchManager matchManager = new MatchManager(this, arenaManager, messages, matchScoreboard);
         NamespacedKey wandKey = new NamespacedKey(this, "wand");
@@ -29,7 +33,7 @@ public class SulfurSoccerPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new SelectionListener(this, selectionManager, messages), this);
         getServer().getPluginManager().registerEvents(new BallDeathListener(matchManager), this);
 
-        SoccerCommand soccerCommand = new SoccerCommand(arenaManager, matchManager, selectionManager, wandKey, messages);
+        SoccerCommand soccerCommand = new SoccerCommand(arenaManager, matchManager, selectionManager, gimmickManager, wandKey, messages);
         PluginCommand command = getCommand("soccer");
         command.setExecutor(soccerCommand);
         command.setTabCompleter(soccerCommand);
@@ -37,12 +41,19 @@ public class SulfurSoccerPlugin extends JavaPlugin {
         long tickInterval = getConfig().getLong("match.tick-interval-ticks", 10);
         this.soccerTickTask = new SoccerTickTask(this, arenaManager, matchManager, matchScoreboard);
         soccerTickTask.runTaskTimer(this, tickInterval, tickInterval);
+
+        long gimmickInterval = getConfig().getLong("gimmick.interval-ticks", 5);
+        this.gimmickTask = new GimmickTask(this, arenaManager, gimmickManager, matchManager);
+        gimmickTask.runTaskTimer(this, gimmickInterval, gimmickInterval);
     }
 
     @Override
     public void onDisable() {
         if (soccerTickTask != null) {
             soccerTickTask.cancel();
+        }
+        if (gimmickTask != null) {
+            gimmickTask.cancel();
         }
     }
 }
