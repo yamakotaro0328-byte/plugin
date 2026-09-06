@@ -133,6 +133,27 @@ public class SpecialItems {
         blinkShardRecipe.addIngredient(Material.ENDER_PEARL);
         blinkShardRecipe.addIngredient(Material.FEATHER);
         Bukkit.addRecipe(blinkShardRecipe);
+
+        // Ender Pearl and Blaze Rod are both normally drop-only (Enderman/Blaze), not craftable -
+        // and both gate a runner's path to the End (Eye of Ender = pearl + blaze powder) as well as
+        // the Blink Shard recipe just above, which already expects a real Ender Pearl as input.
+        // Neither recipe uses an ingredient derived from its own output, so there's no duplication
+        // loop (Blaze Rod -> Blaze Powder -> Magma Cream would loop back into Blaze Rod, so that
+        // chain is deliberately avoided here).
+        NamespacedKey enderPearlRecipeKey = new NamespacedKey(plugin, "ender_pearl_recipe");
+        Bukkit.removeRecipe(enderPearlRecipeKey);
+        ShapelessRecipe enderPearlRecipe = new ShapelessRecipe(enderPearlRecipeKey, new ItemStack(Material.ENDER_PEARL));
+        enderPearlRecipe.addIngredient(4, Material.SLIME_BALL);
+        enderPearlRecipe.addIngredient(Material.AMETHYST_SHARD);
+        Bukkit.addRecipe(enderPearlRecipe);
+
+        NamespacedKey blazeRodRecipeKey = new NamespacedKey(plugin, "blaze_rod_recipe");
+        Bukkit.removeRecipe(blazeRodRecipeKey);
+        ShapelessRecipe blazeRodRecipe = new ShapelessRecipe(blazeRodRecipeKey, new ItemStack(Material.BLAZE_ROD));
+        blazeRodRecipe.addIngredient(Material.STICK);
+        blazeRodRecipe.addIngredient(Material.REDSTONE);
+        blazeRodRecipe.addIngredient(Material.GLOWSTONE_DUST);
+        Bukkit.addRecipe(blazeRodRecipe);
     }
 
     public boolean isLocatorOrb(ItemStack item) {
