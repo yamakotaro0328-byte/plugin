@@ -30,8 +30,10 @@ import java.util.Optional;
  * - WARP: teleports the ball back to kickoff the moment it's over the region.
  *
  * WIND/WARP only check the region's footprint (x/z), not height - "standing over the marked
- * ground", matching how these get set up (select a patch of ground with the wand), not a strict
- * 3D volume the ball has to be exactly inside.
+ * ground", not a strict 3D volume the ball has to be exactly inside. In practice that footprint is
+ * a single column now (see SoccerCommand#randomPositionWithin - the wand selection is a spawn
+ * range, one column inside it is chosen at random when the gimmick is added), but nothing here
+ * assumes that.
  *
  * Runs independently of SoccerTickTask (see SulfurSoccerPlugin) at its own tick rate.
  */

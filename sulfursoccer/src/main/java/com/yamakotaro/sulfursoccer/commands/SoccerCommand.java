@@ -34,8 +34,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 public class SoccerCommand implements CommandExecutor, TabCompleter {
+
+    private static final Random RANDOM = new Random();
 
     private final ArenaManager arenaManager;
     private final MatchManager matchManager;
@@ -283,7 +286,12 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
             return;
         }
         Arena arena = arenaOpt.get();
-        Gimmick gimmick = new Gimmick(gimmickId, type, selection.get());
+        // The wand selection is a spawn range, not the gimmick's own footprint - every type gets
+        // one random column picked from inside it (see randomPositionWithin), so the same "bump"
+        // or "wind" zone doesn't sit in the exact same spot (or cover the whole selection at once)
+        // every time it's placed.
+        Box region = randomPositionWithin(selection.get());
+        Gimmick gimmick = new Gimmick(gimmickId, type, region);
         if (!gimmickManager.add(arena.id(), gimmick)) {
             sender.sendMessage(messages.get("arena.gimmick-duplicate-id", Map.of("id", gimmickId)));
             return;
@@ -292,8 +300,17 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
         if (world != null) {
             GimmickBuilder.build(world, gimmick);
         }
-        sender.sendMessage(messages.get("arena.gimmick-added",
-                Map.of("id", gimmickId, "type", type.name(), "name", arena.id())));
+        sender.sendMessage(messages.get("arena.gimmick-added", Map.of(
+                "id", gimmickId, "type", type.name(), "name", arena.id(),
+                "x", String.valueOf(region.minX()), "z", String.valueOf(region.minZ()))));
+    }
+
+    /** Picks one random (x, z) column from within the given selection, keeping its original
+     * y-range - a single-column Box rather than the full selection. */
+    private static Box randomPositionWithin(Box selection) {
+        int x = selection.minX() + RANDOM.nextInt(selection.maxX() - selection.minX() + 1);
+        int z = selection.minZ() + RANDOM.nextInt(selection.maxZ() - selection.minZ() + 1);
+        return new Box(new Point(x, selection.minY(), z), new Point(x, selection.maxY(), z));
     }
 
     private void handleArenaGimmickRemove(CommandSender sender, String[] args) {

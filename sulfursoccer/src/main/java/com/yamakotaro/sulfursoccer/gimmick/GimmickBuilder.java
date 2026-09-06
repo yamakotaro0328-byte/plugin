@@ -6,11 +6,13 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 
 /**
- * ICE and BOUNCE need no per-tick code at all: converting the selected region's floor to the right
+ * ICE and BOUNCE need no per-tick code at all: converting the gimmick's floor to the right
  * material once is enough, because vanilla already makes packed ice slippery and slime blocks
  * bounce anything that lands on them. Unlike ArenaWallBuilder (which only fills empty air so it
  * never overwrites a boundary the admin already built), this always overwrites the floor layer -
- * the whole point of the gimmick is replacing whatever ground was there.
+ * the whole point of the gimmick is replacing whatever ground was there. The loops below cover
+ * whatever rectangle gimmick.region() happens to be - in practice always a single column now
+ * (see SoccerCommand#randomPositionWithin), but nothing here assumes that.
  */
 public class GimmickBuilder {
 
