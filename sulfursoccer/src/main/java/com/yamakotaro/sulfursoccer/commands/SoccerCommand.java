@@ -3,6 +3,7 @@ package com.yamakotaro.sulfursoccer.commands;
 import com.yamakotaro.sulfursoccer.Messages;
 import com.yamakotaro.sulfursoccer.arena.Arena;
 import com.yamakotaro.sulfursoccer.arena.ArenaManager;
+import com.yamakotaro.sulfursoccer.arena.ArenaTreeBuilder;
 import com.yamakotaro.sulfursoccer.arena.ArenaWallBuilder;
 import com.yamakotaro.sulfursoccer.arena.Box;
 import com.yamakotaro.sulfursoccer.arena.Point;
@@ -128,6 +129,7 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
             case "setkickoff" -> handleArenaSetKickoff(sender, args);
             case "setfield" -> handleArenaSetField(sender, args);
             case "gimmick" -> handleArenaGimmick(sender, args);
+            case "tree" -> handleArenaTree(sender, args);
             case "remove" -> handleArenaRemove(sender, args);
             case "list" -> handleArenaList(sender);
             default -> sender.sendMessage(messages.get("arena.usage", Map.of()));
@@ -243,6 +245,25 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
         arenaManager.update(updated);
         sender.sendMessage(messages.get("arena.field-set", Map.of("name", arena.id())));
         maybeBuildWalls(sender, updated);
+    }
+
+    private void handleArenaTree(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(messages.get("arena.tree-usage", Map.of()));
+            return;
+        }
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(messages.get("general.player-only", Map.of()));
+            return;
+        }
+        Optional<Arena> arenaOpt = arenaManager.find(args[2]);
+        if (arenaOpt.isEmpty()) {
+            sender.sendMessage(messages.get("arena.not-found", Map.of("name", args[2])));
+            return;
+        }
+        Arena arena = arenaOpt.get();
+        ArenaTreeBuilder.place(player.getLocation().getBlock());
+        sender.sendMessage(messages.get("arena.tree-placed", Map.of("name", arena.id())));
     }
 
     private void handleArenaGimmick(CommandSender sender, String[] args) {
@@ -447,10 +468,10 @@ public class SoccerCommand implements CommandExecutor, TabCompleter {
             return filterPrefix(List.of("wand", "arena", "join", "leave", "start", "stop"), args[0]);
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("arena")) {
-            return filterPrefix(List.of("create", "setgoal", "setspawn", "setkickoff", "setfield", "gimmick", "remove", "list"), args[1]);
+            return filterPrefix(List.of("create", "setgoal", "setspawn", "setkickoff", "setfield", "gimmick", "tree", "remove", "list"), args[1]);
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("arena")
-                && List.of("setgoal", "setspawn", "setkickoff", "setfield", "remove").contains(args[1].toLowerCase())) {
+                && List.of("setgoal", "setspawn", "setkickoff", "setfield", "tree", "remove").contains(args[1].toLowerCase())) {
             return filterPrefix(arenaManager.all().stream().map(Arena::id).toList(), args[2]);
         }
         if (args.length == 4 && args[0].equalsIgnoreCase("arena")

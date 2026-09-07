@@ -14,6 +14,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.EquipmentSlot;
@@ -148,11 +149,12 @@ public class MatchManager {
         Point kickoff = arena.kickoff();
         Location location = new Location(world, kickoff.centerX(), kickoff.y(), kickoff.centerZ());
         Entity ball = world.spawnEntity(location, EntityType.SULFUR_CUBE);
-        // No setAI(false) here, and no custom velocity code anywhere in this plugin - a Sulfur
-        // Cube stops moving on its own the moment it's holding an absorbed block (see the
-        // equipment set below) and becomes a pure physics object instead: hitting it converts all
-        // combat damage into knockback launched opposite the hit, and it ricochets and decelerates
-        // through vanilla's own "Bouncy" archetype. There is nothing left for this plugin to drive.
+        if (ball instanceof Mob mob) {
+            // Stops the mob's own wandering/targeting AI so it doesn't walk off on its own -
+            // gravity and velocity are separate from AI and keep applying normally, which is what
+            // lets BallPhysicsTask drive it every tick with setVelocity().
+            mob.setAI(false);
+        }
         if (ball instanceof LivingEntity livingEntity) {
             EntityEquipment equipment = livingEntity.getEquipment();
             if (equipment != null) {

@@ -6,6 +6,7 @@ import com.yamakotaro.sulfursoccer.gimmick.GimmickManager;
 import com.yamakotaro.sulfursoccer.gimmick.GimmickTask;
 import com.yamakotaro.sulfursoccer.listeners.BallDeathListener;
 import com.yamakotaro.sulfursoccer.listeners.SelectionListener;
+import com.yamakotaro.sulfursoccer.match.BallPhysicsTask;
 import com.yamakotaro.sulfursoccer.match.MatchManager;
 import com.yamakotaro.sulfursoccer.match.MatchScoreboard;
 import com.yamakotaro.sulfursoccer.match.SoccerTickTask;
@@ -17,6 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class SulfurSoccerPlugin extends JavaPlugin {
 
     private SoccerTickTask soccerTickTask;
+    private BallPhysicsTask ballPhysicsTask;
     private GimmickTask gimmickTask;
 
     @Override
@@ -42,6 +44,10 @@ public class SulfurSoccerPlugin extends JavaPlugin {
         this.soccerTickTask = new SoccerTickTask(this, arenaManager, matchManager, matchScoreboard);
         soccerTickTask.runTaskTimer(this, tickInterval, tickInterval);
 
+        long physicsInterval = getConfig().getLong("match.physics-interval-ticks", 2);
+        this.ballPhysicsTask = new BallPhysicsTask(this, arenaManager, matchManager);
+        ballPhysicsTask.runTaskTimer(this, physicsInterval, physicsInterval);
+
         long gimmickInterval = getConfig().getLong("gimmick.interval-ticks", 5);
         this.gimmickTask = new GimmickTask(this, arenaManager, gimmickManager, matchManager);
         gimmickTask.runTaskTimer(this, gimmickInterval, gimmickInterval);
@@ -51,6 +57,9 @@ public class SulfurSoccerPlugin extends JavaPlugin {
     public void onDisable() {
         if (soccerTickTask != null) {
             soccerTickTask.cancel();
+        }
+        if (ballPhysicsTask != null) {
+            ballPhysicsTask.cancel();
         }
         if (gimmickTask != null) {
             gimmickTask.cancel();

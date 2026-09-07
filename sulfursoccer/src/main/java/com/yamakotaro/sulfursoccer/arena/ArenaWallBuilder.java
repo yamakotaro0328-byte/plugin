@@ -8,10 +8,12 @@ import org.bukkit.block.Block;
  * Wraps a field's wand-selected 3D box in invisible BARRIER blocks on all four horizontal sides,
  * spanning exactly the y-range the admin selected with the wand - the same "3D select a region,
  * then wall it in" workflow WorldEdit is known for, just built specifically for this field's own
- * corners instead of a general-purpose region tool. The ball (a Sulfur Cube holding an absorbed
- * birch log - see MatchManager#spawnBall) is vanilla's own "Bouncy" archetype, so it ricochets off
- * these walls under ordinary game physics; this class only needs to make sure the walls are
- * actually there. Ceiling/floor are deliberately left open - a soccer field, not a box.
+ * corners instead of a general-purpose region tool. These walls stop players and any other entity
+ * that isn't the ball; the ball itself is turned back earlier, at the field's edge rather than the
+ * wall, by BallPhysicsTask's own boundary check (see MatchManager#spawnBall - the ball has
+ * setAI(false) but is still a normal physics entity, so it would otherwise just push through a
+ * solid barrier like anything else does when shoved into one). Ceiling/floor are deliberately left
+ * open - a soccer field, not a box.
  */
 public class ArenaWallBuilder {
 
