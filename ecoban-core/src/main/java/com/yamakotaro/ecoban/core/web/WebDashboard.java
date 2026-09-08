@@ -82,6 +82,9 @@ public class WebDashboard {
         server.createContext("/api/session", authed(this::handleSession));
         // Browsing punishment records is public - only issuing/lifting one requires login.
         server.createContext("/api/punishments", this::handlePunishments);
+        server.createContext("/api/punishment", this::handlePunishmentDetail);
+        server.createContext("/api/player", this::handlePlayer);
+        server.createContext("/api/stats", this::handleStats);
         server.createContext("/api/history", this::handleHistory);
         server.createContext("/api/ban", authed(this::handleBan));
         server.createContext("/api/ipban", authed(this::handleIpban));
@@ -172,15 +175,100 @@ public class WebDashboard {
     private void handlePunishments(HttpExchange exchange) throws IOException {
         Map<String, String> query = parseQuery(exchange.getRequestURI().getRawQuery());
         String search = query.get("q");
-        int limit = parseIntOr(query.get("limit"), 100);
+        int limit = Math.min(200, parseIntOr(query.get("limit"), 25));
+        int page = Math.max(1, parseIntOr(query.get("page"), 1));
+        int offset = (page - 1) * limit;
+        // Search results are always shown across full history (matching a name/IP is the point
+        // even if the punishment itself already expired) - only the plain "browse" mode respects
+        // the activeOnly toggle.
+        boolean activeOnly = !"false".equalsIgnoreCase(query.get("activeOnly"));
+        PunishmentType type = query.containsKey("type") ? parseTypeOrNull(query.get("type")) : null;
+
         List<Punishment> results;
+        int total;
         if (search != null && !search.isBlank()) {
-            results = punishmentManager.search(search, limit);
+            results = punishmentManager.search(search, limit, offset);
+            total = punishmentManager.countSearch(search);
         } else {
-            PunishmentType type = query.containsKey("type") ? parseTypeOrNull(query.get("type")) : null;
-            results = punishmentManager.listActive(type, limit);
+            results = punishmentManager.list(type, activeOnly, limit, offset);
+            total = punishmentManager.count(type, activeOnly);
         }
-        respondJson(exchange, 200, gson.toJsonTree(results.stream().map(this::toDto).toList()));
+
+        JsonObject json = new JsonObject();
+        json.add("items", gson.toJsonTree(results.stream().map(this::toDto).toList()));
+        json.addProperty("total", total);
+        json.addProperty("page", page);
+        json.addProperty("limit", limit);
+        respondJson(exchange, 200, json);
+    }
+
+    private void handlePunishmentDetail(HttpExchange exchange) throws IOException {
+        Map<String, String> query = parseQuery(exchange.getRequestURI().getRawQuery());
+        long id = parseLongOr(query.get("id"), -1);
+        Punishment punishment = id >= 0 ? punishmentManager.getById(id) : null;
+        if (punishment == null) {
+            respondJson(exchange, 404, error("No punishment with that id"));
+            return;
+        }
+        respondJson(exchange, 200, toDto(punishment));
+    }
+
+    /** Aggregate profile for one player - their latest known name, a per-type breakdown, and their
+     * full punishment history, all in one call for the dashboard's player profile panel. */
+    private void handlePlayer(HttpExchange exchange) throws IOException {
+        Map<String, String> query = parseQuery(exchange.getRequestURI().getRawQuery());
+        UUID uuid = parseUuidOrNull(query.get("uuid"));
+        if (uuid == null) {
+            respondJson(exchange, 400, error("Missing or invalid uuid"));
+            return;
+        }
+        List<Punishment> history = punishmentManager.history(uuid);
+        String latestName = history.stream().map(Punishment::getTargetName).filter(n -> n != null).findFirst().orElse(null);
+
+        JsonObject counts = new JsonObject();
+        for (PunishmentType type : PunishmentType.values()) {
+            counts.addProperty(type.name(), history.stream().filter(p -> p.getType() == type).count());
+        }
+
+        JsonObject json = new JsonObject();
+        json.addProperty("uuid", uuid.toString());
+        json.addProperty("name", latestName);
+        json.add("counts", counts);
+        json.add("history", gson.toJsonTree(history.stream().map(this::toDto).toList()));
+        respondJson(exchange, 200, json);
+    }
+
+    /** Dashboard-wide totals, a 14-day activity chart, and a staff leaderboard - computed with
+     * real COUNT/GROUP BY queries rather than the client counting a capped row fetch, so these
+     * stay accurate no matter how large the punishment table grows. */
+    private void handleStats(HttpExchange exchange) throws IOException {
+        JsonObject json = new JsonObject();
+        json.addProperty("activeTotal", punishmentManager.count(null, true));
+        json.addProperty("activeBans", punishmentManager.count(PunishmentType.BAN, true)
+                + punishmentManager.count(PunishmentType.TEMPBAN, true)
+                + punishmentManager.count(PunishmentType.IPBAN, true));
+        json.addProperty("activeMutes", punishmentManager.count(PunishmentType.MUTE, true)
+                + punishmentManager.count(PunishmentType.TEMPMUTE, true));
+        json.addProperty("activeWarns", punishmentManager.count(PunishmentType.WARN, true));
+        json.addProperty("allTimeTotal", punishmentManager.count(null, false));
+
+        List<JsonObject> daily = punishmentManager.dailyCounts(14).stream().map(day -> {
+            JsonObject entry = new JsonObject();
+            entry.addProperty("date", day.dayStartMillis());
+            entry.addProperty("count", day.count());
+            return entry;
+        }).toList();
+        json.add("daily", gson.toJsonTree(daily));
+
+        List<JsonObject> operators = punishmentManager.topOperators(0, 8).stream().map(op -> {
+            JsonObject entry = new JsonObject();
+            entry.addProperty("name", op.operatorName());
+            entry.addProperty("count", op.count());
+            return entry;
+        }).toList();
+        json.add("topOperators", gson.toJsonTree(operators));
+
+        respondJson(exchange, 200, json);
     }
 
     private void handleHistory(HttpExchange exchange) throws IOException {
@@ -422,6 +510,14 @@ public class WebDashboard {
     private int parseIntOr(String raw, int fallback) {
         try {
             return raw == null ? fallback : Integer.parseInt(raw);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    private long parseLongOr(String raw, long fallback) {
+        try {
+            return raw == null ? fallback : Long.parseLong(raw);
         } catch (NumberFormatException e) {
             return fallback;
         }

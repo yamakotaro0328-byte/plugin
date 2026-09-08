@@ -27,6 +27,9 @@ public interface PunishmentStorage {
 
     Punishment getActiveMute(UUID uuid);
 
+    /** A single punishment by its row id - the web dashboard's permalink/detail view. */
+    Punishment getById(long id);
+
     List<Punishment> getHistory(UUID uuid);
 
     /**
@@ -35,10 +38,39 @@ public interface PunishmentStorage {
      */
     List<Punishment> search(String query, int limit);
 
+    /** Same match as {@link #search(String, int)}, one page at a time - see {@link #countSearch(String)} for the total. */
+    List<Punishment> search(String query, int limit, int offset);
+
+    int countSearch(String query);
+
     /**
      * @param type null to list every still-active punishment regardless of type.
      */
     List<Punishment> listActive(PunishmentType type, int limit);
+
+    /**
+     * One page of punishments, newest first.
+     *
+     * @param type       null to include every type.
+     * @param activeOnly false also includes expired/lifted/kick/warn rows - the dashboard's
+     *                   "include history" toggle.
+     */
+    List<Punishment> list(PunishmentType type, boolean activeOnly, int limit, int offset);
+
+    /** @see #list(PunishmentType, boolean, int, int) - same filter, just a row count instead of the rows. */
+    int count(PunishmentType type, boolean activeOnly);
+
+    /** Punishments issued per calendar day over the last {@code days} days (including today), oldest first - powers the dashboard's activity chart. */
+    List<DailyCount> dailyCounts(int days);
+
+    record DailyCount(long dayStartMillis, int count) {
+    }
+
+    /** Staff leaderboard: operators ranked by how many punishments they've issued since sinceMillis (0 = all time), most first. */
+    List<OperatorCount> topOperators(long sinceMillis, int limit);
+
+    record OperatorCount(String operatorName, int count) {
+    }
 
     /**
      * Sweeps every active, non-permanent punishment whose expiry has passed and marks it

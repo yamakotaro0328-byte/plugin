@@ -1,5 +1,6 @@
 const loginButton = document.getElementById("login-button");
 const logoutButton = document.getElementById("logout-button");
+const themeToggle = document.getElementById("theme-toggle");
 const loginOverlay = document.getElementById("login-overlay");
 const loginForm = document.getElementById("login-form");
 const loginCancel = document.getElementById("login-cancel");
@@ -9,26 +10,110 @@ const issueForm = document.getElementById("issue-form");
 const issueType = document.getElementById("issue-type");
 const issueIp = document.getElementById("issue-ip");
 const issueResult = document.getElementById("issue-result");
+const quickReasons = document.getElementById("quick-reasons");
 const searchInput = document.getElementById("search-input");
 const typeFilter = document.getElementById("type-filter");
+const historyToggle = document.getElementById("history-toggle");
+const autoRefreshToggle = document.getElementById("auto-refresh-toggle");
 const refreshButton = document.getElementById("refresh-button");
 const punishmentsBody = document.getElementById("punishments-body");
 const tableSpinner = document.getElementById("table-spinner");
 const emptyState = document.getElementById("empty-state");
-const truncationHint = document.getElementById("truncation-hint");
+const pagePrev = document.getElementById("page-prev");
+const pageNext = document.getElementById("page-next");
+const pageInfo = document.getElementById("page-info");
 const statTotal = document.getElementById("stat-total");
 const statBans = document.getElementById("stat-bans");
 const statMutes = document.getElementById("stat-mutes");
 const statWarns = document.getElementById("stat-warns");
+const statAlltime = document.getElementById("stat-alltime");
+const activityChart = document.getElementById("activity-chart");
+const leaderboardList = document.getElementById("leaderboard-list");
+const leaderboardEmpty = document.getElementById("leaderboard-empty");
 const issueDurationUnit = document.getElementById("issue-duration-unit");
 const liftOverlay = document.getElementById("lift-overlay");
 const liftForm = document.getElementById("lift-form");
 const liftCancel = document.getElementById("lift-cancel");
 const liftReasonInput = document.getElementById("lift-reason");
 const liftSummary = document.getElementById("lift-summary");
-let pendingLift = null;
+const detailOverlay = document.getElementById("detail-overlay");
+const detailBody = document.getElementById("detail-body");
+const detailClose = document.getElementById("detail-close");
+const playerOverlay = document.getElementById("player-overlay");
+const playerBody = document.getElementById("player-body");
+const playerClose = document.getElementById("player-close");
+const toastStack = document.getElementById("toast-stack");
 
+let pendingLift = null;
 let loggedIn = false;
+let currentPage = 1;
+const PAGE_SIZE = 25;
+let liveInterval = null;
+
+const QUICK_REASONS = ["Cheating", "Griefing", "Spamming", "Advertising", "Abusive language", "Ban evasion"];
+const THEME_KEY = "ecoban-theme";
+
+// ---- theme ----
+
+function applyTheme(theme) {
+  if (theme === "light" || theme === "dark") {
+    document.documentElement.setAttribute("data-theme", theme);
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+}
+
+function currentTheme() {
+  const explicit = document.documentElement.getAttribute("data-theme");
+  if (explicit) {
+    return explicit;
+  }
+  return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+themeToggle.addEventListener("click", () => {
+  const next = currentTheme() === "dark" ? "light" : "dark";
+  applyTheme(next);
+  try {
+    localStorage.setItem(THEME_KEY, next);
+  } catch (e) {
+    // Private browsing or storage disabled - the toggle still works for this page load.
+  }
+});
+
+try {
+  const stored = localStorage.getItem(THEME_KEY);
+  if (stored) {
+    applyTheme(stored);
+  }
+} catch (e) {
+  // Ignore - falls back to the system theme.
+}
+
+// ---- toasts ----
+
+function showToast(message, type) {
+  const toast = document.createElement("div");
+  toast.className = "toast" + (type ? " " + type : "");
+  toast.textContent = message;
+  toastStack.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
+async function copyToClipboard(text, button) {
+  try {
+    await navigator.clipboard.writeText(text);
+    const original = button.textContent;
+    button.textContent = "Copied!";
+    setTimeout(() => {
+      button.textContent = original;
+    }, 1200);
+  } catch (e) {
+    showToast("Couldn't copy to clipboard.", "error");
+  }
+}
+
+// ---- auth ----
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -80,6 +165,7 @@ loginForm.addEventListener("submit", async (event) => {
   }
   closeLogin();
   setLoggedIn(true);
+  showToast("Signed in.", "success");
   loadPunishments();
 });
 
@@ -88,6 +174,19 @@ logoutButton.addEventListener("click", async () => {
   setLoggedIn(false);
   loadPunishments();
 });
+
+// ---- issue form ----
+
+for (const reason of QUICK_REASONS) {
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "quick-reason-chip";
+  chip.textContent = reason;
+  chip.addEventListener("click", () => {
+    document.getElementById("issue-reason").value = reason;
+  });
+  quickReasons.appendChild(chip);
+}
 
 issueType.addEventListener("change", () => {
   issueIp.hidden = issueType.value !== "ipban";
@@ -117,9 +216,12 @@ issueForm.addEventListener("submit", async (event) => {
     const data = await response.json();
     if (!response.ok) {
       setIssueResult("Error: " + (data.error || "unknown error"), "error");
+      showToast(data.error || "Failed to issue punishment.", "error");
     } else {
       setIssueResult("Issued successfully.", "success");
+      showToast(`${type.toUpperCase()} issued.`, "success");
       issueForm.reset();
+      currentPage = 1;
       loadPunishments();
       loadStats();
     }
@@ -136,9 +238,45 @@ function setIssueResult(text, state) {
   }
 }
 
-searchInput.addEventListener("input", debounce(loadPunishments, 300));
-typeFilter.addEventListener("change", loadPunishments);
-refreshButton.addEventListener("click", loadPunishments);
+// ---- punishments table ----
+
+searchInput.addEventListener("input", debounce(() => {
+  currentPage = 1;
+  loadPunishments();
+}, 300));
+typeFilter.addEventListener("change", () => {
+  currentPage = 1;
+  loadPunishments();
+});
+historyToggle.addEventListener("change", () => {
+  currentPage = 1;
+  loadPunishments();
+});
+refreshButton.addEventListener("click", () => {
+  loadPunishments();
+  loadStats();
+});
+pagePrev.addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage--;
+    loadPunishments();
+  }
+});
+pageNext.addEventListener("click", () => {
+  currentPage++;
+  loadPunishments();
+});
+autoRefreshToggle.addEventListener("change", () => {
+  if (autoRefreshToggle.checked) {
+    liveInterval = setInterval(() => {
+      loadPunishments();
+      loadStats();
+    }, 8000);
+  } else if (liveInterval) {
+    clearInterval(liveInterval);
+    liveInterval = null;
+  }
+});
 
 function debounce(fn, delayMillis) {
   let timeout;
@@ -158,65 +296,175 @@ async function loadPunishments() {
   if (type) {
     params.set("type", type);
   }
+  params.set("activeOnly", String(!historyToggle.checked));
+  params.set("page", String(currentPage));
+  params.set("limit", String(PAGE_SIZE));
   tableSpinner.hidden = false;
   try {
     // Browsing needs no auth, so a plain fetch here (never triggers the login overlay).
     const response = await fetch("/api/punishments?" + params.toString());
-    const punishments = await response.json();
-    renderPunishments(punishments);
+    const data = await response.json();
+    renderPunishments(data.items);
+    renderPagination(data.page, data.limit, data.total);
   } finally {
     tableSpinner.hidden = true;
   }
 }
 
-/** A separate, unfiltered fetch just for the summary tiles, so searching/filtering the table
- * below doesn't make the overall counts look like they changed. */
+function renderPagination(page, limit, total) {
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  pageInfo.textContent = `Page ${page} of ${totalPages} · ${total} total`;
+  pagePrev.disabled = page <= 1;
+  pageNext.disabled = page >= totalPages;
+}
+
 async function loadStats() {
-  const response = await fetch("/api/punishments?limit=1000");
-  const punishments = await response.json();
-  const isBan = (t) => t === "BAN" || t === "TEMPBAN" || t === "IPBAN";
-  const isMute = (t) => t === "MUTE" || t === "TEMPMUTE";
-  statTotal.textContent = punishments.length;
-  statBans.textContent = punishments.filter((p) => isBan(p.type)).length;
-  statMutes.textContent = punishments.filter((p) => isMute(p.type)).length;
-  statWarns.textContent = punishments.filter((p) => p.type === "WARN").length;
+  const response = await fetch("/api/stats");
+  const stats = await response.json();
+  statTotal.textContent = stats.activeTotal;
+  statBans.textContent = stats.activeBans;
+  statMutes.textContent = stats.activeMutes;
+  statWarns.textContent = stats.activeWarns;
+  statAlltime.textContent = stats.allTimeTotal;
+  renderActivityChart(stats.daily);
+  renderLeaderboard(stats.topOperators);
+}
+
+function renderActivityChart(daily) {
+  activityChart.innerHTML = "";
+  const max = Math.max(1, ...daily.map((day) => day.count));
+  for (const day of daily) {
+    const wrap = document.createElement("div");
+    wrap.className = "activity-bar-wrap";
+
+    const bar = document.createElement("div");
+    bar.className = "activity-bar";
+    const heightPct = (day.count / max) * 100;
+    bar.style.height = Math.max(3, heightPct) + "%";
+    bar.title = `${new Date(day.date).toLocaleDateString()}: ${day.count}`;
+
+    const label = document.createElement("span");
+    label.className = "activity-bar-label";
+    label.textContent = new Date(day.date).toLocaleDateString(undefined, { day: "numeric", month: "numeric" });
+
+    wrap.append(bar, label);
+    activityChart.appendChild(wrap);
+  }
+}
+
+function renderLeaderboard(operators) {
+  leaderboardList.innerHTML = "";
+  leaderboardEmpty.hidden = operators.length > 0;
+  operators.forEach((op, index) => {
+    const li = document.createElement("li");
+
+    const rank = document.createElement("span");
+    rank.className = "leaderboard-rank";
+    rank.textContent = String(index + 1);
+
+    const name = document.createElement("span");
+    name.className = "leaderboard-name";
+    name.textContent = op.name;
+
+    const count = document.createElement("span");
+    count.className = "leaderboard-count";
+    count.textContent = String(op.count);
+
+    li.append(rank, name, count);
+    leaderboardList.appendChild(li);
+  });
 }
 
 function typeBadgeClass(type) {
   return "type-badge type-" + type.toLowerCase();
 }
 
+function avatarUrl(uuid, size) {
+  return uuid ? `https://mc-heads.net/avatar/${uuid}/${size}` : null;
+}
+
+function avatarElement(uuid, size) {
+  const url = avatarUrl(uuid, size);
+  if (url) {
+    const img = document.createElement("img");
+    img.className = "avatar";
+    img.style.width = size + "px";
+    img.style.height = size + "px";
+    img.src = url;
+    img.alt = "";
+    img.loading = "lazy";
+    return img;
+  }
+  const placeholder = document.createElement("div");
+  placeholder.className = "avatar-placeholder";
+  placeholder.style.width = size + "px";
+  placeholder.style.height = size + "px";
+  placeholder.textContent = "?";
+  return placeholder;
+}
+
 function renderPunishments(punishments) {
   punishmentsBody.innerHTML = "";
   emptyState.hidden = punishments.length > 0;
-  // The API defaults to a 100-row limit when no explicit limit is given (see loadPunishments) -
-  // hitting that count exactly is the only signal the client has that more rows exist.
-  truncationHint.hidden = punishments.length < 100;
   for (const p of punishments) {
     const row = document.createElement("tr");
+    row.addEventListener("click", () => openDetail(p.id));
 
-    const target = p.targetName || p.targetUuid || p.ip || "(unknown)";
-    const expires = p.permanent ? "Permanent" : new Date(p.expiresAt).toLocaleString();
+    const typeCell = document.createElement("td");
+    const typeBadge = document.createElement("span");
+    typeBadge.className = typeBadgeClass(p.type);
+    typeBadge.textContent = p.type;
+    typeCell.appendChild(typeBadge);
 
-    row.innerHTML = `
-      <td><span class="${typeBadgeClass(p.type)}">${p.type}</span></td>
-      <td class="target-cell">${escapeHtml(target)}</td>
-      <td class="reason-cell">${escapeHtml(p.reason || "")}</td>
-      <td>${escapeHtml(p.operatorName || "")}</td>
-      <td>${new Date(p.createdAt).toLocaleString()}</td>
-      <td>${expires}</td>
-      <td><span class="badge ${p.active ? "active" : "inactive"}">${p.active ? "Active" : "Inactive"}</span></td>
-      <td></td>
-    `;
+    const targetCell = document.createElement("td");
+    targetCell.className = "target-cell";
+    const targetWrap = document.createElement("div");
+    targetWrap.className = "target-wrap";
+    targetWrap.appendChild(avatarElement(p.targetUuid, 20));
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "target-name";
+    nameSpan.textContent = p.targetName || p.targetUuid || p.ip || "(unknown)";
+    targetWrap.appendChild(nameSpan);
+    if (p.targetUuid) {
+      targetWrap.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openPlayer(p.targetUuid);
+      });
+    }
+    targetCell.appendChild(targetWrap);
 
+    const reasonCell = document.createElement("td");
+    reasonCell.className = "reason-cell";
+    reasonCell.textContent = p.reason || "";
+
+    const operatorCell = document.createElement("td");
+    operatorCell.textContent = p.operatorName || "";
+
+    const issuedCell = document.createElement("td");
+    issuedCell.textContent = new Date(p.createdAt).toLocaleString();
+
+    const expiresCell = document.createElement("td");
+    expiresCell.textContent = p.permanent ? "Permanent" : new Date(p.expiresAt).toLocaleString();
+
+    const statusCell = document.createElement("td");
+    const statusBadge = document.createElement("span");
+    statusBadge.className = "badge " + (p.active ? "active" : "inactive");
+    statusBadge.textContent = p.active ? "Active" : "Inactive";
+    statusCell.appendChild(statusBadge);
+
+    const actionCell = document.createElement("td");
     if (loggedIn && p.active && (p.type === "BAN" || p.type === "TEMPBAN" || p.type === "IPBAN" || p.type === "MUTE" || p.type === "TEMPMUTE")) {
       const button = document.createElement("button");
       button.className = "small ghost";
       button.textContent = "Lift";
-      button.addEventListener("click", () => liftPunishment(p));
-      row.lastElementChild.appendChild(button);
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        liftPunishment(p);
+      });
+      actionCell.appendChild(button);
     }
 
+    row.append(typeCell, targetCell, reasonCell, operatorCell, issuedCell, expiresCell, statusCell, actionCell);
     punishmentsBody.appendChild(row);
   }
 }
@@ -261,6 +509,7 @@ liftForm.addEventListener("submit", async (event) => {
   }
   try {
     await api(path, { method: "POST", body: JSON.stringify(body) });
+    showToast("Punishment lifted.", "success");
     loadPunishments();
     loadStats();
   } catch (e) {
@@ -268,13 +517,259 @@ liftForm.addEventListener("submit", async (event) => {
   }
 });
 
-function escapeHtml(text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
+// ---- punishment detail modal ----
+
+async function openDetail(id) {
+  history.replaceState(null, "", `#/punishment/${id}`);
+  detailOverlay.hidden = false;
+  detailBody.replaceChildren(loadingParagraph());
+  try {
+    const response = await fetch(`/api/punishment?id=${encodeURIComponent(id)}`);
+    if (!response.ok) {
+      detailBody.replaceChildren(emptyParagraph("Punishment not found."));
+      return;
+    }
+    renderDetail(await response.json());
+  } catch (e) {
+    detailBody.replaceChildren(emptyParagraph("Failed to load."));
+  }
+}
+
+function closeDetail() {
+  detailOverlay.hidden = true;
+  clearHashIfMatches("#/punishment/");
+}
+
+detailClose.addEventListener("click", closeDetail);
+detailOverlay.addEventListener("click", (event) => {
+  if (event.target === detailOverlay) {
+    closeDetail();
+  }
+});
+
+function renderDetail(p) {
+  detailBody.innerHTML = "";
+
+  const header = document.createElement("div");
+  header.className = "detail-header";
+  const avatar = avatarElement(p.targetUuid, 56);
+  avatar.className = avatar.className.replace("avatar", "detail-avatar");
+  header.appendChild(avatar);
+
+  const heading = document.createElement("div");
+  heading.className = "detail-heading";
+  const title = document.createElement("h2");
+  title.textContent = `${p.type} #${p.id}`;
+  const badges = document.createElement("div");
+  badges.className = "detail-badges";
+  badges.appendChild(makeBadge(typeBadgeClass(p.type), p.type));
+  badges.appendChild(makeBadge("badge " + (p.active ? "active" : "inactive"), p.active ? "Active" : "Inactive"));
+  if (p.permanent) {
+    badges.appendChild(makeBadge("badge inactive", "Permanent"));
+  }
+  heading.append(title, badges);
+  header.appendChild(heading);
+  detailBody.appendChild(header);
+
+  const grid = document.createElement("dl");
+  grid.className = "detail-grid";
+  addDetailRow(grid, "Player", p.targetName || "–", p.targetUuid);
+  if (p.targetUuid) {
+    addDetailRow(grid, "UUID", p.targetUuid, p.targetUuid);
+  }
+  if (p.ip) {
+    addDetailRow(grid, "IP", p.ip, p.ip);
+  }
+  addDetailRow(grid, "Reason", p.reason || "(none given)");
+  addDetailRow(grid, "Operator", p.operatorName || "–");
+  addDetailRow(grid, "Issued", new Date(p.createdAt).toLocaleString());
+  addDetailRow(grid, "Expires", p.permanent ? "Permanent" : new Date(p.expiresAt).toLocaleString());
+  if (!p.active && p.removedByName) {
+    addDetailRow(grid, "Lifted by", p.removedByName);
+    if (p.removedReason) {
+      addDetailRow(grid, "Lift reason", p.removedReason);
+    }
+  }
+  detailBody.appendChild(grid);
+
+  const footer = document.createElement("div");
+  footer.className = "detail-footer";
+  const copyLinkButton = document.createElement("button");
+  copyLinkButton.className = "ghost small";
+  copyLinkButton.textContent = "Copy link";
+  copyLinkButton.addEventListener("click", () => copyToClipboard(location.href, copyLinkButton));
+  footer.appendChild(copyLinkButton);
+  if (p.targetUuid) {
+    const viewProfileButton = document.createElement("button");
+    viewProfileButton.className = "ghost small";
+    viewProfileButton.textContent = "View player profile";
+    viewProfileButton.addEventListener("click", () => {
+      closeDetail();
+      openPlayer(p.targetUuid);
+    });
+    footer.appendChild(viewProfileButton);
+  }
+  detailBody.appendChild(footer);
+}
+
+function addDetailRow(grid, label, value, copyValue) {
+  const dt = document.createElement("dt");
+  dt.textContent = label;
+  const dd = document.createElement("dd");
+  const span = document.createElement("span");
+  span.textContent = value;
+  dd.appendChild(span);
+  if (copyValue) {
+    const button = document.createElement("button");
+    button.className = "copy-button";
+    button.textContent = "Copy";
+    button.addEventListener("click", () => copyToClipboard(copyValue, button));
+    dd.appendChild(button);
+  }
+  grid.append(dt, dd);
+}
+
+function makeBadge(className, text) {
+  const span = document.createElement("span");
+  span.className = className;
+  span.textContent = text;
+  return span;
+}
+
+// ---- player profile modal ----
+
+async function openPlayer(uuid) {
+  history.replaceState(null, "", `#/player/${uuid}`);
+  playerOverlay.hidden = false;
+  playerBody.replaceChildren(loadingParagraph());
+  try {
+    const response = await fetch(`/api/player?uuid=${encodeURIComponent(uuid)}`);
+    if (!response.ok) {
+      playerBody.replaceChildren(emptyParagraph("No record for that player."));
+      return;
+    }
+    renderPlayer(await response.json());
+  } catch (e) {
+    playerBody.replaceChildren(emptyParagraph("Failed to load."));
+  }
+}
+
+function closePlayer() {
+  playerOverlay.hidden = true;
+  clearHashIfMatches("#/player/");
+}
+
+playerClose.addEventListener("click", closePlayer);
+playerOverlay.addEventListener("click", (event) => {
+  if (event.target === playerOverlay) {
+    closePlayer();
+  }
+});
+
+function renderPlayer(data) {
+  playerBody.innerHTML = "";
+
+  const header = document.createElement("div");
+  header.className = "player-header";
+  const avatar = avatarElement(data.uuid, 56);
+  avatar.className = avatar.className.replace("avatar", "player-avatar");
+  header.appendChild(avatar);
+
+  const heading = document.createElement("div");
+  heading.className = "player-heading";
+  const title = document.createElement("h2");
+  title.textContent = data.name || "(unknown name)";
+  const sub = document.createElement("p");
+  sub.className = "modal-subtitle";
+  sub.style.margin = "0";
+  sub.textContent = data.uuid;
+  heading.append(title, sub);
+  header.appendChild(heading);
+  playerBody.appendChild(header);
+
+  const counts = document.createElement("div");
+  counts.className = "player-counts";
+  const bans = (data.counts.BAN || 0) + (data.counts.TEMPBAN || 0) + (data.counts.IPBAN || 0);
+  const mutes = (data.counts.MUTE || 0) + (data.counts.TEMPMUTE || 0);
+  const tiles = [["Bans", bans], ["Mutes", mutes], ["Warns", data.counts.WARN || 0], ["Kicks", data.counts.KICK || 0]];
+  for (const [label, value] of tiles) {
+    const tile = document.createElement("div");
+    tile.className = "player-count-tile";
+    const valueSpan = document.createElement("span");
+    valueSpan.className = "count-value";
+    valueSpan.textContent = String(value);
+    const labelSpan = document.createElement("span");
+    labelSpan.className = "count-label";
+    labelSpan.textContent = label;
+    tile.append(valueSpan, labelSpan);
+    counts.appendChild(tile);
+  }
+  playerBody.appendChild(counts);
+
+  const list = document.createElement("div");
+  list.className = "player-history-list";
+  if (data.history.length === 0) {
+    list.appendChild(emptyParagraph("No punishment history."));
+  }
+  for (const p of data.history) {
+    const row = document.createElement("div");
+    row.className = "player-history-row";
+    row.addEventListener("click", () => {
+      closePlayer();
+      openDetail(p.id);
+    });
+
+    const badge = document.createElement("span");
+    badge.className = typeBadgeClass(p.type);
+    badge.textContent = p.type;
+
+    const reason = document.createElement("span");
+    reason.className = "player-history-reason";
+    reason.textContent = p.reason || "(no reason)";
+
+    const date = document.createElement("span");
+    date.className = "player-history-date";
+    date.textContent = new Date(p.createdAt).toLocaleDateString();
+
+    row.append(badge, reason, date);
+    list.appendChild(row);
+  }
+  playerBody.appendChild(list);
+}
+
+function loadingParagraph() {
+  return emptyParagraph("Loading…");
+}
+
+function emptyParagraph(text) {
+  const p = document.createElement("p");
+  p.className = "empty-state";
+  p.textContent = text;
+  return p;
+}
+
+function clearHashIfMatches(prefix) {
+  if (location.hash.startsWith(prefix)) {
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+}
+
+// ---- permalink routing ----
+
+function handleInitialHash() {
+  const match = location.hash.match(/^#\/(punishment|player)\/(.+)$/);
+  if (!match) {
+    return;
+  }
+  if (match[1] === "punishment") {
+    openDetail(match[2]);
+  } else {
+    openPlayer(match[2]);
+  }
 }
 
 // The punishments list loads for everyone; the session check just decides whether to
 // reveal the issue form and Lift buttons (the cookie, if any, survives a page reload).
 fetch("/api/session").then((response) => setLoggedIn(response.ok)).finally(loadPunishments);
 loadStats();
+handleInitialHash();

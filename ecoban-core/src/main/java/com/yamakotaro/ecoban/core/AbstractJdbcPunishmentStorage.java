@@ -6,7 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -144,6 +146,11 @@ public abstract class AbstractJdbcPunishmentStorage implements PunishmentStorage
     }
 
     @Override
+    public Punishment getById(long id) {
+        return queryOne("SELECT * FROM ecoban_punishments WHERE id = ?", stmt -> stmt.setLong(1, id));
+    }
+
+    @Override
     public List<Punishment> getHistory(UUID uuid) {
         return queryList("SELECT * FROM ecoban_punishments WHERE target_uuid = ? ORDER BY id DESC",
                 stmt -> stmt.setString(1, uuid.toString()));
@@ -151,9 +158,24 @@ public abstract class AbstractJdbcPunishmentStorage implements PunishmentStorage
 
     @Override
     public List<Punishment> search(String query, int limit) {
+        return search(query, limit, 0);
+    }
+
+    @Override
+    public List<Punishment> search(String query, int limit, int offset) {
         String like = "%" + query.toLowerCase() + "%";
         return queryList("SELECT * FROM ecoban_punishments WHERE LOWER(target_name) LIKE ? OR ip LIKE ? "
-                        + "ORDER BY id DESC LIMIT " + Math.max(1, limit),
+                        + "ORDER BY id DESC LIMIT " + Math.max(1, limit) + " OFFSET " + Math.max(0, offset),
+                stmt -> {
+                    stmt.setString(1, like);
+                    stmt.setString(2, like);
+                });
+    }
+
+    @Override
+    public int countSearch(String query) {
+        String like = "%" + query.toLowerCase() + "%";
+        return countRows("SELECT COUNT(*) FROM ecoban_punishments WHERE LOWER(target_name) LIKE ? OR ip LIKE ?",
                 stmt -> {
                     stmt.setString(1, like);
                     stmt.setString(2, like);
@@ -162,15 +184,102 @@ public abstract class AbstractJdbcPunishmentStorage implements PunishmentStorage
 
     @Override
     public List<Punishment> listActive(PunishmentType type, int limit) {
-        if (type == null) {
-            return queryList("SELECT * FROM ecoban_punishments WHERE active = ? ORDER BY id DESC LIMIT " + Math.max(1, limit),
-                    stmt -> stmt.setBoolean(1, true));
+        return list(type, true, limit, 0);
+    }
+
+    @Override
+    public List<Punishment> list(PunishmentType type, boolean activeOnly, int limit, int offset) {
+        StringBuilder sql = new StringBuilder("SELECT * FROM ecoban_punishments WHERE 1 = 1");
+        if (activeOnly) {
+            sql.append(" AND active = ?");
         }
-        return queryList("SELECT * FROM ecoban_punishments WHERE active = ? AND type = ? ORDER BY id DESC LIMIT " + Math.max(1, limit),
-                stmt -> {
-                    stmt.setBoolean(1, true);
-                    stmt.setString(2, type.name());
-                });
+        if (type != null) {
+            sql.append(" AND type = ?");
+        }
+        sql.append(" ORDER BY id DESC LIMIT ").append(Math.max(1, limit)).append(" OFFSET ").append(Math.max(0, offset));
+        return queryList(sql.toString(), stmt -> {
+            int index = 1;
+            if (activeOnly) {
+                stmt.setBoolean(index++, true);
+            }
+            if (type != null) {
+                stmt.setString(index, type.name());
+            }
+        });
+    }
+
+    @Override
+    public int count(PunishmentType type, boolean activeOnly) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ecoban_punishments WHERE 1 = 1");
+        if (activeOnly) {
+            sql.append(" AND active = ?");
+        }
+        if (type != null) {
+            sql.append(" AND type = ?");
+        }
+        return countRows(sql.toString(), stmt -> {
+            int index = 1;
+            if (activeOnly) {
+                stmt.setBoolean(index++, true);
+            }
+            if (type != null) {
+                stmt.setString(index, type.name());
+            }
+        });
+    }
+
+    @Override
+    public List<DailyCount> dailyCounts(int days) {
+        long dayMillis = 86_400_000L;
+        long todayBucket = System.currentTimeMillis() / dayMillis;
+        long sinceDayStart = (todayBucket - (days - 1)) * dayMillis;
+
+        Map<Long, Integer> countsByDay = new HashMap<>();
+        Connection conn = connection();
+        if (conn != null) {
+            String sql = "SELECT (created_at / " + dayMillis + ") AS day_bucket, COUNT(*) AS cnt FROM ecoban_punishments "
+                    + "WHERE created_at >= ? GROUP BY day_bucket";
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setLong(1, sinceDayStart);
+                try (ResultSet rs = statement.executeQuery()) {
+                    while (rs.next()) {
+                        countsByDay.put(rs.getLong("day_bucket") * dayMillis, rs.getInt("cnt"));
+                    }
+                }
+            } catch (SQLException e) {
+                logger.log(Level.SEVERE, "Failed to compute daily punishment counts", e);
+            }
+        }
+
+        List<DailyCount> results = new ArrayList<>();
+        for (int i = days - 1; i >= 0; i--) {
+            long dayStart = (todayBucket - i) * dayMillis;
+            results.add(new DailyCount(dayStart, countsByDay.getOrDefault(dayStart, 0)));
+        }
+        return results;
+    }
+
+    @Override
+    public List<OperatorCount> topOperators(long sinceMillis, int limit) {
+        List<OperatorCount> results = new ArrayList<>();
+        Connection conn = connection();
+        if (conn == null) {
+            return results;
+        }
+        String sql = "SELECT operator_name, COUNT(*) AS cnt FROM ecoban_punishments "
+                + "WHERE created_at >= ? AND operator_name IS NOT NULL "
+                + "GROUP BY operator_name ORDER BY cnt DESC LIMIT " + Math.max(1, limit);
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setLong(1, sinceMillis);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    results.add(new OperatorCount(rs.getString("operator_name"), rs.getInt("cnt")));
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Failed to compute the staff leaderboard", e);
+        }
+        return results;
     }
 
     @Override
@@ -257,6 +366,22 @@ public abstract class AbstractJdbcPunishmentStorage implements PunishmentStorage
             }
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Failed to close the punishment database connection", e);
+        }
+    }
+
+    private int countRows(String sql, SqlSetter setter) {
+        Connection conn = connection();
+        if (conn == null) {
+            return 0;
+        }
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            setter.set(statement);
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? rs.getInt(1) : 0;
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Failed to count punishments", e);
+            return 0;
         }
     }
 

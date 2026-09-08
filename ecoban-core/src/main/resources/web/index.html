@@ -17,6 +17,9 @@
     <h1>EcoBan</h1>
   </div>
   <div id="auth-area">
+    <button id="theme-toggle" class="ghost icon-button" type="button" aria-label="Toggle theme" title="Toggle light/dark theme">
+      <svg id="theme-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg>
+    </button>
     <button id="login-button">Log in</button>
     <button id="logout-button" class="ghost" hidden>Log out</button>
   </div>
@@ -47,6 +50,22 @@
   </form>
 </div>
 
+<div id="detail-overlay" class="overlay" hidden>
+  <div class="modal-card detail-card">
+    <button type="button" class="modal-close" id="detail-close" aria-label="Close">&times;</button>
+    <div id="detail-body"></div>
+  </div>
+</div>
+
+<div id="player-overlay" class="overlay" hidden>
+  <div class="modal-card player-card">
+    <button type="button" class="modal-close" id="player-close" aria-label="Close">&times;</button>
+    <div id="player-body"></div>
+  </div>
+</div>
+
+<div id="toast-stack" aria-live="polite"></div>
+
 <main>
   <section class="stats-row" id="stats-row" aria-label="Punishment summary">
     <div class="stat-tile">
@@ -64,6 +83,22 @@
     <div class="stat-tile">
       <span class="stat-value" id="stat-warns">–</span>
       <span class="stat-label">Warnings</span>
+    </div>
+    <div class="stat-tile">
+      <span class="stat-value" id="stat-alltime">–</span>
+      <span class="stat-label">All-time issued</span>
+    </div>
+  </section>
+
+  <section class="insights-row">
+    <div class="card chart-card">
+      <div class="card-heading"><h2>Activity, last 14 days</h2></div>
+      <div id="activity-chart" class="activity-chart" role="img" aria-label="Punishments issued per day over the last 14 days"></div>
+    </div>
+    <div class="card leaderboard-card">
+      <div class="card-heading"><h2>Staff leaderboard</h2></div>
+      <ol id="leaderboard-list" class="leaderboard-list"></ol>
+      <p class="empty-state" id="leaderboard-empty" hidden>No punishments issued yet.</p>
     </div>
   </section>
 
@@ -90,6 +125,7 @@
         </select>
       </div>
       <input type="text" id="issue-reason" placeholder="Reason" class="wide">
+      <div class="quick-reasons wide" id="quick-reasons"></div>
       <button type="submit">Issue</button>
     </form>
     <p id="issue-result" class="result"></p>
@@ -109,7 +145,7 @@
         <input type="text" id="search-input" placeholder="Search by name or IP...">
       </div>
       <select id="type-filter">
-        <option value="">All active types</option>
+        <option value="">All types</option>
         <option value="BAN">Ban</option>
         <option value="TEMPBAN">Temp Ban</option>
         <option value="IPBAN">IP Ban</option>
@@ -118,6 +154,8 @@
         <option value="KICK">Kick</option>
         <option value="WARN">Warn</option>
       </select>
+      <label class="checkbox-label"><input type="checkbox" id="history-toggle"> Include history</label>
+      <label class="checkbox-label"><input type="checkbox" id="auto-refresh-toggle"> Live</label>
       <button id="refresh-button" class="ghost">Refresh</button>
     </div>
     <div class="table-wrap">
@@ -137,7 +175,11 @@
         <tbody id="punishments-body"></tbody>
       </table>
       <p class="empty-state" id="empty-state" hidden>No punishments match here.</p>
-      <p class="truncation-hint" id="truncation-hint" hidden>Showing the first 100 results - narrow your search to see more.</p>
+    </div>
+    <div class="pagination" id="pagination">
+      <button id="page-prev" class="ghost small" type="button">&larr; Prev</button>
+      <span id="page-info">–</span>
+      <button id="page-next" class="ghost small" type="button">Next &rarr;</button>
     </div>
   </section>
 </main>

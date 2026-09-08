@@ -105,12 +105,40 @@ public class PunishmentManager {
         return storage.getHistory(uuid);
     }
 
+    public Punishment getById(long id) {
+        return storage.getById(id);
+    }
+
     public List<Punishment> search(String query, int limit) {
         return storage.search(query, limit);
     }
 
+    public List<Punishment> search(String query, int limit, int offset) {
+        return storage.search(query, limit, offset);
+    }
+
+    public int countSearch(String query) {
+        return storage.countSearch(query);
+    }
+
     public List<Punishment> listActive(PunishmentType type, int limit) {
         return storage.listActive(type, limit);
+    }
+
+    public List<Punishment> list(PunishmentType type, boolean activeOnly, int limit, int offset) {
+        return storage.list(type, activeOnly, limit, offset);
+    }
+
+    public int count(PunishmentType type, boolean activeOnly) {
+        return storage.count(type, activeOnly);
+    }
+
+    public List<PunishmentStorage.DailyCount> dailyCounts(int days) {
+        return storage.dailyCounts(days);
+    }
+
+    public List<PunishmentStorage.OperatorCount> topOperators(long sinceMillis, int limit) {
+        return storage.topOperators(sinceMillis, limit);
     }
 
     public void deactivateExpired() {
