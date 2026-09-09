@@ -1,5 +1,6 @@
 const loginButton = document.getElementById("login-button");
 const logoutButton = document.getElementById("logout-button");
+const sessionUsername = document.getElementById("session-username");
 const themeToggle = document.getElementById("theme-toggle");
 const loginOverlay = document.getElementById("login-overlay");
 const loginForm = document.getElementById("login-form");
@@ -144,12 +145,14 @@ async function api(path, options = {}) {
   return response;
 }
 
-function setLoggedIn(value) {
+function setLoggedIn(value, username) {
   loggedIn = value;
   loginButton.hidden = value;
   logoutButton.hidden = !value;
   issueCard.hidden = !value;
   selectAllCol.hidden = !value;
+  sessionUsername.hidden = !value;
+  sessionUsername.textContent = value ? `Signed in as ${username}` : "";
   if (!value) {
     selectedIds.clear();
     updateBulkLiftVisibility();
@@ -186,7 +189,7 @@ loginForm.addEventListener("submit", async (event) => {
     return;
   }
   closeLogin();
-  setLoggedIn(true);
+  setLoggedIn(true, username);
   showToast("Signed in.", "success");
   loadPunishments();
 });
@@ -1129,6 +1132,11 @@ function handleInitialHash() {
 
 // The punishments list loads for everyone; the session check just decides whether to
 // reveal the issue form and Lift buttons (the cookie, if any, survives a page reload).
-fetch("/api/session").then((response) => setLoggedIn(response.ok)).finally(loadPunishments);
+fetch("/api/session")
+  .then(async (response) => {
+    const data = response.ok ? await response.json() : null;
+    setLoggedIn(response.ok, data && data.username);
+  })
+  .finally(loadPunishments);
 loadStats();
 handleInitialHash();

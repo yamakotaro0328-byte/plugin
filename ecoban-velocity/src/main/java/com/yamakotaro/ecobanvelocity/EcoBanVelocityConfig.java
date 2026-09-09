@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,6 +58,24 @@ public class EcoBanVelocityConfig {
     public boolean getBoolean(String path, boolean defaultValue) {
         Object value = get(path);
         return value instanceof Boolean bool ? bool : defaultValue;
+    }
+
+    /** Mirrors Bukkit's FileConfiguration#getMapList - a list of key/value blocks, e.g.
+     * web.accounts' list of {username, password} entries. Empty (not null) if path is missing or
+     * isn't a list of maps. */
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> getMapList(String path) {
+        Object value = get(path);
+        if (!(value instanceof List<?> list)) {
+            return List.of();
+        }
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object item : list) {
+            if (item instanceof Map) {
+                result.add((Map<String, Object>) item);
+            }
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked")

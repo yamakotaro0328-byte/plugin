@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -65,8 +66,7 @@ public class EcoBanPlugin extends JavaPlugin {
         if (getConfig().getBoolean("web.enabled", true)) {
             this.webDashboard = new WebDashboard(punishmentManager,
                     getConfig().getInt("web.port", 8123),
-                    getConfig().getString("web.username", "admin"),
-                    getConfig().getString("web.password", "changeme"),
+                    webAccounts(),
                     logger);
             webDashboard.start();
         }
@@ -88,6 +88,20 @@ public class EcoBanPlugin extends JavaPlugin {
             }
             punishmentManager.markKickHandled(pending.id());
         }
+    }
+
+    /** web.username/web.password plus any extra named logins from web.accounts - see config.yml. */
+    private Map<String, String> webAccounts() {
+        Map<String, String> accounts = new LinkedHashMap<>();
+        accounts.put(getConfig().getString("web.username", "admin"), getConfig().getString("web.password", "changeme"));
+        for (Map<?, ?> account : getConfig().getMapList("web.accounts")) {
+            Object accountUsername = account.get("username");
+            Object accountPassword = account.get("password");
+            if (accountUsername != null && accountPassword != null) {
+                accounts.put(accountUsername.toString(), accountPassword.toString());
+            }
+        }
+        return accounts;
     }
 
     private <T extends CommandExecutor & TabCompleter> void registerAll(T executorAndCompleter, String... commandNames) {

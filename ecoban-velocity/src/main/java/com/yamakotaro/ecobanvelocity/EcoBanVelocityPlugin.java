@@ -22,6 +22,7 @@ import com.yamakotaro.ecobanvelocity.listeners.BanEnforcementListener;
 import com.yamakotaro.ecobanvelocity.listeners.MuteEnforcementListener;
 
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -91,8 +92,7 @@ public class EcoBanVelocityPlugin {
         if (config.getBoolean("web.enabled", false)) {
             this.webDashboard = new WebDashboard(punishmentManager,
                     config.getInt("web.port", 8123),
-                    config.getString("web.username", "admin"),
-                    config.getString("web.password", "changeme"),
+                    webAccounts(),
                     logger);
             webDashboard.start();
         }
@@ -117,6 +117,20 @@ public class EcoBanVelocityPlugin {
                     Map.of("reason", pending.reason() != null ? pending.reason() : ""))));
             punishmentManager.markKickHandled(pending.id());
         }
+    }
+
+    /** web.username/web.password plus any extra named logins from web.accounts - see config.yml. */
+    private Map<String, String> webAccounts() {
+        Map<String, String> accounts = new LinkedHashMap<>();
+        accounts.put(config.getString("web.username", "admin"), config.getString("web.password", "changeme"));
+        for (Map<?, ?> account : config.getMapList("web.accounts")) {
+            Object accountUsername = account.get("username");
+            Object accountPassword = account.get("password");
+            if (accountUsername != null && accountPassword != null) {
+                accounts.put(accountUsername.toString(), accountPassword.toString());
+            }
+        }
+        return accounts;
     }
 
     private void registerCommand(SimpleCommand command, String primary, String... aliases) {

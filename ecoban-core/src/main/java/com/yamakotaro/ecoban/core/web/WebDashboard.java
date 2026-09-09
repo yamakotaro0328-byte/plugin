@@ -32,43 +32,45 @@ import java.util.logging.Logger;
 /**
  * A small self-contained panel: http://&lt;host&gt;:&lt;port&gt;/ - browsing/searching
  * punishments needs no login (anyone with the link can look), but issuing or lifting one requires
- * signing in with the username/password from config.yml first, via the login button in the
+ * signing in with one of the named accounts from config.yml first, via the login button in the
  * corner. Built on the JDK's own {@link HttpServer} (no extra web-framework dependency to shade),
  * serving a single bundled HTML/CSS/JS page (see src/main/resources/web/) plus a small JSON REST
  * API.
  *
  * Session auth is a random token in a cookie, checked on every write /api/* route (see authed()
- * below) - intentionally simple (one shared admin account) rather than a full user system, since
- * write access is meant for a handful of trusted staff even though read access is open.
+ * below) - each session remembers which account name signed in, so punishment history correctly
+ * attributes an action to the staff member who actually took it rather than one shared label.
  */
 public class WebDashboard {
 
     private static final long SESSION_LIFETIME_MILLIS = 12L * 60 * 60 * 1000; // 12 hours
     private static final String SESSION_COOKIE = "ecoban_session";
-    // The dashboard has exactly one shared admin account (see the class doc comment), so a brute
-    // force login only needs to try password guesses - locking out an IP after a handful of
-    // misses closes that off without needing per-account throttling.
+    // Several named accounts can share this dashboard, so a brute force login still only needs to
+    // try password guesses against whichever username it targets - locking out an IP after a
+    // handful of misses (regardless of which account it was aimed at) closes that off.
     private static final int MAX_LOGIN_ATTEMPTS = 5;
     private static final long LOGIN_LOCKOUT_MILLIS = 5L * 60 * 1000; // 5 minutes
 
     private final PunishmentManager punishmentManager;
     private final int port;
-    private final String username;
-    private final String password;
+    private final Map<String, String> accounts;
     private final Logger logger;
     private final Gson gson = new Gson();
-    private final Map<String, Long> sessions = new ConcurrentHashMap<>();
+    private final Map<String, Session> sessions = new ConcurrentHashMap<>();
     private final Map<String, LoginAttempt> loginAttempts = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
 
     private HttpServer server;
 
-    public WebDashboard(PunishmentManager punishmentManager, int port, String username, String password, Logger logger) {
+    /** @param accounts username -> password for every login the dashboard should accept. */
+    public WebDashboard(PunishmentManager punishmentManager, int port, Map<String, String> accounts, Logger logger) {
         this.punishmentManager = punishmentManager;
         this.port = port;
-        this.username = username;
-        this.password = password;
+        this.accounts = accounts;
         this.logger = logger;
+    }
+
+    private record Session(String username, long expiresAtMillis) {
     }
 
     public void start() {
@@ -139,17 +141,29 @@ public class WebDashboard {
 
     private HttpHandler authed(AuthedHandler handler) {
         return exchange -> {
-            String token = readCookie(exchange, SESSION_COOKIE);
-            Long expiry = token != null ? sessions.get(token) : null;
-            if (expiry == null || expiry < System.currentTimeMillis()) {
-                if (token != null) {
-                    sessions.remove(token);
-                }
+            if (session(exchange) == null) {
                 respondJson(exchange, 401, error("Not logged in"));
                 return;
             }
             handler.handle(exchange);
         };
+    }
+
+    /** The logged-in session for this request, if any - removes it first if it's expired. */
+    private Session session(HttpExchange exchange) {
+        String token = readCookie(exchange, SESSION_COOKIE);
+        if (token == null) {
+            return null;
+        }
+        Session session = sessions.get(token);
+        if (session == null) {
+            return null;
+        }
+        if (session.expiresAtMillis() < System.currentTimeMillis()) {
+            sessions.remove(token);
+            return null;
+        }
+        return session;
     }
 
     private void handleLogin(HttpExchange exchange) throws IOException {
@@ -169,7 +183,8 @@ public class WebDashboard {
         JsonObject body = readJson(exchange);
         String givenUser = body.has("username") ? body.get("username").getAsString() : "";
         String givenPass = body.has("password") ? body.get("password").getAsString() : "";
-        if (!constantTimeEquals(givenUser, username) || !constantTimeEquals(givenPass, password)) {
+        String expectedPassword = accounts.get(givenUser);
+        if (expectedPassword == null || !constantTimeEquals(givenPass, expectedPassword)) {
             int failures = (attempt != null ? attempt.failures() : 0) + 1;
             long lockedUntil = failures >= MAX_LOGIN_ATTEMPTS ? now + LOGIN_LOCKOUT_MILLIS : 0;
             loginAttempts.put(clientIp, new LoginAttempt(failures, lockedUntil));
@@ -179,7 +194,7 @@ public class WebDashboard {
 
         loginAttempts.remove(clientIp);
         String token = newToken();
-        sessions.put(token, now + SESSION_LIFETIME_MILLIS);
+        sessions.put(token, new Session(givenUser, now + SESSION_LIFETIME_MILLIS));
         exchange.getResponseHeaders().add("Set-Cookie", SESSION_COOKIE + "=" + token + "; Path=/; HttpOnly; SameSite=Strict");
         respondJson(exchange, 200, okObject());
     }
@@ -200,9 +215,11 @@ public class WebDashboard {
         respondJson(exchange, 200, okObject());
     }
 
-    /** Lets the page ask "am I still logged in?" (e.g. after a reload) without side effects. */
+    /** Lets the page ask "am I still logged in, and as whom?" (e.g. after a reload) without side effects. */
     private void handleSession(HttpExchange exchange) throws IOException {
-        respondJson(exchange, 200, okObject());
+        JsonObject json = okObject();
+        json.addProperty("username", session(exchange).username());
+        respondJson(exchange, 200, json);
     }
 
     // ---- read endpoints ----
@@ -349,7 +366,7 @@ public class WebDashboard {
                 respondJson(exchange, 400, error("Missing uuid or text"));
                 return;
             }
-            respondJson(exchange, 200, toNoteDto(punishmentManager.addNote(uuid, operatorName(), text.trim())));
+            respondJson(exchange, 200, toNoteDto(punishmentManager.addNote(uuid, operatorName(exchange), text.trim())));
             return;
         }
         respondJson(exchange, 405, error("Use GET or POST"));
@@ -416,7 +433,7 @@ public class WebDashboard {
             return;
         }
         Punishment result = punishmentManager.ban(uuid, getOrNull(body, "name"), getOrNull(body, "reason"),
-                operatorName(), getLongOr(body, "durationMillis", 0));
+                operatorName(exchange), getLongOr(body, "durationMillis", 0));
         respondJson(exchange, 200, toDto(result));
     }
 
@@ -427,7 +444,7 @@ public class WebDashboard {
             respondJson(exchange, 400, error("Missing ip"));
             return;
         }
-        Punishment result = punishmentManager.ipban(ip, getOrNull(body, "name"), getOrNull(body, "reason"), operatorName());
+        Punishment result = punishmentManager.ipban(ip, getOrNull(body, "name"), getOrNull(body, "reason"), operatorName(exchange));
         respondJson(exchange, 200, toDto(result));
     }
 
@@ -439,7 +456,7 @@ public class WebDashboard {
             return;
         }
         Punishment result = punishmentManager.mute(uuid, getOrNull(body, "name"), getOrNull(body, "reason"),
-                operatorName(), getLongOr(body, "durationMillis", 0));
+                operatorName(exchange), getLongOr(body, "durationMillis", 0));
         respondJson(exchange, 200, toDto(result));
     }
 
@@ -450,7 +467,7 @@ public class WebDashboard {
             respondJson(exchange, 400, error("Missing or invalid uuid"));
             return;
         }
-        Punishment result = punishmentManager.kick(uuid, getOrNull(body, "name"), getOrNull(body, "reason"), operatorName());
+        Punishment result = punishmentManager.kick(uuid, getOrNull(body, "name"), getOrNull(body, "reason"), operatorName(exchange));
         respondJson(exchange, 200, toDto(result));
     }
 
@@ -461,7 +478,7 @@ public class WebDashboard {
             respondJson(exchange, 400, error("Missing or invalid uuid"));
             return;
         }
-        Punishment result = punishmentManager.warn(uuid, getOrNull(body, "name"), getOrNull(body, "reason"), operatorName());
+        Punishment result = punishmentManager.warn(uuid, getOrNull(body, "name"), getOrNull(body, "reason"), operatorName(exchange));
         respondJson(exchange, 200, toDto(result));
     }
 
@@ -472,7 +489,7 @@ public class WebDashboard {
             respondJson(exchange, 400, error("Missing or invalid uuid"));
             return;
         }
-        boolean removed = punishmentManager.unban(uuid, operatorName(), getOrNull(body, "reason"));
+        boolean removed = punishmentManager.unban(uuid, operatorName(exchange), getOrNull(body, "reason"));
         respondJson(exchange, 200, resultObject(removed));
     }
 
@@ -483,7 +500,7 @@ public class WebDashboard {
             respondJson(exchange, 400, error("Missing ip"));
             return;
         }
-        boolean removed = punishmentManager.unbanIp(ip, operatorName(), getOrNull(body, "reason"));
+        boolean removed = punishmentManager.unbanIp(ip, operatorName(exchange), getOrNull(body, "reason"));
         respondJson(exchange, 200, resultObject(removed));
     }
 
@@ -494,14 +511,14 @@ public class WebDashboard {
             respondJson(exchange, 400, error("Missing or invalid uuid"));
             return;
         }
-        boolean removed = punishmentManager.unmute(uuid, operatorName(), getOrNull(body, "reason"));
+        boolean removed = punishmentManager.unmute(uuid, operatorName(exchange), getOrNull(body, "reason"));
         respondJson(exchange, 200, resultObject(removed));
     }
 
-    private String operatorName() {
-        // Every session shares the one configured admin account, so the account name itself
-        // identifies who took the action for punishment history purposes.
-        return username;
+    /** The account name behind this request's session - always present since every caller of
+     * this is behind {@link #authed}, which already rejected the request otherwise. */
+    private String operatorName(HttpExchange exchange) {
+        return session(exchange).username();
     }
 
     // ---- DTO/JSON helpers ----

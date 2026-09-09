@@ -23,15 +23,26 @@ storage:
 # Hosting it here (rather than on a backend server) is recommended since it gives one true
 # network-wide control panel; only enable it in ONE place. Change username/password before
 # exposing this port to the internet.
+# web.accounts: optional extra named logins on top of username/password above - give each staff
+#   member their own so punishment history correctly credits who actually took an action, instead
+#   of every login sharing one label. Leave empty ([]) if the one account above is enough.
 # (日本語) 内蔵Webダッシュボード: http://<このプロキシのアドレス>:<port>/
 # バックエンド側ではなくここで有効にすると、ネットワーク全体を管理できる唯一の
 # コントロールパネルになります。有効にするのは1箇所だけにしてください。
 # インターネットに公開する前に、必ずusername/passwordを変更してください。
+# web.accounts: 上記のusername/passwordに加えて、スタッフごとに個別のログインを追加できる
+#   (任意) - これにより、処罰履歴が実際に操作したスタッフ名で正しく記録される(全員が
+#   同じ1つの名前を共有しなくなる)。上記1アカウントで十分なら空([])のままでよい。
 web:
   enabled: false
   port: 8123
   username: admin
   password: "changeme"
+  accounts: []
+    # - username: alice
+    #   password: "change-me-alice"
+    # - username: bob
+    #   password: "change-me-bob"
 
 # Used only by /ecoban import <advancedban|litebans> - point these at the OTHER plugin's
 # EXISTING database so its punishment history can be copied into EcoBan's shared database.
