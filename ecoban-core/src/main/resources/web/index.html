@@ -5,16 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EcoBan Dashboard</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%235b8def'/%3E%3Cpath d='M7 7l10 10M17 7L7 17' stroke='white' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/app.css">
 </head>
 <body>
 <header>
   <div class="brand">
-    <svg class="brand-icon" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" fill="var(--accent)"/>
-      <path d="M7 7l10 10M17 7L7 17" stroke="white" stroke-width="2.4" stroke-linecap="round"/>
-    </svg>
-    <h1>EcoBan</h1>
+    <span class="brand-mark">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+        <path d="M7 7l10 10M17 7L7 17" stroke="white" stroke-width="2.6" stroke-linecap="round"/>
+      </svg>
+    </span>
+    <div class="brand-text">
+      <h1>EcoBan</h1>
+      <span class="brand-subtitle">Punishment control panel</span>
+    </div>
   </div>
   <div id="auth-area">
     <button id="theme-toggle" class="ghost icon-button" type="button" aria-label="Toggle theme" title="Toggle light/dark theme">
@@ -68,23 +75,38 @@
 
 <main>
   <section class="stats-row" id="stats-row" aria-label="Punishment summary">
-    <div class="stat-tile">
+    <div class="stat-tile stat-accent-neutral">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3.5 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
       <span class="stat-value" id="stat-total">–</span>
       <span class="stat-label">Active total</span>
     </div>
-    <div class="stat-tile">
+    <div class="stat-tile stat-accent-danger">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7.5 7.5l9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
       <span class="stat-value" id="stat-bans">–</span>
       <span class="stat-label">Bans</span>
     </div>
-    <div class="stat-tile">
+    <div class="stat-tile stat-accent-mute">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M5 9v6h4l5 4V5L9 9H5z" fill="currentColor"/><path d="M17 9l4 6M21 9l-4 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </span>
       <span class="stat-value" id="stat-mutes">–</span>
       <span class="stat-label">Mutes</span>
     </div>
-    <div class="stat-tile">
+    <div class="stat-tile stat-accent-warn">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 4l9 16H3L12 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17" r="0.9" fill="currentColor"/></svg>
+      </span>
       <span class="stat-value" id="stat-warns">–</span>
       <span class="stat-label">Warnings</span>
     </div>
-    <div class="stat-tile">
+    <div class="stat-tile stat-accent-accent">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      </span>
       <span class="stat-value" id="stat-alltime">–</span>
       <span class="stat-label">All-time issued</span>
     </div>
