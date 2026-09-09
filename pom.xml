@@ -66,15 +66,34 @@
             <version>8.3.0</version>
             <scope>compile</scope>
         </dependency>
+        <!-- Web経済ダッシュボードのJSON API用。同梱する (下の shade プラグイン参照)。 -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.11.0</version>
+        </dependency>
     </dependencies>
 
     <build>
         <finalName>${project.artifactId}-${project.version}</finalName>
         <defaultGoal>package</defaultGoal>
         <resources>
+            <!-- Filtering substitutes ${...} tokens (plugin.yml's ${project.version}), but the
+                 web dashboard's JS uses that exact syntax for template literals - excluded here
+                 so Maven doesn't try to resolve "${p.type}" etc. as project properties. -->
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
+                <excludes>
+                    <exclude>web/**</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>web/**</include>
+                </includes>
             </resource>
         </resources>
         <plugins>

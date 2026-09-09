@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoTP Dashboard</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%2335c48f'/%3E%3Ctext x='12' y='16.5' font-size='13' font-family='Arial' font-weight='700' text-anchor='middle' fill='white'%3E%24%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<header>
+  <div class="brand">
+    <span class="brand-mark">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><text x="12" y="17" font-size="15" font-family="Arial" font-weight="700" text-anchor="middle" fill="white">$</text></svg>
+    </span>
+    <div class="brand-text">
+      <h1>EcoTP</h1>
+      <span class="brand-subtitle">Economy dashboard</span>
+    </div>
+  </div>
+  <div id="auth-area">
+    <button id="theme-toggle" class="ghost icon-button" type="button" aria-label="Toggle theme" title="Toggle light/dark theme">
+      <svg id="theme-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" fill="currentColor"/></svg>
+    </button>
+    <button id="login-button">Log in</button>
+    <span id="session-username" class="session-username" hidden></span>
+    <button id="logout-button" class="ghost" hidden>Log out</button>
+  </div>
+</header>
+
+<div id="login-overlay" class="overlay" hidden>
+  <form id="login-form" class="modal-card">
+    <h2>Sign in</h2>
+    <label>Username<input type="text" id="login-username" autocomplete="username" required></label>
+    <label>Password<input type="password" id="login-password" autocomplete="current-password" required></label>
+    <div class="modal-actions">
+      <button type="button" id="login-cancel" class="ghost">Cancel</button>
+      <button type="submit">Sign in</button>
+    </div>
+    <p id="login-error" class="error" hidden></p>
+  </form>
+</div>
+
+<div id="toast-stack" aria-live="polite"></div>
+
+<main>
+  <section class="stats-row" id="stats-row" aria-label="Economy summary">
+    <div class="stat-tile stat-accent-accent">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2v20M17 6.5C17 4.6 14.8 3 12 3S7 4.6 7 6.5 9.2 9 12 9s5 1.6 5 3.5-2.2 3.5-5 3.5-5-1.6-5-3.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </span>
+      <span class="stat-value" id="stat-total-money">–</span>
+      <span class="stat-label" id="stat-total-money-label">Total money</span>
+    </div>
+    <div class="stat-tile stat-accent-neutral">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6M16 9a3 3 0 1 0 0-6M15 14c2.7.3 4.5 2.4 4.5 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      </span>
+      <span class="stat-value" id="stat-accounts">–</span>
+      <span class="stat-label">Accounts</span>
+    </div>
+    <div class="stat-tile stat-accent-warn">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      </span>
+      <span class="stat-value" id="stat-average">–</span>
+      <span class="stat-label" id="stat-average-label">Average balance</span>
+    </div>
+    <div class="stat-tile stat-accent-mute">
+      <span class="stat-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 2l2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4z" fill="currentColor"/></svg>
+      </span>
+      <span class="stat-value" id="stat-highest" title="">–</span>
+      <span class="stat-label" id="stat-highest-label">Highest balance</span>
+    </div>
+  </section>
+
+  <section class="insights-row">
+    <div class="card leaderboard-card baltop-card">
+      <div class="card-heading">
+        <h2>Balance leaderboard</h2>
+        <span class="spinner" id="baltop-spinner" hidden aria-label="Loading"></span>
+        <select id="baltop-limit" class="baltop-limit-select">
+          <option value="10">Top 10</option>
+          <option value="25" selected>Top 25</option>
+          <option value="50">Top 50</option>
+          <option value="100">Top 100</option>
+        </select>
+      </div>
+      <ol id="baltop-list" class="leaderboard-list baltop-list"></ol>
+      <p class="empty-state" id="baltop-empty" hidden>No accounts yet.</p>
+    </div>
+
+    <div class="card lookup-card">
+      <div class="card-heading"><h2>Look up a player</h2></div>
+      <form id="lookup-form" class="lookup-form">
+        <input type="text" id="lookup-name" placeholder="Player name" autocomplete="off">
+        <button type="submit">Look up</button>
+      </form>
+      <div id="lookup-result" class="lookup-result" hidden></div>
+      <p class="empty-state" id="lookup-empty" hidden>No account for that name.</p>
+    </div>
+  </section>
+
+  <section class="card" id="eco-card" hidden>
+    <h2>Give / Take / Set balance</h2>
+    <form id="eco-form" class="eco-form">
+      <select id="eco-action">
+        <option value="give">Give</option>
+        <option value="take">Take</option>
+        <option value="set">Set to</option>
+      </select>
+      <input type="text" id="eco-name" placeholder="Player name" autocomplete="off" required>
+      <input type="number" id="eco-amount" placeholder="Amount" min="0" step="any" required>
+      <button type="submit">Apply</button>
+      <div class="quick-reasons wide" id="quick-amounts"></div>
+    </form>
+    <p id="eco-result" class="result"></p>
+  </section>
+</main>
+
+<script src="/app.js"></script>
+</body>
+</html>

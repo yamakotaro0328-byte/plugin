@@ -93,6 +93,26 @@ public class YamlBalanceStorage implements BalanceStorage {
     }
 
     @Override
+    public long countAccounts() {
+        long count = 0;
+        for (String key : data.getKeys(false)) {
+            if (data.contains(key + ".balance")) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public double totalMoney() {
+        double total = 0;
+        for (String key : data.getKeys(false)) {
+            total += data.getDouble(key + ".balance", 0.0);
+        }
+        return total;
+    }
+
+    @Override
     public void saveIfDirty() {
         if (!dirty) {
             return;

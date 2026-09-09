@@ -28,12 +28,16 @@ import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
 import com.yamakotaro.ecotp.listeners.MenuItemListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
 import com.yamakotaro.ecotp.listeners.VoteRewardJoinListener;
+import com.yamakotaro.ecotp.web.WebDashboard;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * このクラス (plugin.yml の main) は、net.milkbowl.vault.economy.Economy 型を
@@ -67,6 +71,7 @@ public class EcoTpPlugin extends JavaPlugin {
     private DailyRewardManager dailyRewardManager;
     private EcoItemManager ecoItemManager;
     private MenuItemManager menuItemManager;
+    private WebDashboard webDashboard;
 
     @Override
     public void onEnable() {
@@ -92,6 +97,11 @@ public class EcoTpPlugin extends JavaPlugin {
             EssentialsImporter essentialsImporter = new EssentialsImporter(this);
             this.ecoTpEconomy = new EcoTpEconomy(this, balanceStorage, essentialsImporter);
             economyHolder.setEcoTpEconomy(ecoTpEconomy);
+            if (getConfig().getBoolean("web.enabled", false)) {
+                this.webDashboard = new WebDashboard(this, ecoTpEconomy, balanceStorage,
+                        getConfig().getInt("web.port", 8124), webAccounts(), getLogger());
+                webDashboard.start();
+            }
         } else {
             getLogger().info("economy.enabled is false: using an external economy via Vault instead of the built-in one.");
             if (!economyHolder.tryLinkExternal()) {
@@ -223,6 +233,9 @@ public class EcoTpPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (webDashboard != null) {
+            webDashboard.stop();
+        }
         if (spawnManager != null) {
             spawnManager.save();
         }
@@ -246,6 +259,20 @@ public class EcoTpPlugin extends JavaPlugin {
     private void registerPlaceholders() {
         new EcoTpPlaceholders(this).register();
         getLogger().info("Registered PlaceholderAPI placeholders (%ecotp_balance% and others).");
+    }
+
+    /** web.username/web.password plus any extra named logins from web.accounts - see config.yml. */
+    private Map<String, String> webAccounts() {
+        Map<String, String> accounts = new LinkedHashMap<>();
+        accounts.put(getConfig().getString("web.username", "admin"), getConfig().getString("web.password", "changeme"));
+        for (Map<?, ?> account : getConfig().getMapList("web.accounts")) {
+            Object accountUsername = account.get("username");
+            Object accountPassword = account.get("password");
+            if (accountUsername != null && accountPassword != null) {
+                accounts.put(accountUsername.toString(), accountPassword.toString());
+            }
+        }
+        return accounts;
     }
 
     /**

@@ -25,6 +25,12 @@ public interface BalanceStorage {
      */
     List<BalanceEntry> getTopBalances(int limit);
 
+    /** 口座数。Webダッシュボードの統計表示用。 */
+    long countAccounts();
+
+    /** 全口座の残高合計(経済全体の通貨供給量)。Webダッシュボードの統計表示用。 */
+    double totalMoney();
+
     /**
      * 変更があれば永続化する。定期タスクと終了時に呼ばれる。
      */

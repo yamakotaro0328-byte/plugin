@@ -164,6 +164,38 @@ public class MySqlBalanceStorage implements BalanceStorage {
     }
 
     @Override
+    public long countAccounts() {
+        Connection conn = connectionProvider.get();
+        if (conn == null) {
+            return 0;
+        }
+        String sql = "SELECT COUNT(*) FROM " + table;
+        try (PreparedStatement statement = conn.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            return rs.next() ? rs.getLong(1) : 0;
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to count balance accounts", e);
+            return 0;
+        }
+    }
+
+    @Override
+    public double totalMoney() {
+        Connection conn = connectionProvider.get();
+        if (conn == null) {
+            return 0;
+        }
+        String sql = "SELECT COALESCE(SUM(balance), 0) FROM " + table;
+        try (PreparedStatement statement = conn.prepareStatement(sql);
+             ResultSet rs = statement.executeQuery()) {
+            return rs.next() ? rs.getDouble(1) : 0;
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to sum total money", e);
+            return 0;
+        }
+    }
+
+    @Override
     public void saveIfDirty() {
         if (dirty.isEmpty()) {
             return;

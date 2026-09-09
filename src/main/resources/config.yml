@@ -208,3 +208,25 @@ storage:
 # Number of players shown by /baltop.
 # (日本語) /baltop で表示する人数
 baltop-limit: 10
+
+# The built-in web economy dashboard: http://<this server's address>:<port>/
+# Only works when economy.enabled is true (EcoTP's own built-in economy) - if you're using an
+# external economy plugin via Vault instead, EcoTP has no balances of its own to show, so this
+# stays off even if enabled: true here.
+# web.accounts: optional extra named logins on top of username/password below - give each staff
+#   member their own so balance changes correctly credit who actually made them.
+# Change username/password before exposing this port to the internet.
+# (日本語) 内蔵Web経済ダッシュボード: http://<このサーバーのアドレス>:<port>/
+# economy.enabled が true (EcoTP自身の経済) のときのみ動作する。Vault経由の外部経済プラグインを
+# 使っている場合、EcoTPは残高データを持たないため、ここをenabled: trueにしても起動しない。
+# web.accounts: 下記のusername/passwordに加えて、スタッフごとに個別のログインを追加できる
+#   (任意) - これにより、残高変更の記録が実際に操作したスタッフ名で正しく残る。
+# インターネットに公開する前に、必ずusername/passwordを変更してください。
+web:
+  enabled: false
+  port: 8124
+  username: admin
+  password: "changeme"
+  accounts: []
+    # - username: alice
+    #   password: "change-me-alice"
