@@ -122,6 +122,11 @@
       <ol id="leaderboard-list" class="leaderboard-list"></ol>
       <p class="empty-state" id="leaderboard-empty" hidden>No punishments issued yet.</p>
     </div>
+    <div class="card leaderboard-card">
+      <div class="card-heading"><h2>Most punished players</h2></div>
+      <ol id="top-targets-list" class="leaderboard-list"></ol>
+      <p class="empty-state" id="top-targets-empty" hidden>No punishments issued yet.</p>
+    </div>
   </section>
 
   <section class="card" id="issue-card" hidden>
@@ -135,7 +140,8 @@
         <option value="warn">Warn</option>
       </select>
       <input type="text" id="issue-uuid" placeholder="Player UUID">
-      <input type="text" id="issue-name" placeholder="Player name (optional)">
+      <input type="text" id="issue-name" placeholder="Player name (optional)" list="issue-name-suggestions" autocomplete="off">
+      <datalist id="issue-name-suggestions"></datalist>
       <input type="text" id="issue-ip" placeholder="IP address (IP Ban only)" hidden>
       <div class="duration-group">
         <input type="number" id="issue-duration" placeholder="Duration (blank = permanent)" min="0">

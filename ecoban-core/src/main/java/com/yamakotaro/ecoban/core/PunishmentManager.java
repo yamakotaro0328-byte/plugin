@@ -145,6 +145,10 @@ public class PunishmentManager {
         return storage.topOperators(sinceMillis, limit);
     }
 
+    public List<PunishmentStorage.TargetCount> topTargets(long sinceMillis, int limit) {
+        return storage.topTargets(sinceMillis, limit);
+    }
+
     public List<PunishmentStorage.PlayerNote> listNotes(UUID targetUuid) {
         return storage.listNotes(targetUuid);
     }

@@ -36,6 +36,11 @@ const statAlltime = document.getElementById("stat-alltime");
 const activityChart = document.getElementById("activity-chart");
 const leaderboardList = document.getElementById("leaderboard-list");
 const leaderboardEmpty = document.getElementById("leaderboard-empty");
+const topTargetsList = document.getElementById("top-targets-list");
+const topTargetsEmpty = document.getElementById("top-targets-empty");
+const issueNameInput = document.getElementById("issue-name");
+const issueNameSuggestions = document.getElementById("issue-name-suggestions");
+const issueUuidInput = document.getElementById("issue-uuid");
 const issueDurationUnit = document.getElementById("issue-duration-unit");
 const liftOverlay = document.getElementById("lift-overlay");
 const liftForm = document.getElementById("lift-form");
@@ -175,7 +180,8 @@ loginForm.addEventListener("submit", async (event) => {
     body: JSON.stringify({ username, password }),
   });
   if (!response.ok) {
-    loginError.textContent = "Invalid username or password.";
+    const data = await response.json().catch(() => ({}));
+    loginError.textContent = data.error || "Invalid username or password.";
     loginError.hidden = false;
     return;
   }
@@ -206,6 +212,41 @@ for (const reason of QUICK_REASONS) {
 
 issueType.addEventListener("change", () => {
   issueIp.hidden = issueType.value !== "ipban";
+});
+
+// Suggests names from past punishment records as the operator types, and auto-fills the UUID
+// field once they pick (or type out) an exact match - saves hunting down a UUID by hand for a
+// player who's been punished before.
+let issueNameToUuid = new Map();
+
+issueNameInput.addEventListener("input", debounce(async () => {
+  const query = issueNameInput.value.trim();
+  if (query.length < 2) {
+    issueNameSuggestions.innerHTML = "";
+    return;
+  }
+  const response = await fetch(`/api/punishments?q=${encodeURIComponent(query)}&limit=20&activeOnly=false`);
+  const data = await response.json();
+  const matches = new Map();
+  for (const p of data.items) {
+    if (p.targetName && p.targetUuid && !matches.has(p.targetName)) {
+      matches.set(p.targetName, p.targetUuid);
+    }
+  }
+  issueNameToUuid = matches;
+  issueNameSuggestions.innerHTML = "";
+  for (const name of matches.keys()) {
+    const option = document.createElement("option");
+    option.value = name;
+    issueNameSuggestions.appendChild(option);
+  }
+}, 250));
+
+issueNameInput.addEventListener("change", () => {
+  const uuid = issueNameToUuid.get(issueNameInput.value.trim());
+  if (uuid && !issueUuidInput.value.trim()) {
+    issueUuidInput.value = uuid;
+  }
 });
 
 const DURATION_UNIT_MILLIS = { minutes: 60_000, hours: 3_600_000, days: 86_400_000, weeks: 604_800_000 };
@@ -452,7 +493,8 @@ async function loadStats() {
   statWarns.textContent = stats.activeWarns;
   statAlltime.textContent = stats.allTimeTotal;
   renderActivityChart(stats.daily);
-  renderLeaderboard(stats.topOperators);
+  renderRankedList(leaderboardList, leaderboardEmpty, stats.topOperators, (op) => op.name, null);
+  renderRankedList(topTargetsList, topTargetsEmpty, stats.topTargets, (t) => t.name || t.uuid, (t) => openPlayer(t.uuid));
 }
 
 function renderActivityChart(daily) {
@@ -492,11 +534,17 @@ function renderActivityChart(daily) {
   }
 }
 
-function renderLeaderboard(operators) {
-  leaderboardList.innerHTML = "";
-  leaderboardEmpty.hidden = operators.length > 0;
-  operators.forEach((op, index) => {
+/** Shared renderer for the staff leaderboard and the most-punished-players list - same rank
+ * badge/name/count layout, differing only in what labels each row and what a click does. */
+function renderRankedList(listEl, emptyEl, items, getLabel, onClick) {
+  listEl.innerHTML = "";
+  emptyEl.hidden = items.length > 0;
+  items.forEach((item, index) => {
     const li = document.createElement("li");
+    if (onClick) {
+      li.classList.add("clickable");
+      li.addEventListener("click", () => onClick(item));
+    }
 
     const rank = document.createElement("span");
     rank.className = "leaderboard-rank";
@@ -504,19 +552,43 @@ function renderLeaderboard(operators) {
 
     const name = document.createElement("span");
     name.className = "leaderboard-name";
-    name.textContent = op.name;
+    name.textContent = getLabel(item);
 
     const count = document.createElement("span");
     count.className = "leaderboard-count";
-    count.textContent = String(op.count);
+    count.textContent = String(item.count);
 
     li.append(rank, name, count);
-    leaderboardList.appendChild(li);
+    listEl.appendChild(li);
   });
 }
 
 function typeBadgeClass(type) {
   return "type-badge type-" + type.toLowerCase();
+}
+
+const RELATIVE_TIME_UNITS = [
+  ["year", 365 * 86_400_000],
+  ["month", 30 * 86_400_000],
+  ["week", 7 * 86_400_000],
+  ["day", 86_400_000],
+  ["hour", 3_600_000],
+  ["minute", 60_000],
+];
+
+/** "3 days ago" / "in 3 days" - a coarser, glanceable read than a full timestamp, which is still
+ * available via the element's title attribute wherever this is used. */
+function relativeTime(millis) {
+  const diff = millis - Date.now();
+  const magnitude = Math.abs(diff);
+  for (const [name, unitMillis] of RELATIVE_TIME_UNITS) {
+    if (magnitude >= unitMillis) {
+      const value = Math.round(magnitude / unitMillis);
+      const plural = value === 1 ? name : name + "s";
+      return diff > 0 ? `in ${value} ${plural}` : `${value} ${plural} ago`;
+    }
+  }
+  return diff > 0 ? "in a moment" : "just now";
 }
 
 function avatarUrl(uuid, size) {
@@ -611,10 +683,16 @@ function renderPunishments(punishments) {
     operatorCell.textContent = p.operatorName || "";
 
     const issuedCell = document.createElement("td");
-    issuedCell.textContent = new Date(p.createdAt).toLocaleString();
+    issuedCell.textContent = relativeTime(p.createdAt);
+    issuedCell.title = new Date(p.createdAt).toLocaleString();
 
     const expiresCell = document.createElement("td");
-    expiresCell.textContent = p.permanent ? "Permanent" : new Date(p.expiresAt).toLocaleString();
+    if (p.permanent) {
+      expiresCell.textContent = "Permanent";
+    } else {
+      expiresCell.textContent = relativeTime(p.expiresAt);
+      expiresCell.title = new Date(p.expiresAt).toLocaleString();
+    }
 
     const statusCell = document.createElement("td");
     const statusBadge = document.createElement("span");
@@ -763,8 +841,8 @@ function renderDetail(p) {
   }
   addDetailRow(grid, "Reason", p.reason || "(none given)");
   addDetailRow(grid, "Operator", p.operatorName || "–");
-  addDetailRow(grid, "Issued", new Date(p.createdAt).toLocaleString());
-  addDetailRow(grid, "Expires", p.permanent ? "Permanent" : new Date(p.expiresAt).toLocaleString());
+  addDetailRow(grid, "Issued", `${relativeTime(p.createdAt)} · ${new Date(p.createdAt).toLocaleString()}`);
+  addDetailRow(grid, "Expires", p.permanent ? "Permanent" : `${relativeTime(p.expiresAt)} · ${new Date(p.expiresAt).toLocaleString()}`);
   if (!p.active && p.removedByName) {
     addDetailRow(grid, "Lifted by", p.removedByName);
     if (p.removedReason) {

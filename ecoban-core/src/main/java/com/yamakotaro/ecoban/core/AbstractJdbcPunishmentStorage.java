@@ -299,6 +299,29 @@ public abstract class AbstractJdbcPunishmentStorage implements PunishmentStorage
     }
 
     @Override
+    public List<TargetCount> topTargets(long sinceMillis, int limit) {
+        List<TargetCount> results = new ArrayList<>();
+        Connection conn = connection();
+        if (conn == null) {
+            return results;
+        }
+        String sql = "SELECT target_uuid, MAX(target_name) AS name, COUNT(*) AS cnt FROM ecoban_punishments "
+                + "WHERE created_at >= ? AND target_uuid IS NOT NULL "
+                + "GROUP BY target_uuid ORDER BY cnt DESC LIMIT " + Math.max(1, limit);
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setLong(1, sinceMillis);
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    results.add(new TargetCount(UUID.fromString(rs.getString("target_uuid")), rs.getString("name"), rs.getInt("cnt")));
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Failed to compute most-punished players", e);
+        }
+        return results;
+    }
+
+    @Override
     public void deactivateExpired() {
         Connection conn = connection();
         if (conn == null) {

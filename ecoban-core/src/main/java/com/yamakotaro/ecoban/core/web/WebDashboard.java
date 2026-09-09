@@ -45,6 +45,11 @@ public class WebDashboard {
 
     private static final long SESSION_LIFETIME_MILLIS = 12L * 60 * 60 * 1000; // 12 hours
     private static final String SESSION_COOKIE = "ecoban_session";
+    // The dashboard has exactly one shared admin account (see the class doc comment), so a brute
+    // force login only needs to try password guesses - locking out an IP after a handful of
+    // misses closes that off without needing per-account throttling.
+    private static final int MAX_LOGIN_ATTEMPTS = 5;
+    private static final long LOGIN_LOCKOUT_MILLIS = 5L * 60 * 1000; // 5 minutes
 
     private final PunishmentManager punishmentManager;
     private final int port;
@@ -53,6 +58,7 @@ public class WebDashboard {
     private final Logger logger;
     private final Gson gson = new Gson();
     private final Map<String, Long> sessions = new ConcurrentHashMap<>();
+    private final Map<String, LoginAttempt> loginAttempts = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
 
     private HttpServer server;
@@ -151,17 +157,39 @@ public class WebDashboard {
             respondJson(exchange, 405, error("Use POST"));
             return;
         }
+        String clientIp = clientIp(exchange);
+        long now = System.currentTimeMillis();
+        LoginAttempt attempt = loginAttempts.get(clientIp);
+        if (attempt != null && attempt.lockedUntilMillis() > now) {
+            long secondsLeft = (attempt.lockedUntilMillis() - now) / 1000 + 1;
+            respondJson(exchange, 429, error("Too many failed attempts - try again in " + secondsLeft + "s"));
+            return;
+        }
+
         JsonObject body = readJson(exchange);
         String givenUser = body.has("username") ? body.get("username").getAsString() : "";
         String givenPass = body.has("password") ? body.get("password").getAsString() : "";
         if (!constantTimeEquals(givenUser, username) || !constantTimeEquals(givenPass, password)) {
+            int failures = (attempt != null ? attempt.failures() : 0) + 1;
+            long lockedUntil = failures >= MAX_LOGIN_ATTEMPTS ? now + LOGIN_LOCKOUT_MILLIS : 0;
+            loginAttempts.put(clientIp, new LoginAttempt(failures, lockedUntil));
             respondJson(exchange, 401, error("Invalid username or password"));
             return;
         }
+
+        loginAttempts.remove(clientIp);
         String token = newToken();
-        sessions.put(token, System.currentTimeMillis() + SESSION_LIFETIME_MILLIS);
+        sessions.put(token, now + SESSION_LIFETIME_MILLIS);
         exchange.getResponseHeaders().add("Set-Cookie", SESSION_COOKIE + "=" + token + "; Path=/; HttpOnly; SameSite=Strict");
         respondJson(exchange, 200, okObject());
+    }
+
+    private String clientIp(HttpExchange exchange) {
+        InetSocketAddress remote = exchange.getRemoteAddress();
+        return remote != null && remote.getAddress() != null ? remote.getAddress().getHostAddress() : "unknown";
+    }
+
+    private record LoginAttempt(int failures, long lockedUntilMillis) {
     }
 
     private void handleLogout(HttpExchange exchange) throws IOException {
@@ -277,6 +305,15 @@ public class WebDashboard {
             return entry;
         }).toList();
         json.add("topOperators", gson.toJsonTree(operators));
+
+        List<JsonObject> targets = punishmentManager.topTargets(0, 8).stream().map(target -> {
+            JsonObject entry = new JsonObject();
+            entry.addProperty("uuid", target.targetUuid().toString());
+            entry.addProperty("name", target.targetName());
+            entry.addProperty("count", target.count());
+            return entry;
+        }).toList();
+        json.add("topTargets", gson.toJsonTree(targets));
 
         respondJson(exchange, 200, json);
     }

@@ -80,6 +80,13 @@ public interface PunishmentStorage {
     record OperatorCount(String operatorName, int count) {
     }
 
+    /** Most-punished players since sinceMillis (0 = all time), most first - IP bans (no target
+     * player) don't count towards this since there's no player to rank. */
+    List<TargetCount> topTargets(long sinceMillis, int limit);
+
+    record TargetCount(UUID targetUuid, String targetName, int count) {
+    }
+
     /**
      * Sweeps every active, non-permanent punishment whose expiry has passed and marks it
      * inactive. Punishment checks (see PunishmentManager) also self-correct on the spot when they
