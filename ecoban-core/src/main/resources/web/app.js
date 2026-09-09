@@ -22,6 +22,12 @@ const emptyState = document.getElementById("empty-state");
 const pagePrev = document.getElementById("page-prev");
 const pageNext = document.getElementById("page-next");
 const pageInfo = document.getElementById("page-info");
+const bulkLiftButton = document.getElementById("bulk-lift-button");
+const exportButton = document.getElementById("export-button");
+const selectAllCol = document.getElementById("select-all-col");
+const selectAllCheckbox = document.getElementById("select-all-checkbox");
+const thIssued = document.getElementById("th-issued");
+const thExpires = document.getElementById("th-expires");
 const statTotal = document.getElementById("stat-total");
 const statBans = document.getElementById("stat-bans");
 const statMutes = document.getElementById("stat-mutes");
@@ -49,6 +55,11 @@ let loggedIn = false;
 let currentPage = 1;
 const PAGE_SIZE = 25;
 let liveInterval = null;
+let sortColumn = null;
+let sortAscending = false;
+let hasLoadedPunishmentsOnce = false;
+const selectedIds = new Set();
+const punishmentsById = new Map();
 
 const QUICK_REASONS = ["Cheating", "Griefing", "Spamming", "Advertising", "Abusive language", "Ban evasion"];
 const THEME_KEY = "ecoban-theme";
@@ -133,6 +144,11 @@ function setLoggedIn(value) {
   loginButton.hidden = value;
   logoutButton.hidden = !value;
   issueCard.hidden = !value;
+  selectAllCol.hidden = !value;
+  if (!value) {
+    selectedIds.clear();
+    updateBulkLiftVisibility();
+  }
 }
 
 function openLogin() {
@@ -278,6 +294,84 @@ autoRefreshToggle.addEventListener("change", () => {
   }
 });
 
+for (const th of [thIssued, thExpires]) {
+  th.addEventListener("click", () => {
+    const column = th.dataset.sort;
+    if (sortColumn === column) {
+      sortAscending = !sortAscending;
+    } else {
+      sortColumn = column;
+      sortAscending = false;
+    }
+    updateSortHeaders();
+    currentPage = 1;
+    loadPunishments();
+  });
+}
+
+function updateSortHeaders() {
+  for (const th of [thIssued, thExpires]) {
+    const active = th.dataset.sort === sortColumn;
+    th.classList.toggle("sort-active", active);
+    th.classList.toggle("sort-asc", active && sortAscending);
+  }
+}
+
+selectAllCheckbox.addEventListener("change", () => {
+  if (selectAllCheckbox.checked) {
+    for (const checkbox of punishmentsBody.querySelectorAll(".row-select")) {
+      selectedIds.add(Number(checkbox.value));
+      checkbox.checked = true;
+    }
+  } else {
+    for (const checkbox of punishmentsBody.querySelectorAll(".row-select")) {
+      selectedIds.delete(Number(checkbox.value));
+      checkbox.checked = false;
+    }
+  }
+  updateBulkLiftVisibility();
+});
+
+function updateBulkLiftVisibility() {
+  bulkLiftButton.hidden = selectedIds.size === 0;
+  bulkLiftButton.textContent = `Lift selected (${selectedIds.size})`;
+}
+
+bulkLiftButton.addEventListener("click", () => {
+  const items = Array.from(selectedIds).map((id) => punishmentsById.get(id)).filter(Boolean);
+  if (items.length === 0) {
+    return;
+  }
+  pendingLift = { bulk: items };
+  liftSummary.textContent = `${items.length} punishment${items.length === 1 ? "" : "s"}`;
+  liftReasonInput.value = "";
+  liftOverlay.hidden = false;
+  liftReasonInput.focus();
+});
+
+// ---- keyboard shortcuts ----
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    if (!detailOverlay.hidden) {
+      closeDetail();
+    } else if (!playerOverlay.hidden) {
+      closePlayer();
+    } else if (!liftOverlay.hidden) {
+      closeLiftModal();
+    } else if (!loginOverlay.hidden) {
+      closeLogin();
+    }
+    return;
+  }
+  const tag = document.activeElement && document.activeElement.tagName;
+  const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+  if (event.key === "/" && !isTyping) {
+    event.preventDefault();
+    searchInput.focus();
+  }
+});
+
 function debounce(fn, delayMillis) {
   let timeout;
   return (...args) => {
@@ -286,7 +380,7 @@ function debounce(fn, delayMillis) {
   };
 }
 
-async function loadPunishments() {
+function currentFilterParams() {
   const query = searchInput.value.trim();
   const type = typeFilter.value;
   const params = new URLSearchParams();
@@ -297,17 +391,48 @@ async function loadPunishments() {
     params.set("type", type);
   }
   params.set("activeOnly", String(!historyToggle.checked));
+  return params;
+}
+
+async function loadPunishments() {
+  const params = currentFilterParams();
   params.set("page", String(currentPage));
   params.set("limit", String(PAGE_SIZE));
+  if (sortColumn) {
+    params.set("sort", sortColumn);
+    params.set("dir", sortAscending ? "asc" : "desc");
+  }
+  exportButton.href = "/api/export.csv?" + params.toString();
   tableSpinner.hidden = false;
+  if (!hasLoadedPunishmentsOnce) {
+    renderSkeletonRows(6);
+  }
   try {
     // Browsing needs no auth, so a plain fetch here (never triggers the login overlay).
     const response = await fetch("/api/punishments?" + params.toString());
     const data = await response.json();
+    hasLoadedPunishmentsOnce = true;
     renderPunishments(data.items);
     renderPagination(data.page, data.limit, data.total);
   } finally {
     tableSpinner.hidden = true;
+  }
+}
+
+function renderSkeletonRows(count) {
+  punishmentsBody.innerHTML = "";
+  for (let i = 0; i < count; i++) {
+    const row = document.createElement("tr");
+    row.className = "skeleton-row";
+    for (let c = 0; c < 8; c++) {
+      const td = document.createElement("td");
+      const bar = document.createElement("div");
+      bar.className = "skeleton-bar";
+      bar.style.width = c === 2 ? "70%" : "50%";
+      td.appendChild(bar);
+      row.appendChild(td);
+    }
+    punishmentsBody.appendChild(row);
   }
 }
 
@@ -333,6 +458,12 @@ async function loadStats() {
 function renderActivityChart(daily) {
   activityChart.innerHTML = "";
   const max = Math.max(1, ...daily.map((day) => day.count));
+
+  const tooltip = document.createElement("div");
+  tooltip.className = "chart-tooltip";
+  tooltip.hidden = true;
+  activityChart.appendChild(tooltip);
+
   for (const day of daily) {
     const wrap = document.createElement("div");
     wrap.className = "activity-bar-wrap";
@@ -341,7 +472,16 @@ function renderActivityChart(daily) {
     bar.className = "activity-bar";
     const heightPct = (day.count / max) * 100;
     bar.style.height = Math.max(3, heightPct) + "%";
-    bar.title = `${new Date(day.date).toLocaleDateString()}: ${day.count}`;
+    bar.addEventListener("mouseenter", () => {
+      tooltip.textContent = `${new Date(day.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })} · ${day.count}`;
+      tooltip.hidden = false;
+      const wrapRect = wrap.getBoundingClientRect();
+      const chartRect = activityChart.getBoundingClientRect();
+      tooltip.style.left = wrapRect.left - chartRect.left + wrapRect.width / 2 + "px";
+    });
+    bar.addEventListener("mouseleave", () => {
+      tooltip.hidden = true;
+    });
 
     const label = document.createElement("span");
     label.className = "activity-bar-label";
@@ -406,9 +546,39 @@ function avatarElement(uuid, size) {
 function renderPunishments(punishments) {
   punishmentsBody.innerHTML = "";
   emptyState.hidden = punishments.length > 0;
+  selectedIds.clear();
+  punishmentsById.clear();
+  selectAllCheckbox.checked = false;
+  updateBulkLiftVisibility();
+
   for (const p of punishments) {
+    punishmentsById.set(p.id, p);
+    const liftable = p.active && (p.type === "BAN" || p.type === "TEMPBAN" || p.type === "IPBAN" || p.type === "MUTE" || p.type === "TEMPMUTE");
+
     const row = document.createElement("tr");
     row.addEventListener("click", () => openDetail(p.id));
+
+    if (loggedIn) {
+      const selectCell = document.createElement("td");
+      if (liftable) {
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "row-select";
+        checkbox.value = String(p.id);
+        checkbox.addEventListener("click", (event) => event.stopPropagation());
+        checkbox.addEventListener("change", () => {
+          if (checkbox.checked) {
+            selectedIds.add(p.id);
+          } else {
+            selectedIds.delete(p.id);
+            selectAllCheckbox.checked = false;
+          }
+          updateBulkLiftVisibility();
+        });
+        selectCell.appendChild(checkbox);
+      }
+      row.appendChild(selectCell);
+    }
 
     const typeCell = document.createElement("td");
     const typeBadge = document.createElement("span");
@@ -453,7 +623,7 @@ function renderPunishments(punishments) {
     statusCell.appendChild(statusBadge);
 
     const actionCell = document.createElement("td");
-    if (loggedIn && p.active && (p.type === "BAN" || p.type === "TEMPBAN" || p.type === "IPBAN" || p.type === "MUTE" || p.type === "TEMPMUTE")) {
+    if (loggedIn && liftable) {
       const button = document.createElement("button");
       button.className = "small ghost";
       button.textContent = "Lift";
@@ -489,12 +659,30 @@ liftCancel.addEventListener("click", closeLiftModal);
 
 liftForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const punishment = pendingLift;
+  const pending = pendingLift;
   const reason = liftReasonInput.value.trim() || null;
   closeLiftModal();
-  if (!punishment) {
+  if (!pending) {
     return;
   }
+  const items = pending.bulk ? pending.bulk : [pending];
+  let succeeded = 0;
+  try {
+    for (const punishment of items) {
+      await liftOne(punishment, reason);
+      succeeded++;
+    }
+  } catch (e) {
+    // openLogin() already ran if this was a 401 - fall through to refresh whatever did land.
+  }
+  if (succeeded > 0) {
+    showToast(succeeded === 1 ? "Punishment lifted." : `${succeeded} punishments lifted.`, "success");
+  }
+  loadPunishments();
+  loadStats();
+});
+
+async function liftOne(punishment, reason) {
   let path;
   const body = { reason };
   if (punishment.type === "IPBAN") {
@@ -507,15 +695,8 @@ liftForm.addEventListener("submit", async (event) => {
     path = "/api/unban";
     body.uuid = punishment.targetUuid;
   }
-  try {
-    await api(path, { method: "POST", body: JSON.stringify(body) });
-    showToast("Punishment lifted.", "success");
-    loadPunishments();
-    loadStats();
-  } catch (e) {
-    // openLogin() already ran if this was a 401.
-  }
-});
+  await api(path, { method: "POST", body: JSON.stringify(body) });
+}
 
 // ---- punishment detail modal ----
 
@@ -735,6 +916,106 @@ function renderPlayer(data) {
     list.appendChild(row);
   }
   playerBody.appendChild(list);
+
+  if (loggedIn) {
+    playerBody.appendChild(buildNotesSection(data.uuid));
+  }
+}
+
+// ---- staff notes ----
+
+function buildNotesSection(uuid) {
+  const section = document.createElement("div");
+  section.className = "notes-section";
+
+  const heading = document.createElement("h3");
+  heading.textContent = "Staff notes";
+  section.appendChild(heading);
+
+  const list = document.createElement("div");
+  list.className = "notes-list";
+  section.appendChild(list);
+
+  const form = document.createElement("form");
+  form.className = "note-form";
+  const textarea = document.createElement("textarea");
+  textarea.placeholder = "Add a note for other staff (e.g. known alt, watch for griefing)...";
+  const submitButton = document.createElement("button");
+  submitButton.type = "submit";
+  submitButton.textContent = "Add";
+  form.append(textarea, submitButton);
+  section.appendChild(form);
+
+  async function refreshNotes() {
+    list.replaceChildren(emptyParagraph("Loading…"));
+    try {
+      const response = await api(`/api/notes?uuid=${encodeURIComponent(uuid)}`);
+      renderNotesList(list, await response.json(), refreshNotes);
+    } catch (e) {
+      list.replaceChildren(emptyParagraph("Failed to load notes."));
+    }
+  }
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const text = textarea.value.trim();
+    if (!text) {
+      return;
+    }
+    try {
+      await api("/api/notes", { method: "POST", body: JSON.stringify({ uuid, text }) });
+      textarea.value = "";
+      refreshNotes();
+    } catch (e) {
+      // openLogin() already ran if this was a 401.
+    }
+  });
+
+  refreshNotes();
+  return section;
+}
+
+function renderNotesList(list, notes, onChanged) {
+  list.innerHTML = "";
+  if (notes.length === 0) {
+    list.appendChild(emptyParagraph("No notes yet."));
+    return;
+  }
+  for (const note of notes) {
+    const item = document.createElement("div");
+    item.className = "note-item";
+
+    const header = document.createElement("div");
+    header.className = "note-item-header";
+    const authorGroup = document.createElement("span");
+    const author = document.createElement("span");
+    author.className = "note-item-author";
+    author.textContent = note.authorName || "unknown";
+    authorGroup.append(author, document.createTextNode(" · " + new Date(note.createdAt).toLocaleString()));
+    header.appendChild(authorGroup);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "note-delete";
+    deleteButton.textContent = "✕";
+    deleteButton.title = "Delete note";
+    deleteButton.addEventListener("click", async () => {
+      try {
+        await api("/api/notes/delete", { method: "POST", body: JSON.stringify({ id: note.id }) });
+        onChanged();
+      } catch (e) {
+        // openLogin() already ran if this was a 401.
+      }
+    });
+    header.appendChild(deleteButton);
+
+    const text = document.createElement("div");
+    text.className = "note-item-text";
+    text.textContent = note.text;
+
+    item.append(header, text);
+    list.appendChild(item);
+  }
 }
 
 function loadingParagraph() {

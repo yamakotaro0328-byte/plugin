@@ -512,11 +512,29 @@ main {
 }
 
 .activity-chart {
+  position: relative;
   display: flex;
   align-items: flex-end;
   gap: 7px;
   height: 128px;
   padding-top: 8px;
+}
+
+.chart-tooltip {
+  position: absolute;
+  bottom: 100%;
+  transform: translateX(-50%);
+  margin-bottom: 6px;
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .activity-bar-wrap {
@@ -745,6 +763,73 @@ th {
   position: sticky;
   top: 0;
   background: var(--panel);
+}
+
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+th.sortable:hover {
+  color: var(--text);
+}
+
+.sort-arrow {
+  display: inline-block;
+  width: 10px;
+  margin-left: 3px;
+}
+
+th.sort-active .sort-arrow::after {
+  content: "▾";
+}
+
+th.sort-active.sort-asc .sort-arrow::after {
+  content: "▴";
+}
+
+th.sort-active {
+  color: var(--accent);
+}
+
+.select-col {
+  width: 32px;
+}
+
+td input[type="checkbox"], th input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.export-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+/* ---- skeleton loading rows ---- */
+
+.skeleton-row {
+  cursor: default;
+}
+
+.skeleton-row:hover {
+  background: none;
+}
+
+.skeleton-bar {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--panel-raised) 25%, var(--border) 37%, var(--panel-raised) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
 }
 
 tbody tr {
@@ -1003,6 +1088,99 @@ td.reason-cell {
   flex-shrink: 0;
   font-family: var(--font-mono);
   font-size: 11px;
+}
+
+.notes-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.notes-section h3 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.note-item {
+  background: var(--panel-raised);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+  font-size: 12.5px;
+}
+
+.note-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.note-item-author {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.note-item-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.note-delete {
+  background: transparent;
+  background-image: none;
+  border: none;
+  color: var(--muted-2);
+  padding: 0 2px;
+  font-size: 13px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.note-delete:hover {
+  color: var(--danger);
+  filter: none;
+  box-shadow: none;
+}
+
+.note-form {
+  display: flex;
+  gap: 8px;
+}
+
+.note-form textarea {
+  flex: 1;
+  resize: vertical;
+  min-height: 40px;
+  background: var(--panel-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.note-form button {
+  align-self: flex-end;
+  padding: 8px 14px;
+  font-size: 12.5px;
 }
 
 /* ---- toasts ---- */

@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.yamakotaro.ecoban.core.Punishment;
 import com.yamakotaro.ecoban.core.PunishmentManager;
+import com.yamakotaro.ecoban.core.PunishmentStorage;
 import com.yamakotaro.ecoban.core.PunishmentType;
 
 import java.io.ByteArrayOutputStream;
@@ -18,6 +19,7 @@ import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +88,11 @@ public class WebDashboard {
         server.createContext("/api/player", this::handlePlayer);
         server.createContext("/api/stats", this::handleStats);
         server.createContext("/api/history", this::handleHistory);
+        server.createContext("/api/export.csv", this::handleExportCsv);
+        // Notes are internal staff intel about a player, not a public punishment record - gated
+        // behind login for both reading and writing, unlike everything else above.
+        server.createContext("/api/notes/delete", authed(this::handleDeleteNote));
+        server.createContext("/api/notes", authed(this::handleNotes));
         server.createContext("/api/ban", authed(this::handleBan));
         server.createContext("/api/ipban", authed(this::handleIpban));
         server.createContext("/api/mute", authed(this::handleMute));
@@ -183,14 +190,17 @@ public class WebDashboard {
         // the activeOnly toggle.
         boolean activeOnly = !"false".equalsIgnoreCase(query.get("activeOnly"));
         PunishmentType type = query.containsKey("type") ? parseTypeOrNull(query.get("type")) : null;
+        String sortColumn = query.get("sort");
+        boolean ascending = "asc".equalsIgnoreCase(query.get("dir"));
 
         List<Punishment> results;
         int total;
         if (search != null && !search.isBlank()) {
+            // Sorting a name/IP search is low value (matches are usually few) - always newest first.
             results = punishmentManager.search(search, limit, offset);
             total = punishmentManager.countSearch(search);
         } else {
-            results = punishmentManager.list(type, activeOnly, limit, offset);
+            results = punishmentManager.list(type, activeOnly, limit, offset, sortColumn, ascending);
             total = punishmentManager.count(type, activeOnly);
         }
 
@@ -280,6 +290,83 @@ public class WebDashboard {
         }
         List<Punishment> results = punishmentManager.history(uuid);
         respondJson(exchange, 200, gson.toJsonTree(results.stream().map(this::toDto).toList()));
+    }
+
+    /** GET lists a player's staff notes (?uuid=...), POST adds one ({uuid, text}). */
+    private void handleNotes(HttpExchange exchange) throws IOException {
+        if ("GET".equals(exchange.getRequestMethod())) {
+            Map<String, String> query = parseQuery(exchange.getRequestURI().getRawQuery());
+            UUID uuid = parseUuidOrNull(query.get("uuid"));
+            if (uuid == null) {
+                respondJson(exchange, 400, error("Missing or invalid uuid"));
+                return;
+            }
+            respondJson(exchange, 200, gson.toJsonTree(punishmentManager.listNotes(uuid).stream().map(this::toNoteDto).toList()));
+            return;
+        }
+        if ("POST".equals(exchange.getRequestMethod())) {
+            JsonObject body = readJson(exchange);
+            UUID uuid = parseUuidOrNull(getOrNull(body, "uuid"));
+            String text = getOrNull(body, "text");
+            if (uuid == null || text == null || text.isBlank()) {
+                respondJson(exchange, 400, error("Missing uuid or text"));
+                return;
+            }
+            respondJson(exchange, 200, toNoteDto(punishmentManager.addNote(uuid, operatorName(), text.trim())));
+            return;
+        }
+        respondJson(exchange, 405, error("Use GET or POST"));
+    }
+
+    private void handleDeleteNote(HttpExchange exchange) throws IOException {
+        JsonObject body = readJson(exchange);
+        long id = getLongOr(body, "id", -1);
+        if (id < 0) {
+            respondJson(exchange, 400, error("Missing id"));
+            return;
+        }
+        respondJson(exchange, 200, resultObject(punishmentManager.deleteNote(id)));
+    }
+
+    /** Same filters as {@link #handlePunishments}, minus pagination - streams up to 5000 matching
+     * rows as a CSV download. Kept as public as browsing itself, since it's the same data. */
+    private void handleExportCsv(HttpExchange exchange) throws IOException {
+        Map<String, String> query = parseQuery(exchange.getRequestURI().getRawQuery());
+        String search = query.get("q");
+        boolean activeOnly = !"false".equalsIgnoreCase(query.get("activeOnly"));
+        PunishmentType type = query.containsKey("type") ? parseTypeOrNull(query.get("type")) : null;
+        int limit = 5000;
+
+        List<Punishment> results = (search != null && !search.isBlank())
+                ? punishmentManager.search(search, limit, 0)
+                : punishmentManager.list(type, activeOnly, limit, 0);
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("id,type,target_name,target_uuid,ip,reason,operator,created_at,expires_at,active,removed_by,removed_reason\n");
+        for (Punishment p : results) {
+            csv.append(csvRow(
+                    String.valueOf(p.getId()),
+                    p.getType().name(),
+                    nullToEmpty(p.getTargetName()),
+                    p.getTargetUuid() != null ? p.getTargetUuid().toString() : "",
+                    nullToEmpty(p.getIp()),
+                    nullToEmpty(p.getReason()),
+                    nullToEmpty(p.getOperatorName()),
+                    Instant.ofEpochMilli(p.getCreatedAt()).toString(),
+                    p.isPermanent() ? "" : Instant.ofEpochMilli(p.getExpiresAt()).toString(),
+                    String.valueOf(p.isActive()),
+                    nullToEmpty(p.getRemovedByName()),
+                    nullToEmpty(p.getRemovedReason())
+            )).append("\n");
+        }
+
+        byte[] bytes = csv.toString().getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "text/csv; charset=utf-8");
+        exchange.getResponseHeaders().set("Content-Disposition", "attachment; filename=\"ecoban-export.csv\"");
+        exchange.sendResponseHeaders(200, bytes.length);
+        try (OutputStream out = exchange.getResponseBody()) {
+            out.write(bytes);
+        }
     }
 
     // ---- write endpoints ----
@@ -398,6 +485,38 @@ public class WebDashboard {
         json.addProperty("removedByName", punishment.getRemovedByName());
         json.addProperty("removedReason", punishment.getRemovedReason());
         return json;
+    }
+
+    private JsonObject toNoteDto(PunishmentStorage.PlayerNote note) {
+        JsonObject json = new JsonObject();
+        json.addProperty("id", note.id());
+        json.addProperty("targetUuid", note.targetUuid().toString());
+        json.addProperty("authorName", note.authorName());
+        json.addProperty("text", note.text());
+        json.addProperty("createdAt", note.createdAt());
+        return json;
+    }
+
+    private static String nullToEmpty(String value) {
+        return value == null ? "" : value;
+    }
+
+    private static String csvRow(String... values) {
+        StringBuilder row = new StringBuilder();
+        for (int i = 0; i < values.length; i++) {
+            if (i > 0) {
+                row.append(',');
+            }
+            row.append(csvEscape(values[i]));
+        }
+        return row.toString();
+    }
+
+    private static String csvEscape(String value) {
+        if (value.contains(",") || value.contains("\"") || value.contains("\n")) {
+            return "\"" + value.replace("\"", "\"\"") + "\"";
+        }
+        return value;
     }
 
     private JsonObject error(String message) {

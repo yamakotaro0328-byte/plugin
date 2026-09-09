@@ -129,6 +129,10 @@ public class PunishmentManager {
         return storage.list(type, activeOnly, limit, offset);
     }
 
+    public List<Punishment> list(PunishmentType type, boolean activeOnly, int limit, int offset, String sortColumn, boolean ascending) {
+        return storage.list(type, activeOnly, limit, offset, sortColumn, ascending);
+    }
+
     public int count(PunishmentType type, boolean activeOnly) {
         return storage.count(type, activeOnly);
     }
@@ -139,6 +143,18 @@ public class PunishmentManager {
 
     public List<PunishmentStorage.OperatorCount> topOperators(long sinceMillis, int limit) {
         return storage.topOperators(sinceMillis, limit);
+    }
+
+    public List<PunishmentStorage.PlayerNote> listNotes(UUID targetUuid) {
+        return storage.listNotes(targetUuid);
+    }
+
+    public PunishmentStorage.PlayerNote addNote(UUID targetUuid, String authorName, String text) {
+        return storage.addNote(targetUuid, authorName, text);
+    }
+
+    public boolean deleteNote(long id) {
+        return storage.deleteNote(id);
     }
 
     public void deactivateExpired() {

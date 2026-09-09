@@ -70,4 +70,15 @@ public class MySqlPunishmentStorage extends AbstractJdbcPunishmentStorage {
                 + "handled BOOLEAN NOT NULL DEFAULT FALSE, "
                 + "INDEX idx_handled (handled))";
     }
+
+    @Override
+    protected String createNotesTableSql() {
+        return "CREATE TABLE IF NOT EXISTS ecoban_notes ("
+                + "id BIGINT AUTO_INCREMENT PRIMARY KEY, "
+                + "target_uuid VARCHAR(36) NOT NULL, "
+                + "author_name VARCHAR(16), "
+                + "note_text TEXT, "
+                + "created_at BIGINT NOT NULL, "
+                + "INDEX idx_target_uuid (target_uuid))";
+    }
 }

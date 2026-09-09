@@ -34,6 +34,8 @@ public abstract class AbstractJdbcPunishmentStorage implements PunishmentStorage
 
     protected abstract String createPendingKicksTableSql();
 
+    protected abstract String createNotesTableSql();
+
     protected void init() {
         Connection conn = connection();
         if (conn == null) {
@@ -42,6 +44,7 @@ public abstract class AbstractJdbcPunishmentStorage implements PunishmentStorage
         try (Statement statement = conn.createStatement()) {
             statement.executeUpdate(createPunishmentsTableSql());
             statement.executeUpdate(createPendingKicksTableSql());
+            statement.executeUpdate(createNotesTableSql());
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Failed to create EcoBan's tables", e);
         }
@@ -189,6 +192,18 @@ public abstract class AbstractJdbcPunishmentStorage implements PunishmentStorage
 
     @Override
     public List<Punishment> list(PunishmentType type, boolean activeOnly, int limit, int offset) {
+        return list(type, activeOnly, limit, offset, null, false);
+    }
+
+    @Override
+    public List<Punishment> list(PunishmentType type, boolean activeOnly, int limit, int offset, String sortColumn, boolean ascending) {
+        String column = switch (sortColumn == null ? "" : sortColumn) {
+            case "created_at" -> "created_at";
+            case "expires_at" -> "expires_at";
+            default -> "id";
+        };
+        String direction = ascending ? "ASC" : "DESC";
+
         StringBuilder sql = new StringBuilder("SELECT * FROM ecoban_punishments WHERE 1 = 1");
         if (activeOnly) {
             sql.append(" AND active = ?");
@@ -196,7 +211,8 @@ public abstract class AbstractJdbcPunishmentStorage implements PunishmentStorage
         if (type != null) {
             sql.append(" AND type = ?");
         }
-        sql.append(" ORDER BY id DESC LIMIT ").append(Math.max(1, limit)).append(" OFFSET ").append(Math.max(0, offset));
+        sql.append(" ORDER BY ").append(column).append(' ').append(direction).append(", id DESC");
+        sql.append(" LIMIT ").append(Math.max(1, limit)).append(" OFFSET ").append(Math.max(0, offset));
         return queryList(sql.toString(), stmt -> {
             int index = 1;
             if (activeOnly) {
@@ -355,6 +371,71 @@ public abstract class AbstractJdbcPunishmentStorage implements PunishmentStorage
             statement.executeUpdate();
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Failed to mark pending kick " + id + " handled", e);
+        }
+    }
+
+    @Override
+    public List<PlayerNote> listNotes(UUID targetUuid) {
+        List<PlayerNote> results = new ArrayList<>();
+        Connection conn = connection();
+        if (conn == null) {
+            return results;
+        }
+        String sql = "SELECT id, target_uuid, author_name, note_text, created_at FROM ecoban_notes "
+                + "WHERE target_uuid = ? ORDER BY id DESC";
+        try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, targetUuid.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                while (rs.next()) {
+                    results.add(new PlayerNote(rs.getLong("id"), UUID.fromString(rs.getString("target_uuid")),
+                            rs.getString("author_name"), rs.getString("note_text"), rs.getLong("created_at")));
+                }
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Failed to list notes for " + targetUuid, e);
+        }
+        return results;
+    }
+
+    @Override
+    public PlayerNote addNote(UUID targetUuid, String authorName, String text) {
+        long now = System.currentTimeMillis();
+        Connection conn = connection();
+        if (conn == null) {
+            return new PlayerNote(-1, targetUuid, authorName, text, now);
+        }
+        String sql = "INSERT INTO ecoban_notes (target_uuid, author_name, note_text, created_at) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement statement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setString(1, targetUuid.toString());
+            statement.setString(2, authorName);
+            statement.setString(3, text);
+            statement.setLong(4, now);
+            statement.executeUpdate();
+            long id = -1;
+            try (ResultSet keys = statement.getGeneratedKeys()) {
+                if (keys.next()) {
+                    id = keys.getLong(1);
+                }
+            }
+            return new PlayerNote(id, targetUuid, authorName, text, now);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Failed to add a note for " + targetUuid, e);
+            return new PlayerNote(-1, targetUuid, authorName, text, now);
+        }
+    }
+
+    @Override
+    public boolean deleteNote(long id) {
+        Connection conn = connection();
+        if (conn == null) {
+            return false;
+        }
+        try (PreparedStatement statement = conn.prepareStatement("DELETE FROM ecoban_notes WHERE id = ?")) {
+            statement.setLong(1, id);
+            return statement.executeUpdate() > 0;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Failed to delete note " + id, e);
+            return false;
         }
     }
 

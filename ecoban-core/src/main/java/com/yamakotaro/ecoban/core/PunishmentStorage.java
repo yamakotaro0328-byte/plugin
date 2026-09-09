@@ -57,6 +57,14 @@ public interface PunishmentStorage {
      */
     List<Punishment> list(PunishmentType type, boolean activeOnly, int limit, int offset);
 
+    /**
+     * Same as {@link #list(PunishmentType, boolean, int, int)}, but lets the caller pick the sort
+     * column - the dashboard's sortable "Issued"/"Expires" table headers.
+     *
+     * @param sortColumn "created_at" or "expires_at"; anything else falls back to id-descending.
+     */
+    List<Punishment> list(PunishmentType type, boolean activeOnly, int limit, int offset, String sortColumn, boolean ascending);
+
     /** @see #list(PunishmentType, boolean, int, int) - same filter, just a row count instead of the rows. */
     int count(PunishmentType type, boolean activeOnly);
 
@@ -94,6 +102,20 @@ public interface PunishmentStorage {
     List<PendingKick> pollPendingKicks(int limit);
 
     void markKickHandled(long id);
+
+    /**
+     * Free-text staff notes on a player ("known alt of X", "watch for griefing") - separate from
+     * the punishment log because a note isn't an action taken against the player, just intel for
+     * other staff. Unlike punishment records, notes are never shown to the public dashboard view.
+     */
+    record PlayerNote(long id, UUID targetUuid, String authorName, String text, long createdAt) {
+    }
+
+    List<PlayerNote> listNotes(UUID targetUuid);
+
+    PlayerNote addNote(UUID targetUuid, String authorName, String text);
+
+    boolean deleteNote(long id);
 
     void close();
 }

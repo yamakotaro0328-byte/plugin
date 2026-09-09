@@ -66,4 +66,14 @@ public class SqlitePunishmentStorage extends AbstractJdbcPunishmentStorage {
                 + "created_at BIGINT NOT NULL, "
                 + "handled BOOLEAN NOT NULL DEFAULT 0)";
     }
+
+    @Override
+    protected String createNotesTableSql() {
+        return "CREATE TABLE IF NOT EXISTS ecoban_notes ("
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + "target_uuid VARCHAR(36) NOT NULL, "
+                + "author_name VARCHAR(16), "
+                + "note_text TEXT, "
+                + "created_at BIGINT NOT NULL)";
+    }
 }
