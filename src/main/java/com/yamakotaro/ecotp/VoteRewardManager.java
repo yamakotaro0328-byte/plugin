@@ -1,6 +1,7 @@
 package com.yamakotaro.ecotp;
 
 import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -60,11 +61,21 @@ public class VoteRewardManager {
     private void reward(Player player) {
         Economy economy = plugin.getEconomyHolder().get();
         if (economy == null) {
+            // Previously logged to console only - the voting player saw nothing at all and had
+            // no way to know their vote had been received but not rewarded.
             plugin.getLogger().warning("Could not reward " + player.getName() + " for voting: no economy available yet.");
+            player.sendMessage(plugin.msg("general.no-economy"));
             return;
         }
         double amount = rewardAmount();
-        economy.depositPlayer(player, amount);
+        EconomyResponse response = economy.depositPlayer(player, amount);
+        if (!response.transactionSuccess()) {
+            // Previously ignored entirely - the player got the "thanks for voting" message even
+            // when the deposit itself failed (only possible with an external Vault economy).
+            plugin.getLogger().warning("Failed to deposit the vote reward for " + player.getName() + ": " + response.errorMessage);
+            player.sendMessage(plugin.msg("general.no-economy"));
+            return;
+        }
         player.sendMessage(plugin.msg("vote.thanks", "amount", ChatUtil.formatMoney(amount)));
         Bukkit.broadcastMessage(plugin.getMessages().get("vote.broadcast",
                 "player", player.getName(), "amount", ChatUtil.formatMoney(amount)));

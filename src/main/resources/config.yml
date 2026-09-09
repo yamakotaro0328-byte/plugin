@@ -98,15 +98,19 @@ vote-reward:
 # point directly at this server WITHOUT installing NuVotifier or any other vote plugin —
 # just start the server once, then give your voting sites the contents of
 # plugins/EcoTP/votifier-rsa/public.key (generated automatically on first run) and this
-# host:port. If you'd rather keep using an existing NuVotifier install instead (e.g. it's
-# already shared with other plugins), set enabled: false here; EcoTP will still pick up
-# NuVotifier's own vote events automatically via vote-reward above.
+# host:port. If NuVotifier (or a compatible fork) is ALSO installed, EcoTP automatically
+# skips starting this listener (both default to port 8192 - starting both would have one
+# silently steal votes meant for the other) and instead picks up NuVotifier's own vote
+# events directly; you don't need to set enabled: false yourself for that case, though you
+# still can to force this listener off for any other reason.
 # (日本語) EcoTPはVotifier(V1)プロトコル互換のリスナーを自前で内蔵しているため、
 # NuVotifier等を別途導入しなくても投票サイトから直接この設定を使えます。初回起動時に
 # 自動生成される plugins/EcoTP/votifier-rsa/public.key の中身と、このhost:portを
-# 投票サイト側に設定してください。既存のNuVotifierをそのまま使いたい場合はここを
-# enabled: falseにすれば、NuVotifierの投票イベントを自動検出する形で動作します
-# (上のvote-rewardの設定はどちらの方式でも共通で使われます)。
+# 投票サイト側に設定してください。NuVotifier(またはその互換品)も導入されている場合、
+# 両方が既定でポート8192を使うため(片方の投票をもう片方が横取りしてしまう)、EcoTPは
+# 自動的にこのリスナーの起動を見送り、NuVotifier側の投票イベントを直接検出します -
+# その場合にenabled: falseを自分で設定する必要はありません(他の理由で強制的に
+# 無効化したい場合はもちろん設定可能です)。
 votifier:
   enabled: true
   # "0.0.0.0" listens on every network interface. Change only if you know you need to.

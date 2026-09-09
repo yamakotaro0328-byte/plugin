@@ -1,9 +1,11 @@
 package com.yamakotaro.ecotp;
 
 import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
+import java.util.logging.Level;
 
 /**
  * /daily : 1日1回ボーナスを受け取れる。streak-window-hours 以内に次の請求をすれば
@@ -50,7 +52,16 @@ public class DailyRewardManager {
         int maxBonusDays = plugin.getConfig().getInt("daily-reward.max-streak-bonus-days", 30);
         double amount = base + Math.min(newStreak - 1, maxBonusDays) * perDay;
 
-        economy.depositPlayer(player, amount);
+        EconomyResponse response = economy.depositPlayer(player, amount);
+        if (!response.transactionSuccess()) {
+            // Was previously ignored entirely - the player was told "claimed" and their streak
+            // was consumed even when the deposit itself failed (only possible with an external
+            // Vault economy; EcoTP's own always succeeds for a non-negative amount).
+            plugin.getLogger().log(Level.WARNING, "Failed to deposit the daily reward for "
+                    + player.getName() + ": " + response.errorMessage);
+            player.sendMessage(plugin.msg("general.no-economy"));
+            return false;
+        }
         storage.recordClaim(uuid, now, newStreak);
         player.sendMessage(plugin.msg("daily.claimed", "amount", ChatUtil.formatMoney(amount), "streak", String.valueOf(newStreak)));
         return true;

@@ -26,8 +26,9 @@ import java.util.logging.Level;
  * 古典的なVotifier(V1)プロトコル互換のサーバーをEcoTP自身に内蔵し、NuVotifier等の
  * 別プラグインを一切導入せずに投票報酬を使えるようにする。投票サイト側には
  * votifier-rsa/public.key の中身(Base64)をそのまま貼り付けてもらうだけでよい。
- * NuVotifierを別途使いたい場合はvotifier.enabled: falseにすれば、VoteRewardListener
- * (リフレクションでNuVotifierのイベントを拾う側)だけが動く。
+ * NuVotifier(等の互換品)が既に導入されている場合は、ポート8192の競合を避けるため
+ * このリスナー自身は起動を自動的に見送る(VoteRewardListenerがリフレクションで
+ * NuVotifier側のイベントを拾う)。votifier.enabled: falseで明示的に無効化することもできる。
  */
 public class VotifierServer {
 
@@ -44,6 +45,19 @@ public class VotifierServer {
 
     public void start() {
         if (!plugin.getConfig().getBoolean("votifier.enabled", true)) {
+            return;
+        }
+        if (isCompatibleVotifierPluginPresent()) {
+            // Both this listener and NuVotifier default to port 8192 - if NuVotifier is also
+            // installed and wins the race to bind it, votes sent to what the voting sites think
+            // is NuVotifier's listener land here instead, fail to decrypt (wrong keypair), and
+            // are dropped - a real, silent way for "voting doesn't work" to happen. Stepping
+            // aside automatically avoids that instead of relying on the admin to notice and set
+            // votifier.enabled: false themselves; NuVotifier's own events still reach
+            // VoteRewardManager via VoteRewardListener regardless.
+            plugin.getLogger().info("A NuVotifier-compatible plugin is already installed - not starting "
+                    + "the built-in Votifier-compatible listener (both default to port 8192; votes will "
+                    + "be picked up via that plugin's own events instead).");
             return;
         }
         try {
@@ -100,6 +114,7 @@ public class VotifierServer {
     }
 
     private void handleConnection(Socket socket) {
+        byte[] block;
         try (Socket s = socket) {
             s.setSoTimeout(5000);
             OutputStream out = s.getOutputStream();
@@ -107,25 +122,49 @@ public class VotifierServer {
             out.flush();
 
             InputStream in = s.getInputStream();
-            byte[] block = readFully(in, 256);
+            block = readFully(in, 256);
             if (block == null) {
                 return;
             }
+        } catch (IOException e) {
+            // The connection dropped before sending a full 256-byte block - expected
+            // occasionally on a public port (scanners, health checks); nothing actionable here.
+            plugin.getLogger().log(Level.FINE, "Ignoring an incomplete Votifier connection", e);
+            return;
+        }
+
+        byte[] decrypted;
+        try {
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] decrypted = cipher.doFinal(block);
-            String message = new String(decrypted, StandardCharsets.UTF_8);
-            String[] parts = message.split("\n");
-            if (parts.length < 3 || !parts[0].equals("VOTE")) {
-                return;
-            }
-            String serviceName = parts[1];
-            String username = parts[2];
-            Bukkit.getScheduler().runTask(plugin, () -> plugin.getVoteRewardManager().handleVote(username, serviceName));
+            decrypted = cipher.doFinal(block);
         } catch (Exception e) {
-            // Malformed/garbage connections (scanners, misconfigured clients, etc.) are expected
-            // occasionally on a public port; drop them without spamming the console.
-            plugin.getLogger().log(Level.FINE, "Ignoring an invalid Votifier connection", e);
+            // A well-formed 256-byte block that fails to decrypt with THIS keypair almost always
+            // means the voting site was given the wrong public.key - a real misconfiguration, not
+            // scanner noise, so this needs to be visible by default rather than buried at FINE.
+            plugin.getLogger().log(Level.WARNING, "Received a vote that failed to decrypt - the voting "
+                    + "site is likely using the wrong public key (should be the contents of "
+                    + new File(rsaFolder, "public.key").getPath() + ")", e);
+            return;
+        }
+
+        String message = new String(decrypted, StandardCharsets.UTF_8);
+        String[] parts = message.split("\n");
+        if (parts.length < 3 || !parts[0].equals("VOTE")) {
+            plugin.getLogger().log(Level.FINE, "Ignoring a decrypted Votifier message that wasn't a vote: " + message);
+            return;
+        }
+        String serviceName = parts[1];
+        String username = parts[2];
+        Bukkit.getScheduler().runTask(plugin, () -> plugin.getVoteRewardManager().handleVote(username, serviceName));
+    }
+
+    private static boolean isCompatibleVotifierPluginPresent() {
+        try {
+            Class.forName("com.vexsoftware.votifier.model.VotifierEvent");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
         }
     }
 
