@@ -9,7 +9,9 @@ import org.bukkit.entity.Player;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
@@ -22,6 +24,12 @@ public class VoteRewardManager {
     private final EcoTpPlugin plugin;
     private final Set<String> pendingUsernames = new HashSet<>();
     private final File file;
+    // The classic Votifier(V1) protocol never sends any success/failure acknowledgment back to
+    // the voting site - if a site's own request appears to fail (timeout, no response) it may
+    // silently retry, and each retry looks like a brand new, entirely valid vote to us with no
+    // way to tell it apart from a genuine repeat vote. Without this, a site retrying a "failed"
+    // request would reward the player once per retry even though the site itself reports failure.
+    private final Map<String, Long> lastRewardMillis = new HashMap<>();
 
     public VoteRewardManager(EcoTpPlugin plugin) {
         this.plugin = plugin;
@@ -37,8 +45,19 @@ public class VoteRewardManager {
         return plugin.getConfig().getDouble("vote-reward.amount", 1000.0);
     }
 
+    private long duplicateWindowMillis() {
+        return plugin.getConfig().getLong("vote-reward.duplicate-window-seconds", 60) * 1000L;
+    }
+
     public void handleVote(String username, String serviceName) {
         if (!isEnabled()) {
+            return;
+        }
+        if (isRecentDuplicate(username)) {
+            plugin.getLogger().info("Ignored a vote for " + username + " (" + serviceName
+                    + ") - the same username was already rewarded within the last "
+                    + (duplicateWindowMillis() / 1000L) + "s, most likely a retried connection "
+                    + "from the voting site rather than a second real vote.");
             return;
         }
         Player online = Bukkit.getPlayerExact(username);
@@ -48,6 +67,20 @@ public class VoteRewardManager {
         }
         pendingUsernames.add(username.toLowerCase());
         save();
+    }
+
+    /** @return true if this username was already credited for a vote within the duplicate
+     * window - marks the current attempt's timestamp as a side effect either way, since a
+     * genuinely new vote (accepted or not) is what starts the next window. */
+    private boolean isRecentDuplicate(String username) {
+        String key = username.toLowerCase();
+        long now = System.currentTimeMillis();
+        Long last = lastRewardMillis.get(key);
+        boolean duplicate = last != null && now - last < duplicateWindowMillis();
+        if (!duplicate) {
+            lastRewardMillis.put(key, now);
+        }
+        return duplicate;
     }
 
     /** ログイン時に呼び出す。オフライン中に届いた投票報酬が保留されていれば付与する。 */

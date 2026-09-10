@@ -88,11 +88,22 @@ menu-item:
 
 # Rewards a player for voting on a voting site. If the player is offline when the vote
 # arrives, the reward is queued and given the next time they join.
+# duplicate-window-seconds: the classic Votifier protocol never tells the voting site whether
+#   a vote actually succeeded, so a site that thinks its request failed (timeout, no response)
+#   may silently retry it - each retry otherwise looks like a brand new, valid vote and would
+#   pay out again. A second "vote" for the same username within this many seconds of the last
+#   rewarded one is treated as a retry and ignored rather than paid again.
 # (日本語) 投票サイトでの投票報酬。投票時にオフラインだった場合は保留され、
 # 次回ログイン時に付与される。
+# duplicate-window-seconds: 古典的なVotifierプロトコルには投票が実際に成功したかを
+#   投票サイト側へ伝える仕組みが無いため、サイト側が「失敗した」と判断すると(タイムアウト等)
+#   黙って再送してくることがある - 対策が無いと再送のたびに新しい投票として報酬が
+#   支払われてしまう。直近に報酬を支払った同じユーザー名からの投票が、この秒数以内に
+#   再度届いた場合は再送とみなし、報酬を支払わずに無視する。
 vote-reward:
   enabled: true
   amount: 1000.0
+  duplicate-window-seconds: 60
 
 # EcoTP includes its OWN Votifier(V1)-protocol-compatible listener, so voting sites can
 # point directly at this server WITHOUT installing NuVotifier or any other vote plugin —
