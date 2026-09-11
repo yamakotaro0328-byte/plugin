@@ -1,0 +1,25 @@
+name: EcoLobby
+version: '${project.version}'
+main: com.yamakotaro.ecolobby.EcoLobbyPlugin
+api-version: '26.2'
+author: yamakotaro0328
+description: Network hub/lobby plugin - spawn protection, double jump, a server-select menu and
+  a links menu, and /hub to return to the lobby from anywhere on the network.
+
+commands:
+  hub:
+    description: Return to the lobby - teleports you here if this IS the lobby server, otherwise
+      sends you to the configured lobby server over the network
+    usage: /hub
+    aliases: [lobby]
+  ecolobby:
+    description: Admin utilities (set the lobby spawn, reload config)
+    usage: /ecolobby <reload|setspawn>
+
+permissions:
+  ecolobby.use:
+    description: Can use /hub, the server-select and links menus, and double jump
+    default: true
+  ecolobby.admin:
+    description: Can set the lobby spawn point and reload config.yml
+    default: op

@@ -1,0 +1,81 @@
+package com.yamakotaro.ecolobby.listeners;
+
+import com.yamakotaro.ecolobby.EcoLobbyPlugin;
+import com.yamakotaro.ecolobby.Messages;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
+
+import java.util.Map;
+
+/** On join (lobby server only, see EcoLobbyPlugin#onEnable): teleports to the lobby spawn, resets
+ * the player to a clean slate, and hands out the server-select/links items. */
+public class JoinListener implements Listener {
+
+    private final EcoLobbyPlugin plugin;
+
+    public JoinListener(EcoLobbyPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        if (!plugin.isLobbyServer()) {
+            return;
+        }
+        Player player = event.getPlayer();
+
+        plugin.getSpawnManager().getSpawn().ifPresent(player::teleport);
+
+        if (plugin.isFeatureEnabled("clear-inventory-on-join")) {
+            player.getInventory().clear();
+            player.setFireTicks(0);
+            player.setFallDistance(0);
+            player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
+            var maxHealthAttribute = player.getAttribute(Attribute.MAX_HEALTH);
+            if (maxHealthAttribute != null) {
+                player.setHealth(maxHealthAttribute.getValue());
+            }
+            player.setFoodLevel(20);
+            player.setSaturation(20f);
+        }
+
+        if (plugin.isFeatureEnabled("double-jump")) {
+            player.setAllowFlight(true);
+        }
+
+        if (plugin.isFeatureEnabled("server-menu")) {
+            giveMenuItem(player, plugin.getServerMenuItemKey(), "items.server-menu-slot", "items.server-menu-material",
+                    "menu.server-title");
+        }
+        if (plugin.isFeatureEnabled("links-menu")) {
+            giveMenuItem(player, plugin.getLinksMenuItemKey(), "items.links-menu-slot", "items.links-menu-material",
+                    "menu.links-title");
+        }
+    }
+
+    private void giveMenuItem(Player player, NamespacedKey key, String slotConfigPath,
+                               String materialConfigPath, String titleMessagePath) {
+        Messages messages = plugin.getMessages();
+        String materialName = plugin.getConfig().getString(materialConfigPath, "STONE");
+        Material material = Material.matchMaterial(materialName);
+        if (material == null) {
+            material = Material.STONE;
+        }
+        int slot = plugin.getConfig().getInt(slotConfigPath, 0);
+
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        meta.displayName(messages.get(titleMessagePath, Map.of()));
+        meta.getPersistentDataContainer().set(key, PersistentDataType.BOOLEAN, true);
+        item.setItemMeta(meta);
+        player.getInventory().setItem(slot, item);
+    }
+}
