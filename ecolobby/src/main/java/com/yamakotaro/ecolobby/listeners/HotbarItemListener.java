@@ -3,6 +3,8 @@ package com.yamakotaro.ecolobby.listeners;
 import com.yamakotaro.ecolobby.EcoLobbyPlugin;
 import com.yamakotaro.ecolobby.LobbyMenuConfig;
 import com.yamakotaro.ecolobby.Messages;
+import com.yamakotaro.ecolobby.gui.AdminPanelHolder;
+import com.yamakotaro.ecolobby.gui.LobbyMenuHolder;
 import com.yamakotaro.ecolobby.gui.ServerMenuHolder;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -41,13 +43,51 @@ public class HotbarItemListener implements Listener {
         ItemMeta meta = item.getItemMeta();
         Player player = event.getPlayer();
 
-        if (Boolean.TRUE.equals(meta.getPersistentDataContainer().get(plugin.getServerMenuItemKey(), PersistentDataType.BOOLEAN))) {
+        var pdc = meta.getPersistentDataContainer();
+        if (Boolean.TRUE.equals(pdc.get(plugin.getServerMenuItemKey(), PersistentDataType.BOOLEAN))) {
             event.setCancelled(true);
             openServerMenu(player);
-        } else if (Boolean.TRUE.equals(meta.getPersistentDataContainer().get(plugin.getLinksMenuItemKey(), PersistentDataType.BOOLEAN))) {
+        } else if (Boolean.TRUE.equals(pdc.get(plugin.getLinksMenuItemKey(), PersistentDataType.BOOLEAN))) {
             event.setCancelled(true);
             sendLinks(player);
+        } else if (Boolean.TRUE.equals(pdc.get(plugin.getLobbyMenuItemKey(), PersistentDataType.BOOLEAN))) {
+            event.setCancelled(true);
+            player.openInventory(new LobbyMenuHolder(plugin.getMessages()).getInventory());
+        } else if (Boolean.TRUE.equals(pdc.get(plugin.getVisibilityToggleItemKey(), PersistentDataType.BOOLEAN))) {
+            event.setCancelled(true);
+            toggleVisibility(player);
+        } else if (Boolean.TRUE.equals(pdc.get(plugin.getQuickReturnItemKey(), PersistentDataType.BOOLEAN))) {
+            event.setCancelled(true);
+            quickReturn(player);
+        } else if (Boolean.TRUE.equals(pdc.get(plugin.getAdminPanelItemKey(), PersistentDataType.BOOLEAN))) {
+            event.setCancelled(true);
+            openAdminPanel(player);
         }
+    }
+
+    private void toggleVisibility(Player player) {
+        Messages messages = plugin.getMessages();
+        boolean nowHidden = plugin.getPlayerStateManager().toggleVisibility(player);
+        player.sendMessage(messages.get(nowHidden ? "toggle.visibility-hidden" : "toggle.visibility-visible", Map.of()));
+    }
+
+    private void quickReturn(Player player) {
+        Messages messages = plugin.getMessages();
+        var spawn = plugin.getSpawnManager().getSpawn();
+        if (spawn.isEmpty()) {
+            player.sendMessage(messages.get("hub.not-configured", Map.of()));
+            return;
+        }
+        player.teleport(spawn.get());
+        player.sendMessage(messages.get("hub.teleported", Map.of()));
+    }
+
+    private void openAdminPanel(Player player) {
+        if (!player.hasPermission("ecolobby.admin")) {
+            player.sendMessage(plugin.getMessages().get("general.no-permission", Map.of()));
+            return;
+        }
+        player.openInventory(new AdminPanelHolder(plugin).getInventory());
     }
 
     private void openServerMenu(Player player) {

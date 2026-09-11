@@ -6,28 +6,44 @@ import com.yamakotaro.ecolobby.gui.GuiListener;
 import com.yamakotaro.ecolobby.listeners.DoubleJumpListener;
 import com.yamakotaro.ecolobby.listeners.HotbarItemListener;
 import com.yamakotaro.ecolobby.listeners.JoinListener;
+import com.yamakotaro.ecolobby.listeners.JumpPadListener;
 import com.yamakotaro.ecolobby.listeners.ProtectionListener;
 import com.yamakotaro.ecolobby.listeners.VoidTeleportListener;
+import com.yamakotaro.ecolobby.tasks.ParticleTrailTask;
 import org.bukkit.NamespacedKey;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 public class EcoLobbyPlugin extends JavaPlugin {
 
     private Messages messages;
     private LobbySpawnManager spawnManager;
     private LobbyMenuConfig menuConfig;
+    private PlayerStateManager playerStateManager;
     private NamespacedKey serverMenuItemKey;
     private NamespacedKey linksMenuItemKey;
+    private NamespacedKey lobbyMenuItemKey;
+    private NamespacedKey visibilityToggleItemKey;
+    private NamespacedKey quickReturnItemKey;
+    private NamespacedKey adminPanelItemKey;
+    private BukkitTask particleTrailTask;
+    private long enabledAtMillis;
 
     @Override
     public void onEnable() {
+        this.enabledAtMillis = System.currentTimeMillis();
         saveDefaultConfig();
         this.messages = new Messages(this);
         this.spawnManager = new LobbySpawnManager(this);
         this.menuConfig = new LobbyMenuConfig(this);
+        this.playerStateManager = new PlayerStateManager(this);
         this.serverMenuItemKey = new NamespacedKey(this, "server-menu-item");
         this.linksMenuItemKey = new NamespacedKey(this, "links-menu-item");
+        this.lobbyMenuItemKey = new NamespacedKey(this, "lobby-menu-item");
+        this.visibilityToggleItemKey = new NamespacedKey(this, "visibility-toggle-item");
+        this.quickReturnItemKey = new NamespacedKey(this, "quick-return-item");
+        this.adminPanelItemKey = new NamespacedKey(this, "admin-panel-item");
 
         BungeeConnector.register(this);
 
@@ -38,7 +54,10 @@ public class EcoLobbyPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new ProtectionListener(this), this);
             getServer().getPluginManager().registerEvents(new DoubleJumpListener(this), this);
             getServer().getPluginManager().registerEvents(new VoidTeleportListener(this), this);
+            getServer().getPluginManager().registerEvents(new JumpPadListener(this), this);
         }
+
+        this.particleTrailTask = new ParticleTrailTask(this).runTaskTimer(this, 5L, 5L);
 
         HubCommand hubCommand = new HubCommand(this);
         PluginCommand hub = getCommand("hub");
@@ -50,6 +69,13 @@ public class EcoLobbyPlugin extends JavaPlugin {
         ecolobby.setTabCompleter(ecoLobbyCommand);
 
         getLogger().info("EcoLobby enabled (is-lobby-server=" + isLobbyServer() + ").");
+    }
+
+    @Override
+    public void onDisable() {
+        if (particleTrailTask != null) {
+            particleTrailTask.cancel();
+        }
     }
 
     public boolean isLobbyServer() {
@@ -86,5 +112,29 @@ public class EcoLobbyPlugin extends JavaPlugin {
 
     public NamespacedKey getLinksMenuItemKey() {
         return linksMenuItemKey;
+    }
+
+    public NamespacedKey getLobbyMenuItemKey() {
+        return lobbyMenuItemKey;
+    }
+
+    public NamespacedKey getVisibilityToggleItemKey() {
+        return visibilityToggleItemKey;
+    }
+
+    public NamespacedKey getQuickReturnItemKey() {
+        return quickReturnItemKey;
+    }
+
+    public NamespacedKey getAdminPanelItemKey() {
+        return adminPanelItemKey;
+    }
+
+    public PlayerStateManager getPlayerStateManager() {
+        return playerStateManager;
+    }
+
+    public long getEnabledAtMillis() {
+        return enabledAtMillis;
     }
 }

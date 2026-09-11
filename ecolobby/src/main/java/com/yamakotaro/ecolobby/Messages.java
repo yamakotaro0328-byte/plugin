@@ -4,6 +4,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.List;
 import java.util.Map;
 
 public class Messages {
@@ -36,5 +37,15 @@ public class Messages {
 
     public Component color(String legacyText) {
         return LegacyComponentSerializer.legacyAmpersand().deserialize(legacyText);
+    }
+
+    /** Reads a messages.&lt;lang&gt;.&lt;path&gt; string list (e.g. rules.lines), falling back to "en". */
+    public List<String> rawList(String path) {
+        String language = language();
+        List<String> value = plugin.getConfig().getStringList("messages." + language + "." + path);
+        if (value.isEmpty()) {
+            value = plugin.getConfig().getStringList("messages.en." + path);
+        }
+        return value;
     }
 }

@@ -45,7 +45,7 @@ public class DoubleJumpListener implements Listener {
         // also never grants actual creative-style flight.
         event.setCancelled(true);
         player.setAllowFlight(true);
-        if (player.isOnGround()) {
+        if (player.isOnGround() || plugin.getPlayerStateManager().isDoubleJumpDisabled(player.getUniqueId())) {
             return;
         }
 

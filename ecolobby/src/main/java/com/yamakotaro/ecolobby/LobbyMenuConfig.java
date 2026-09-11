@@ -1,6 +1,9 @@
 package com.yamakotaro.ecolobby;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
@@ -9,8 +12,9 @@ import java.util.Map;
 import java.util.logging.Level;
 
 /**
- * Reads the servers:/links: lists from config.yml into plain records - re-read fresh each time a
- * menu is opened so /ecolobby reload picks up edits without a restart.
+ * Reads the servers:/links:/vote-links:/random-teleport-points: lists from config.yml into plain
+ * records - re-read fresh each time a menu is opened so /ecolobby reload picks up edits without a
+ * restart.
  */
 public class LobbyMenuConfig {
 
@@ -47,8 +51,16 @@ public class LobbyMenuConfig {
     }
 
     public List<LinkEntry> links() {
+        return linksFrom("links");
+    }
+
+    public List<LinkEntry> voteLinks() {
+        return linksFrom("vote-links");
+    }
+
+    private List<LinkEntry> linksFrom(String path) {
         List<LinkEntry> entries = new ArrayList<>();
-        for (Map<?, ?> map : plugin.getConfig().getMapList("links")) {
+        for (Map<?, ?> map : plugin.getConfig().getMapList(path)) {
             String label = stringOf(map.get("label"));
             String url = stringOf(map.get("url"));
             if (label == null || url == null) {
@@ -57,6 +69,31 @@ public class LobbyMenuConfig {
             entries.add(new LinkEntry(label, url));
         }
         return entries;
+    }
+
+    /** Random-teleport-points: config list of {world, x, y, z}. Skips any entry whose world isn't
+     * currently loaded rather than failing the whole list. */
+    public List<Location> randomTeleportPoints() {
+        List<Location> points = new ArrayList<>();
+        for (Map<?, ?> map : plugin.getConfig().getMapList("random-teleport-points")) {
+            String worldName = stringOf(map.get("world"));
+            if (worldName == null) {
+                continue;
+            }
+            World world = Bukkit.getWorld(worldName);
+            if (world == null) {
+                continue;
+            }
+            double x = numberOf(map.get("x"));
+            double y = numberOf(map.get("y"));
+            double z = numberOf(map.get("z"));
+            points.add(new Location(world, x, y, z));
+        }
+        return points;
+    }
+
+    private double numberOf(Object value) {
+        return value instanceof Number number ? number.doubleValue() : 0.0;
     }
 
     private String stringOf(Object value) {

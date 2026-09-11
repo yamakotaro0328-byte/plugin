@@ -14,31 +14,48 @@ language: ja
 lobby-server-name: "lobby"
 
 # Set this to true ONLY on the server that IS the lobby - it enables spawn protection, double
-# jump, and the server/links menus below, and makes /hub (and joining) teleport players to the
-# lobby spawn instead of sending them elsewhere. Install this same plugin on other backend
-# servers with this left false so players there still get a working /hub command back to the
-# lobby, without any of the lobby-only features actually running there.
+# jump, jump pads, and all the lobby items/menus below, and makes /hub (and joining) teleport
+# players to the lobby spawn instead of sending them elsewhere. Install this same plugin on other
+# backend servers with this left false so players there still get a working /hub command back to
+# the lobby, without any of the lobby-only features actually running there.
 # (日本語) このサーバー自体がロビーである場合のみtrueにする - 以下のスポーン保護・
-# 二段ジャンプ・サーバー/リンクメニューが有効になり、/hub(および参加時)はロビーの
-# スポーン地点へテレポートするようになる。他のバックエンドサーバーにも同じプラグインを
-# 導入する場合はfalseのままにしておけば、ロビー専用機能は動かさずに/hubコマンドだけが
-# ロビーへ戻る機能として使える。
+# 二段ジャンプ・ジャンプ台・各種ロビーアイテム/メニューが有効になり、/hub(および参加時)
+# はロビーのスポーン地点へテレポートするようになる。他のバックエンドサーバーにも同じ
+# プラグインを導入する場合はfalseのままにしておけば、ロビー専用機能は動かさずに
+# /hubコマンドだけがロビーへ戻る機能として使える。
 is-lobby-server: true
 
 # Individually toggle each lobby-only feature (all require is-lobby-server: true above to do
 # anything). clear-inventory-on-join also resets health/hunger/potion effects and gamemode is
 # left untouched - block/item protection below is what actually keeps the lobby tidy regardless
-# of gamemode.
+# of gamemode. lobby-menu/particle-trail/random-teleport/rules-book/server-info/player-list/
+# double-jump-toggle/night-vision-toggle/leave-server/vote-menu control the items reachable from
+# the nether-star "lobby menu" item (see items: below for the menu item itself).
 # (日本語) ロビー専用の各機能を個別にON/OFFできる(いずれも上のis-lobby-server: trueが
 # 前提)。clear-inventory-on-joinは体力・満腹度・状態異常もリセットする(ゲームモードは
 # 変更しない - ロビーを荒らされないようにするのは下記のprotection設定の役目)。
+# lobby-menu以下は、ネザースターの「ロビーメニュー」アイテムから開けるサブ機能の
+# 個別ON/OFF(メニューアイテム自体の設定は下のitems:を参照)。
 features:
   protection: true
   double-jump: true
+  jump-pads: true
   server-menu: true
   links-menu: true
   void-teleport: true
   clear-inventory-on-join: true
+  lobby-menu: true
+  visibility-toggle: true
+  quick-return: true
+  particle-trail: true
+  random-teleport: true
+  rules-book: true
+  server-info: true
+  player-list: true
+  double-jump-toggle: true
+  night-vision-toggle: true
+  leave-server: true
+  vote-menu: true
 
 # (日本語) スポーン保護の詳細設定 (features.protection: true の場合のみ有効)
 protection:
@@ -59,17 +76,34 @@ double-jump:
   velocity: 0.8
   cooldown-seconds: 1.0
 
-# The compass (server-select menu) and book (links menu) given on join - which hotbar slot each
-# goes in, and which item type represents each. Set a feature above to false to skip giving that
-# item entirely.
-# (日本語) 参加時に配布するコンパス(サーバー選択メニュー)と本(リンクメニュー) -
-# それぞれどのホットバースロットに入れるか、どのアイテムにするか。上のfeatureをfalseに
-# すればそのアイテム自体を配らない。
+# Every pressure plate (any wood/stone/weighted variant) launches whoever steps on it, like a
+# jump pad. velocity/cooldown-seconds work the same way as double-jump above.
+# (日本語) 全ての感圧板(木製・石製・重量式いずれも)を踏むと、ジャンプ台のように
+# プレイヤーを打ち上げる。velocity/cooldown-secondsはdouble-jumpと同じ意味。
+jump-pad:
+  velocity: 0.9
+  cooldown-seconds: 0.3
+
+# The items given on join - which hotbar slot each goes in, and which item type represents each.
+# Set the matching feature above to false to skip giving that item entirely. admin-panel is only
+# ever given to players holding ecolobby.admin, regardless of this slot/material.
+# (日本語) 参加時に配布するアイテム - それぞれどのホットバースロットに入れるか、
+# どのアイテムにするか。上のfeatureをfalseにすればそのアイテム自体を配らない。
+# admin-panelは、このスロット/アイテム設定に関わらずecolobby.admin権限を持つ
+# プレイヤーにのみ配布される。
 items:
   server-menu-slot: 0
   server-menu-material: COMPASS
   links-menu-slot: 8
   links-menu-material: BOOK
+  lobby-menu-slot: 4
+  lobby-menu-material: NETHER_STAR
+  visibility-toggle-slot: 1
+  visibility-toggle-material: ARROW
+  quick-return-slot: 7
+  quick-return-material: TOTEM_OF_UNDYING
+  admin-panel-slot: 3
+  admin-panel-material: BLAZE_ROD
 
 # The servers listed in the server-select menu (features.server-menu). "name" must exactly match
 # that server's name on the proxy (same rule as lobby-server-name above) - display-name/lore are
@@ -98,6 +132,40 @@ links:
   - label: "&9Website"
     url: "https://example.com"
 
+# Separate link list shown by the lobby-menu's vote-menu item (features.vote-menu).
+# (日本語) ロビーメニューの投票メニュー項目(features.vote-menu)専用のリンク一覧。
+vote-links:
+  - label: "&aVote Site 1"
+    url: "https://example.com/vote1"
+  - label: "&bVote Site 2"
+    url: "https://example.com/vote2"
+
+# Particle trail options offered by the lobby-menu's particle-trail item (features.particle-trail).
+# "particle" must be a valid org.bukkit.Particle name.
+# (日本語) ロビーメニューのパーティクルトレイル項目(features.particle-trail)で
+# 選べる候補一覧。"particle"はorg.bukkit.Particleの列挙名と一致させること。
+particle-trails:
+  - particle: FLAME
+    display-name: "&6炎"
+    icon: BLAZE_POWDER
+  - particle: HEART
+    display-name: "&dハート"
+    icon: POPPY
+  - particle: CLOUD
+    display-name: "&f雲"
+    icon: WHITE_WOOL
+  - particle: PORTAL
+    display-name: "&5ポータル"
+    icon: OBSIDIAN
+
+# Points the random-teleport item (features.random-teleport) can send a player to, picked at
+# random each time. Empty by default - fill in at least one point (matching this server's world
+# name) to use this feature.
+# (日本語) ランダムワープ項目(features.random-teleport)の送り先候補。毎回この中から
+# ランダムに1つ選ばれる。初期状態では空 - このサーバーのワールド名に合わせて
+# 最低1つ登録すると使えるようになる。
+random-teleport-points: []
+
 messages:
   en:
     general:
@@ -115,6 +183,67 @@ messages:
       server-title: "&8Select a server"
       links-title: "&8Links"
       links-header: "&aClick a link below:"
+      lobby-title: "&8Lobby Menu"
+      visibility-toggle-title: "&dHide/Show Players"
+      quick-return-title: "&bBack to Spawn"
+      admin-panel-title: "&cAdmin Panel"
+      particle-title: "&8Select a Particle Trail"
+      playerlist-title: "&8Online Players"
+      leave-title: "&8Leave the server?"
+      vote-header: "&aVote for us on:"
+    lobby-menu:
+      particle-trail: "&dParticle Trail"
+      random-teleport: "&bRandom Teleport"
+      rules-book: "&eRules"
+      server-info: "&fServer Info"
+      player-list: "&aOnline Players"
+      double-jump-toggle: "&6Toggle Double Jump"
+      night-vision-toggle: "&7Toggle Night Vision"
+      leave-server: "&cLeave Server"
+      vote-menu: "&aVote Links"
+    particle:
+      off: "&cOff"
+      selected: "&aParticle trail set."
+      disabled: "&7Particle trail disabled."
+    teleport:
+      random-none: "&cNo random-teleport points are configured yet."
+      random-done: "&aWarped!"
+    toggle:
+      double-jump-on: "&aDouble jump enabled."
+      double-jump-off: "&7Double jump disabled."
+      night-vision-on: "&aNight vision enabled."
+      night-vision-off: "&7Night vision disabled."
+      visibility-hidden: "&7You are now hidden from other players."
+      visibility-visible: "&aYou are now visible to other players."
+    leave:
+      confirm: "&aYes, disconnect me"
+      cancel: "&cNo, stay"
+      kick-message: "&aDisconnected via the lobby menu. See you next time!"
+    admin:
+      panel-title: "&4EcoLobby Admin Panel"
+      toggle-on-lore: "&aEnabled - click to disable"
+      toggle-off-lore: "&cDisabled - click to enable"
+      set-spawn: "&bSet Lobby Spawn Here"
+      set-spawn-done: "&aLobby spawn set to your current location."
+      reload: "&eReload Config"
+      close: "&cClose"
+      features:
+        protection: "&fSpawn Protection"
+        double-jump: "&fDouble Jump"
+        jump-pads: "&fJump Pads"
+        void-teleport: "&fVoid Teleport"
+        clear-inventory-on-join: "&fClear Inventory On Join"
+        server-menu: "&fServer Menu Item"
+        links-menu: "&fLinks Menu Item"
+        lobby-menu: "&fLobby Menu Item"
+    info:
+      message: "&aOnline: &f{online}&7/&f{max} &7| &aUptime: &f{uptime}"
+    rules:
+      lines:
+        - "&e--- Server Rules ---"
+        - "&f1. Be respectful to others."
+        - "&f2. No cheating or exploiting."
+        - "&f3. Follow staff instructions."
   ja:
     general:
       no-permission: "&cこの操作を行う権限がありません。"
@@ -131,3 +260,64 @@ messages:
       server-title: "&8サーバーを選択"
       links-title: "&8リンク"
       links-header: "&a以下のリンクをクリックしてください:"
+      lobby-title: "&8ロビーメニュー"
+      visibility-toggle-title: "&d表示/非表示切替"
+      quick-return-title: "&bロビーへ戻る"
+      admin-panel-title: "&c管理者パネル"
+      particle-title: "&8パーティクルトレイルを選択"
+      playerlist-title: "&8オンラインプレイヤー"
+      leave-title: "&8サーバーから退出しますか?"
+      vote-header: "&a以下から投票してください:"
+    lobby-menu:
+      particle-trail: "&dパーティクルトレイル"
+      random-teleport: "&bランダムテレポート"
+      rules-book: "&eルール"
+      server-info: "&fサーバー情報"
+      player-list: "&aオンラインプレイヤー"
+      double-jump-toggle: "&6二段ジャンプ切替"
+      night-vision-toggle: "&7暗視切替"
+      leave-server: "&cサーバーを退出"
+      vote-menu: "&a投票リンク"
+    particle:
+      off: "&cオフ"
+      selected: "&aパーティクルトレイルを設定しました。"
+      disabled: "&7パーティクルトレイルを無効にしました。"
+    teleport:
+      random-none: "&cランダムテレポートの地点がまだ設定されていません。"
+      random-done: "&aワープしました!"
+    toggle:
+      double-jump-on: "&a二段ジャンプを有効にしました。"
+      double-jump-off: "&7二段ジャンプを無効にしました。"
+      night-vision-on: "&a暗視を有効にしました。"
+      night-vision-off: "&7暗視を無効にしました。"
+      visibility-hidden: "&c他のプレイヤーから見えない状態になりました。"
+      visibility-visible: "&a他のプレイヤーから見える状態に戻りました。"
+    leave:
+      confirm: "&aはい、切断する"
+      cancel: "&cいいえ、留まる"
+      kick-message: "&aロビーメニューから切断しました。またのご利用をお待ちしています!"
+    admin:
+      panel-title: "&4EcoLobby 管理者パネル"
+      toggle-on-lore: "&a有効 - クリックで無効化"
+      toggle-off-lore: "&c無効 - クリックで有効化"
+      set-spawn: "&bロビーのスポーンを現在地に設定"
+      set-spawn-done: "&aロビーのスポーン地点を現在地に設定しました。"
+      reload: "&e設定を再読み込み"
+      close: "&c閉じる"
+      features:
+        protection: "&fスポーン保護"
+        double-jump: "&f二段ジャンプ"
+        jump-pads: "&fジャンプ台"
+        void-teleport: "&f奈落テレポート"
+        clear-inventory-on-join: "&f参加時インベントリクリア"
+        server-menu: "&fサーバーメニューアイテム"
+        links-menu: "&fリンクメニューアイテム"
+        lobby-menu: "&fロビーメニューアイテム"
+    info:
+      message: "&aオンライン: &f{online}&7/&f{max} &7| &a稼働時間: &f{uptime}"
+    rules:
+      lines:
+        - "&e--- サーバールール ---"
+        - "&f1. 他のプレイヤーを尊重すること。"
+        - "&f2. チート・不正行為を禁止します。"
+        - "&f3. スタッフの指示に従うこと。"

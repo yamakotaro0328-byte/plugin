@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -59,6 +60,29 @@ public class JoinListener implements Listener {
             giveMenuItem(player, plugin.getLinksMenuItemKey(), "items.links-menu-slot", "items.links-menu-material",
                     "menu.links-title");
         }
+        if (plugin.isFeatureEnabled("lobby-menu")) {
+            giveMenuItem(player, plugin.getLobbyMenuItemKey(), "items.lobby-menu-slot", "items.lobby-menu-material",
+                    "menu.lobby-title");
+        }
+        if (plugin.isFeatureEnabled("visibility-toggle")) {
+            giveMenuItem(player, plugin.getVisibilityToggleItemKey(), "items.visibility-toggle-slot",
+                    "items.visibility-toggle-material", "menu.visibility-toggle-title");
+        }
+        if (plugin.isFeatureEnabled("quick-return")) {
+            giveMenuItem(player, plugin.getQuickReturnItemKey(), "items.quick-return-slot",
+                    "items.quick-return-material", "menu.quick-return-title");
+        }
+        if (player.hasPermission("ecolobby.admin")) {
+            giveMenuItem(player, plugin.getAdminPanelItemKey(), "items.admin-panel-slot",
+                    "items.admin-panel-material", "menu.admin-panel-title");
+        }
+
+        plugin.getPlayerStateManager().applyVisibilityTo(player);
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        plugin.getPlayerStateManager().clearOnQuit(event.getPlayer().getUniqueId());
     }
 
     private void giveMenuItem(Player player, NamespacedKey key, String slotConfigPath,
