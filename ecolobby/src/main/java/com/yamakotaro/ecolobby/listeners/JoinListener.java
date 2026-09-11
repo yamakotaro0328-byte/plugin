@@ -107,10 +107,14 @@ public class JoinListener implements Listener {
         ItemStack bow = new ItemStack(Material.BOW);
         ItemMeta meta = bow.getItemMeta();
         meta.displayName(messages.get("menu.ender-arrow-title", Map.of()));
+        meta.setUnbreakable(true);
         meta.getPersistentDataContainer().set(plugin.getEnderArrowBowKey(), PersistentDataType.BOOLEAN, true);
         bow.setItemMeta(meta);
         player.getInventory().setItem(slot, bow);
-        player.getInventory().addItem(new ItemStack(Material.ARROW, 64));
+        // Just one arrow, like an ender pearl - EnderArrowListener hands back a fresh one on
+        // every teleport so it never actually runs out, but the player is never holding a big
+        // stack of spare ammo.
+        player.getInventory().addItem(new ItemStack(Material.ARROW, 1));
     }
 
     @EventHandler

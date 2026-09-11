@@ -2,6 +2,7 @@ package com.yamakotaro.ecolobby.listeners;
 
 import com.yamakotaro.ecolobby.EcoLobbyPlugin;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.Arrow;
@@ -60,6 +61,9 @@ public class EnderArrowListener implements Listener {
         shooter.getWorld().spawnParticle(Particle.PORTAL, landing, 40, 0.3, 0.5, 0.3, 0.1);
         shooter.playSound(landing, Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
         arrow.remove();
+        // Hands back the one arrow it took to fire this shot, so the toy plays like an
+        // unlimited-use ender pearl instead of running out.
+        shooter.getInventory().addItem(new ItemStack(Material.ARROW, 1));
     }
 
     private boolean isEnderArrowBow(ItemStack item) {
