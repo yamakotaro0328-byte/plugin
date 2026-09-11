@@ -9,6 +9,8 @@ import com.yamakotaro.ecolobby.listeners.HotbarItemListener;
 import com.yamakotaro.ecolobby.listeners.JoinListener;
 import com.yamakotaro.ecolobby.listeners.JumpPadListener;
 import com.yamakotaro.ecolobby.listeners.ProtectionListener;
+import com.yamakotaro.ecolobby.listeners.RocketBoostListener;
+import com.yamakotaro.ecolobby.listeners.SnowballLauncherListener;
 import com.yamakotaro.ecolobby.listeners.VoidTeleportListener;
 import com.yamakotaro.ecolobby.tasks.ParticleTrailTask;
 import org.bukkit.NamespacedKey;
@@ -30,6 +32,7 @@ public class EcoLobbyPlugin extends JavaPlugin {
     private NamespacedKey adminPanelItemKey;
     private NamespacedKey enderArrowBowKey;
     private NamespacedKey enderArrowProjectileKey;
+    private NamespacedKey rocketBoostItemKey;
     private BukkitTask particleTrailTask;
     private long enabledAtMillis;
 
@@ -49,6 +52,7 @@ public class EcoLobbyPlugin extends JavaPlugin {
         this.adminPanelItemKey = new NamespacedKey(this, "admin-panel-item");
         this.enderArrowBowKey = new NamespacedKey(this, "ender-arrow-bow");
         this.enderArrowProjectileKey = new NamespacedKey(this, "ender-arrow-projectile");
+        this.rocketBoostItemKey = new NamespacedKey(this, "rocket-boost-item");
 
         BungeeConnector.register(this);
 
@@ -61,6 +65,8 @@ public class EcoLobbyPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new VoidTeleportListener(this), this);
             getServer().getPluginManager().registerEvents(new JumpPadListener(this), this);
             getServer().getPluginManager().registerEvents(new EnderArrowListener(this), this);
+            getServer().getPluginManager().registerEvents(new SnowballLauncherListener(this), this);
+            getServer().getPluginManager().registerEvents(new RocketBoostListener(this), this);
         }
 
         this.particleTrailTask = new ParticleTrailTask(this).runTaskTimer(this, 5L, 5L);
@@ -142,6 +148,10 @@ public class EcoLobbyPlugin extends JavaPlugin {
 
     public NamespacedKey getEnderArrowProjectileKey() {
         return enderArrowProjectileKey;
+    }
+
+    public NamespacedKey getRocketBoostItemKey() {
+        return rocketBoostItemKey;
     }
 
     public PlayerStateManager getPlayerStateManager() {

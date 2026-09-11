@@ -61,6 +61,8 @@ features:
   leave-server: true
   vote-menu: true
   ender-arrow: true
+  snowball-launcher: true
+  rocket-boost: true
   join-title: true
   join-broadcast: true
 
@@ -91,6 +93,22 @@ jump-pad:
   velocity: 0.9
   cooldown-seconds: 0.3
 
+# velocity: how high a snowball hit launches whoever it hits. count: how many snowballs to give
+# on join.
+# (日本語) velocity: 雪玉が当たった相手をどれだけ打ち上げるか。count: 参加時に配布する
+# 雪玉の個数。
+snowball-launcher:
+  velocity: 1.1
+  count: 16
+
+# velocity: forward+upward speed applied when using the rocket-boost item.
+# cooldown-seconds: minimum time between two boosts.
+# (日本語) velocity: ロケットブーストアイテム使用時に加える前方+上方向の速度。
+# cooldown-seconds: ブースト同士の最短間隔。
+rocket-boost:
+  velocity: 1.4
+  cooldown-seconds: 2.0
+
 # The items given on join - which hotbar slot each goes in, and which item type represents each.
 # Set the matching feature above to false to skip giving that item entirely. admin-panel is only
 # ever given to players holding ecolobby.admin, regardless of this slot/material.
@@ -112,6 +130,7 @@ items:
   admin-panel-slot: 3
   admin-panel-material: BLAZE_ROD
   ender-arrow-slot: 2
+  rocket-boost-slot: 6
 
 # The servers listed in the server-select menu (features.server-menu). "name" must exactly match
 # that server's name on the proxy (same rule as lobby-server-name above) - display-name/lore are
@@ -196,6 +215,7 @@ messages:
       quick-return-title: "&bBack to Spawn"
       admin-panel-title: "&cAdmin Panel"
       ender-arrow-title: "&bEnder Arrow"
+      rocket-boost-title: "&6Rocket Boost"
       particle-title: "&8Select a Particle Trail"
       playerlist-title: "&8Online Players"
       leave-title: "&8Leave the server?"
@@ -278,6 +298,7 @@ messages:
       quick-return-title: "&bロビーへ戻る"
       admin-panel-title: "&c管理者パネル"
       ender-arrow-title: "&bエンダーアロー"
+      rocket-boost-title: "&6ロケットブースト"
       particle-title: "&8パーティクルトレイルを選択"
       playerlist-title: "&8オンラインプレイヤー"
       leave-title: "&8サーバーから退出しますか?"

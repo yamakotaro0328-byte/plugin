@@ -89,6 +89,13 @@ public class JoinListener implements Listener {
         if (plugin.isFeatureEnabled("ender-arrow")) {
             giveEnderArrowBow(player);
         }
+        if (plugin.isFeatureEnabled("snowball-launcher")) {
+            int count = plugin.getConfig().getInt("snowball-launcher.count", 16);
+            player.getInventory().addItem(new ItemStack(Material.SNOWBALL, count));
+        }
+        if (plugin.isFeatureEnabled("rocket-boost")) {
+            giveRocketBoostItem(player);
+        }
 
         plugin.getPlayerStateManager().applyVisibilityTo(player);
 
@@ -115,6 +122,18 @@ public class JoinListener implements Listener {
         // every teleport so it never actually runs out, but the player is never holding a big
         // stack of spare ammo.
         player.getInventory().addItem(new ItemStack(Material.ARROW, 1));
+    }
+
+    private void giveRocketBoostItem(Player player) {
+        Messages messages = plugin.getMessages();
+        int slot = plugin.getConfig().getInt("items.rocket-boost-slot", 6);
+
+        ItemStack rocket = new ItemStack(Material.FIREWORK_ROCKET);
+        ItemMeta meta = rocket.getItemMeta();
+        meta.displayName(messages.get("menu.rocket-boost-title", Map.of()));
+        meta.getPersistentDataContainer().set(plugin.getRocketBoostItemKey(), PersistentDataType.BOOLEAN, true);
+        rocket.setItemMeta(meta);
+        player.getInventory().setItem(slot, rocket);
     }
 
     @EventHandler
