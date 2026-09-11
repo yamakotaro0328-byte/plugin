@@ -93,12 +93,18 @@ jump-pad:
   velocity: 0.9
   cooldown-seconds: 0.3
 
-# velocity: how high a snowball hit launches whoever it hits. count: how many snowballs to give
-# on join.
-# (日本語) velocity: 雪玉が当たった相手をどれだけ打ち上げるか。count: 参加時に配布する
-# 雪玉の個数。
+# A "snowball rocket jump": throwing a snowball near your own feet launches YOU upward - never
+# whoever it hits, so it can't be used to knock other players around (that would read as PvP even
+# with real damage disabled). velocity: how high it launches you. radius: how close the impact
+# point must be to your current position to count as "near your feet". count: how many snowballs
+# to give on join.
+# (日本語) 雪玉を自分の足元付近に投げると自分自身が打ち上がる仕組み(「投げつけて自分が
+# 跳ねる」タイプ) - 当たった相手ではなく常に投げた本人が対象なので、他プレイヤーを
+# 吹き飛ばすPvP的な使い方はできない。velocity: 打ち上げる高さ。radius: 着弾地点が
+# 現在地からどれだけ近ければ「足元」とみなすか。count: 参加時に配布する雪玉の個数。
 snowball-launcher:
   velocity: 1.1
+  radius: 3.0
   count: 16
 
 # velocity: forward+upward speed applied when using the rocket-boost item.
