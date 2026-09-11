@@ -48,4 +48,18 @@ public class Messages {
         }
         return value;
     }
+
+    /** Builds a chat-sync.format message, splitting on the {message} placeholder so the actual
+     * chat text is appended as plain (uncolored) text rather than run through the legacy-color
+     * deserializer, which would let a player's own message inject color codes into the format. */
+    public Component formatChatSync(String server, String player, String rawMessage) {
+        String format = raw("chat-sync.format", Map.of("server", server, "player", player));
+        int index = format.indexOf("{message}");
+        if (index < 0) {
+            return color(format);
+        }
+        Component prefix = color(format.substring(0, index));
+        Component suffix = color(format.substring(index + "{message}".length()));
+        return prefix.append(Component.text(rawMessage)).append(suffix);
+    }
 }

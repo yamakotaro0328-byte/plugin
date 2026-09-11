@@ -13,6 +13,18 @@ language: ja
 # このチャンネルに対応しているので、プロキシ側に別途プラグインを入れる必要はない)。
 lobby-server-name: "lobby"
 
+# This server's OWN name on the proxy - different from lobby-server-name above, which is always
+# the name of the HUB regardless of which server this config file is on. Used to tag chat-sync
+# messages with their origin server, and to check whether this server belongs to
+# inventory-sync-servers below. Set it to match this server's own proxy entry (e.g. "survival",
+# "creative", or "lobby" if this IS the lobby).
+# (日本語) このサーバー自身の、プロキシ上での名前 - 上のlobby-server-nameは常に
+# 「ハブの名前」を指すのに対し、こちらは「この設定ファイルが置かれているサーバー自身の
+# 名前」。chat-syncのメッセージに発信元サーバーとしてタグ付けする際と、下の
+# inventory-sync-serversに含まれるかどうかの判定に使う。このサーバーのプロキシ上での
+# 名前と一致させること(例: "survival", "creative", ロビー自身なら "lobby")。
+this-server-name: "lobby"
+
 # Set this to true ONLY on the server that IS the lobby - it enables spawn protection, double
 # jump, jump pads, and all the lobby items/menus below, and makes /hub (and joining) teleport
 # players to the lobby spawn instead of sending them elsewhere. Install this same plugin on other
@@ -34,7 +46,10 @@ is-lobby-server: true
 # the shoot-to-teleport bow, rocket-boost is the reusable velocity-boost firework, and
 # firework-wand is the pure-spectacle firework launcher (none of the three can affect another
 # player). join-title/join-broadcast control the welcome title and the chat message shown to
-# everyone when a player joins.
+# everyone when a player joins. chat-sync and inventory-sync are the two exceptions to the
+# "requires is-lobby-server: true" rule above - they work on every server running this plugin
+# regardless of lobby status, since they're both about linking servers together rather than
+# lobby-only gameplay (see chat-sync/inventory-sync-* settings further below).
 # (日本語) ロビー専用の各機能を個別にON/OFFできる(いずれも上のis-lobby-server: trueが
 # 前提)。clear-inventory-on-joinは体力・満腹度・状態異常もリセットする(ゲームモードは
 # 変更しない - ロビーを荒らされないようにするのは下記のprotection設定の役目)。
@@ -42,7 +57,10 @@ is-lobby-server: true
 # 個別ON/OFF(メニューアイテム自体の設定は下のitems:を参照)。ender-arrowは撃つと
 # 着弾地点へテレポートする弓、rocket-boostは繰り返し使える推進花火、firework-wandは
 # 見た目だけの花火(いずれも他プレイヤーに影響しない)。join-title/join-broadcastは
-# 参加時のタイトル表示と全体への参加チャットメッセージ。
+# 参加時のタイトル表示と全体への参加チャットメッセージ。chat-syncとinventory-syncだけは
+# 上記「is-lobby-server: trueが前提」の例外で、ロビーかどうかに関わらずこのプラグインが
+# 入っている全サーバーで動作する(サーバー同士を繋ぐ機能であり、ロビー専用のゲーム
+# プレイ要素ではないため。詳細は下のchat-sync/inventory-sync-*の設定を参照)。
 features:
   protection: true
   double-jump: true
@@ -68,6 +86,8 @@ features:
   firework-wand: true
   join-title: true
   join-broadcast: true
+  chat-sync: true
+  inventory-sync: true
 
 # (日本語) スポーン保護の詳細設定 (features.protection: true の場合のみ有効)
 protection:
@@ -198,6 +218,38 @@ particle-trails:
 # 最低1つ登録すると使えるようになる。
 random-teleport-points: []
 
+# Bridges chat across every server running this plugin, via the proxy's "BungeeCord" plugin
+# messaging channel (same mechanism /hub uses) - no database, and no separate proxy-side plugin
+# needed. Requires no other setting below; just install this plugin (with chat-sync: true) on
+# every server whose chat should be linked, giving each one its own this-server-name above.
+# (日本語) このプラグインが入っている全サーバーのチャットを、プロキシの"BungeeCord"
+# プラグインメッセージチャンネル経由で繋ぐ(/hubと同じ仕組み) - データベース不要、
+# プロキシ側の追加プラグインも不要。下記の設定は不要 - チャットを繋ぎたい全サーバーに
+# このプラグインを導入し(chat-sync: trueのまま)、それぞれ上のthis-server-nameを
+# 設定するだけでよい。
+
+# Which specific servers share ONE inventory (main inventory + armor + off-hand + ender chest) -
+# list this-server-name (see above) for every server that should be in the shared pool. Empty by
+# default, so inventory-sync does nothing until configured on at least two servers.
+# IMPORTANT: this works WITHOUT a database by writing one YAML file per player under
+# inventory-sync-directory - but that only actually syncs anything if that directory is a truly
+# SHARED location between the servers involved (e.g. they all run on the same machine and you
+# point this at a common path, or a network-mounted/synced folder). If each server only sees its
+# own local disk, this feature silently does nothing useful - there is no cross-server storage
+# without either a shared filesystem or a database, and this deliberately avoids the latter.
+# (日本語) どのサーバー同士でインベントリ(所持品・防具・オフハンド・エンダーチェスト)を
+# 共有するか - 共有したい全サーバーの、上のthis-server-nameの値をここに列挙する。
+# 初期値は空で、2台以上のサーバーに設定するまでは何もしない。
+# 重要: データベースを使わずに実現するため、プレイヤー1人につき1つのYAMLファイルを
+# inventory-sync-directory以下に書き出す方式を取っている - これが実際に機能するのは、
+# 関係するサーバー同士でそのディレクトリが本当に「共有」されている場合のみ(例:
+# 同一マシン上で動かして共通のパスを指定する、またはネットワーク共有/同期されたフォルダを
+# 使う)。各サーバーがそれぞれ自分のローカルディスクしか見ていない場合、この機能は
+# 何も起きないまま静かに無効なままになる - 共有ファイルシステムかデータベースのどちらかが
+# 無ければサーバー間でデータを引き継ぐ方法は無く、本設定は後者を意図的に避けている。
+inventory-sync-servers: []
+inventory-sync-directory: "inventory-sync"
+
 messages:
   en:
     general:
@@ -273,6 +325,8 @@ messages:
         lobby-menu: "&fLobby Menu Item"
     info:
       message: "&aOnline: &f{online}&7/&f{max} &7| &aUptime: &f{uptime}"
+    chat-sync:
+      format: "&7[{server}] &f{player}&7: &f{message}"
     join:
       title: "&6Welcome, {player}!"
       subtitle: "&7Online: &f{online}"
@@ -357,6 +411,8 @@ messages:
         lobby-menu: "&fロビーメニューアイテム"
     info:
       message: "&aオンライン: &f{online}&7/&f{max} &7| &a稼働時間: &f{uptime}"
+    chat-sync:
+      format: "&7[{server}] &f{player}&7: &f{message}"
     join:
       title: "&6ようこそ、{player}!"
       subtitle: "&7オンライン: &f{online}人"

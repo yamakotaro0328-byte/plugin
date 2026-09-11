@@ -47,6 +47,15 @@ Velocity・BungeeCord のような複数サーバー構成(プロキシ+バッ�
 - 1つの jar をロビーサーバーにも他のバックエンドサーバーにも導入できる。
   `is-lobby-server: false` にしたサーバーでは上記のロビー専用機能はすべて無効化され、
   `/hub` でロビーへ戻れる機能だけが動く。
+- **チャット同期**: このプラグインを導入した全サーバーのチャットを繋ぐ。`/hub` と同じ
+  `"BungeeCord"` プラグインメッセージチャンネル(の `Forward` サブチャンネル)を使うので、
+  データベースもプロキシ側の追加プラグインも不要。ロビー専用機能ではなく、
+  `is-lobby-server` の値に関わらず動作する。
+- **インベントリ同期**: 指定した特定のサーバー同士で、所持品・防具・オフハンド・
+  エンダーチェストを共有する。データベースを使わず、プレイヤーごとのYAMLファイルを
+  共有ディレクトリに書き出す方式(そのため、対象サーバー同士が本当に同じディスク/
+  共有フォルダを見ている場合のみ機能する - 詳細はconfig.ymlのコメント参照)。
+  これもロビー専用機能ではない。
 
 ## 導入方法
 
@@ -73,8 +82,11 @@ Velocity・BungeeCord のような複数サーバー構成(プロキシ+バッ�
 
 - `language`: メッセージの言語 (`en` / `ja`)
 - `lobby-server-name`: プロキシ側で設定したロビーサーバーの名前と完全一致させる
+- `this-server-name`: **この設定ファイルが置かれているサーバー自身**の名前(チャット同期の
+  タグ付け・インベントリ同期のグループ判定に使う。`lobby-server-name` とは別物)
 - `is-lobby-server`: このサーバー自体がロビーかどうか (上記参照)
-- `features.*`: 保護/二段ジャンプ/ジャンプ台/各アイテムを個別にON/OFF (合計19項目)
+- `features.*`: 保護/二段ジャンプ/ジャンプ台/各アイテムを個別にON/OFF (chat-sync・
+  inventory-syncの2つだけは `is-lobby-server` に関係なく常に動作する)
 - `protection.*`: スポーン保護の詳細な内訳
 - `double-jump.velocity` / `double-jump.cooldown-seconds`: 二段ジャンプの強さと連発防止間隔
 - `jump-pad.velocity` / `jump-pad.cooldown-seconds`: ジャンプ台の強さと連発防止間隔
@@ -82,6 +94,8 @@ Velocity・BungeeCord のような複数サーバー構成(プロキシ+バッ�
 - `servers:` / `links:` / `vote-links:`: メニューに表示するサーバー一覧・リンク一覧・投票サイト一覧
 - `particle-trails:`: パーティクルトレイルの選択肢一覧
 - `random-teleport-points:`: ランダムテレポート先の候補一覧 (初期値は空、ワールド名を含めて登録する)
+- `inventory-sync-servers:`: インベントリを共有する `this-server-name` の一覧 (初期値は空)
+- `inventory-sync-directory`: 同期用YAMLファイルの保存先 (共有フォルダを指定する必要あり)
 - `messages.en` / `messages.ja`: 全メッセージ文言 (`rules.lines` はルール表示用の複数行テキスト)
 
 ## 権限

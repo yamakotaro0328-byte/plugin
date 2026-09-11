@@ -3,10 +3,12 @@ package com.yamakotaro.ecolobby;
 import com.yamakotaro.ecolobby.commands.EcoLobbyCommand;
 import com.yamakotaro.ecolobby.commands.HubCommand;
 import com.yamakotaro.ecolobby.gui.GuiListener;
+import com.yamakotaro.ecolobby.listeners.ChatSyncListener;
 import com.yamakotaro.ecolobby.listeners.DoubleJumpListener;
 import com.yamakotaro.ecolobby.listeners.EnderArrowListener;
 import com.yamakotaro.ecolobby.listeners.FireworkWandListener;
 import com.yamakotaro.ecolobby.listeners.HotbarItemListener;
+import com.yamakotaro.ecolobby.listeners.InventorySyncListener;
 import com.yamakotaro.ecolobby.listeners.JoinListener;
 import com.yamakotaro.ecolobby.listeners.JumpPadListener;
 import com.yamakotaro.ecolobby.listeners.ProtectionListener;
@@ -61,6 +63,12 @@ public class EcoLobbyPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new JoinListener(this), this);
         getServer().getPluginManager().registerEvents(new HotbarItemListener(this), this);
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
+        getServer().getPluginManager().registerEvents(new InventorySyncListener(this), this);
+
+        ChatSyncListener chatSyncListener = new ChatSyncListener(this);
+        getServer().getPluginManager().registerEvents(chatSyncListener, this);
+        getServer().getMessenger().registerIncomingPluginChannel(this, ChatSyncListener.channel(), chatSyncListener);
+
         if (isLobbyServer()) {
             getServer().getPluginManager().registerEvents(new ProtectionListener(this), this);
             getServer().getPluginManager().registerEvents(new DoubleJumpListener(this), this);
