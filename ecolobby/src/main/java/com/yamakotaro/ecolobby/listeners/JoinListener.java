@@ -89,12 +89,11 @@ public class JoinListener implements Listener {
         if (plugin.isFeatureEnabled("ender-arrow")) {
             giveEnderArrowBow(player);
         }
-        if (plugin.isFeatureEnabled("snowball-launcher")) {
-            int count = plugin.getConfig().getInt("snowball-launcher.count", 16);
-            player.getInventory().addItem(new ItemStack(Material.SNOWBALL, count));
-        }
         if (plugin.isFeatureEnabled("rocket-boost")) {
             giveRocketBoostItem(player);
+        }
+        if (plugin.isFeatureEnabled("firework-wand")) {
+            giveFireworkWand(player);
         }
 
         plugin.getPlayerStateManager().applyVisibilityTo(player);
@@ -134,6 +133,18 @@ public class JoinListener implements Listener {
         meta.getPersistentDataContainer().set(plugin.getRocketBoostItemKey(), PersistentDataType.BOOLEAN, true);
         rocket.setItemMeta(meta);
         player.getInventory().setItem(slot, rocket);
+    }
+
+    private void giveFireworkWand(Player player) {
+        Messages messages = plugin.getMessages();
+        int slot = plugin.getConfig().getInt("items.firework-wand-slot", 5);
+
+        ItemStack wand = new ItemStack(Material.FIRE_CHARGE);
+        ItemMeta meta = wand.getItemMeta();
+        meta.displayName(messages.get("menu.firework-wand-title", Map.of()));
+        meta.getPersistentDataContainer().set(plugin.getFireworkWandItemKey(), PersistentDataType.BOOLEAN, true);
+        wand.setItemMeta(meta);
+        player.getInventory().setItem(slot, wand);
     }
 
     @EventHandler

@@ -31,15 +31,18 @@ is-lobby-server: true
 # of gamemode. lobby-menu/particle-trail/random-teleport/rules-book/server-info/player-list/
 # double-jump-toggle/night-vision-toggle/leave-server/vote-menu control the items reachable from
 # the nether-star "lobby menu" item (see items: below for the menu item itself). ender-arrow is
-# the shoot-to-teleport bow. join-title/join-broadcast control the welcome title and the chat
-# message shown to everyone when a player joins.
+# the shoot-to-teleport bow, rocket-boost is the reusable velocity-boost firework, and
+# firework-wand is the pure-spectacle firework launcher (none of the three can affect another
+# player). join-title/join-broadcast control the welcome title and the chat message shown to
+# everyone when a player joins.
 # (日本語) ロビー専用の各機能を個別にON/OFFできる(いずれも上のis-lobby-server: trueが
 # 前提)。clear-inventory-on-joinは体力・満腹度・状態異常もリセットする(ゲームモードは
 # 変更しない - ロビーを荒らされないようにするのは下記のprotection設定の役目)。
 # lobby-menu以下は、ネザースターの「ロビーメニュー」アイテムから開けるサブ機能の
 # 個別ON/OFF(メニューアイテム自体の設定は下のitems:を参照)。ender-arrowは撃つと
-# 着弾地点へテレポートする弓。join-title/join-broadcastは参加時のタイトル表示と
-# 全体への参加チャットメッセージ。
+# 着弾地点へテレポートする弓、rocket-boostは繰り返し使える推進花火、firework-wandは
+# 見た目だけの花火(いずれも他プレイヤーに影響しない)。join-title/join-broadcastは
+# 参加時のタイトル表示と全体への参加チャットメッセージ。
 features:
   protection: true
   double-jump: true
@@ -61,8 +64,8 @@ features:
   leave-server: true
   vote-menu: true
   ender-arrow: true
-  snowball-launcher: true
   rocket-boost: true
+  firework-wand: true
   join-title: true
   join-broadcast: true
 
@@ -93,20 +96,6 @@ jump-pad:
   velocity: 0.9
   cooldown-seconds: 0.3
 
-# A "snowball rocket jump": throwing a snowball near your own feet launches YOU upward - never
-# whoever it hits, so it can't be used to knock other players around (that would read as PvP even
-# with real damage disabled). velocity: how high it launches you. radius: how close the impact
-# point must be to your current position to count as "near your feet". count: how many snowballs
-# to give on join.
-# (日本語) 雪玉を自分の足元付近に投げると自分自身が打ち上がる仕組み(「投げつけて自分が
-# 跳ねる」タイプ) - 当たった相手ではなく常に投げた本人が対象なので、他プレイヤーを
-# 吹き飛ばすPvP的な使い方はできない。velocity: 打ち上げる高さ。radius: 着弾地点が
-# 現在地からどれだけ近ければ「足元」とみなすか。count: 参加時に配布する雪玉の個数。
-snowball-launcher:
-  velocity: 1.1
-  radius: 3.0
-  count: 16
-
 # velocity: forward+upward speed applied when using the rocket-boost item.
 # cooldown-seconds: minimum time between two boosts.
 # (日本語) velocity: ロケットブーストアイテム使用時に加える前方+上方向の速度。
@@ -114,6 +103,15 @@ snowball-launcher:
 rocket-boost:
   velocity: 1.4
   cooldown-seconds: 2.0
+
+# A pure spectacle toy with no PvP angle at all - right-clicking launches a firework a couple of
+# blocks in front of you with a random color/shape. Nothing about it can affect another player.
+# cooldown-seconds: minimum time between two uses.
+# (日本語) PvP的な要素が一切ない、純粋な見た目だけのおもちゃ - 右クリックすると
+# 自分の少し前方でランダムな色/形の花火が打ち上がる。他プレイヤーに影響することは一切ない。
+# cooldown-seconds: 使用同士の最短間隔。
+firework-wand:
+  cooldown-seconds: 1.0
 
 # The items given on join - which hotbar slot each goes in, and which item type represents each.
 # Set the matching feature above to false to skip giving that item entirely. admin-panel is only
@@ -137,6 +135,7 @@ items:
   admin-panel-material: BLAZE_ROD
   ender-arrow-slot: 2
   rocket-boost-slot: 6
+  firework-wand-slot: 5
 
 # The servers listed in the server-select menu (features.server-menu). "name" must exactly match
 # that server's name on the proxy (same rule as lobby-server-name above) - display-name/lore are
@@ -222,6 +221,7 @@ messages:
       admin-panel-title: "&cAdmin Panel"
       ender-arrow-title: "&bEnder Arrow"
       rocket-boost-title: "&6Rocket Boost"
+      firework-wand-title: "&dFirework Wand"
       particle-title: "&8Select a Particle Trail"
       playerlist-title: "&8Online Players"
       leave-title: "&8Leave the server?"
@@ -305,6 +305,7 @@ messages:
       admin-panel-title: "&c管理者パネル"
       ender-arrow-title: "&bエンダーアロー"
       rocket-boost-title: "&6ロケットブースト"
+      firework-wand-title: "&d花火の杖"
       particle-title: "&8パーティクルトレイルを選択"
       playerlist-title: "&8オンラインプレイヤー"
       leave-title: "&8サーバーから退出しますか?"
