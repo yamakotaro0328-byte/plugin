@@ -2,6 +2,8 @@ package com.yamakotaro.ecolobby.listeners;
 
 import com.yamakotaro.ecolobby.EcoLobbyPlugin;
 import com.yamakotaro.ecolobby.Messages;
+import net.kyori.adventure.title.Title;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -14,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.time.Duration;
 import java.util.Map;
 
 /** On join (lobby server only, see EcoLobbyPlugin#onEnable): teleports to the lobby spawn, resets
@@ -32,6 +35,13 @@ public class JoinListener implements Listener {
             return;
         }
         Player player = event.getPlayer();
+        Messages messages = plugin.getMessages();
+
+        if (plugin.isFeatureEnabled("join-broadcast")) {
+            event.joinMessage(messages.get("join.broadcast", Map.of("player", player.getName())));
+        } else {
+            event.joinMessage(null);
+        }
 
         plugin.getSpawnManager().getSpawn().ifPresent(player::teleport);
 
@@ -76,8 +86,31 @@ public class JoinListener implements Listener {
             giveMenuItem(player, plugin.getAdminPanelItemKey(), "items.admin-panel-slot",
                     "items.admin-panel-material", "menu.admin-panel-title");
         }
+        if (plugin.isFeatureEnabled("ender-arrow")) {
+            giveEnderArrowBow(player);
+        }
 
         plugin.getPlayerStateManager().applyVisibilityTo(player);
+
+        if (plugin.isFeatureEnabled("join-title")) {
+            player.showTitle(Title.title(
+                    messages.get("join.title", Map.of("player", player.getName())),
+                    messages.get("join.subtitle", Map.of("online", String.valueOf(Bukkit.getOnlinePlayers().size()))),
+                    Title.Times.times(Duration.ofMillis(500), Duration.ofSeconds(3), Duration.ofSeconds(1))));
+        }
+    }
+
+    private void giveEnderArrowBow(Player player) {
+        Messages messages = plugin.getMessages();
+        int slot = plugin.getConfig().getInt("items.ender-arrow-slot", 2);
+
+        ItemStack bow = new ItemStack(Material.BOW);
+        ItemMeta meta = bow.getItemMeta();
+        meta.displayName(messages.get("menu.ender-arrow-title", Map.of()));
+        meta.getPersistentDataContainer().set(plugin.getEnderArrowBowKey(), PersistentDataType.BOOLEAN, true);
+        bow.setItemMeta(meta);
+        player.getInventory().setItem(slot, bow);
+        player.getInventory().addItem(new ItemStack(Material.ARROW, 64));
     }
 
     @EventHandler

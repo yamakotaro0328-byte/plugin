@@ -4,6 +4,7 @@ import com.yamakotaro.ecolobby.commands.EcoLobbyCommand;
 import com.yamakotaro.ecolobby.commands.HubCommand;
 import com.yamakotaro.ecolobby.gui.GuiListener;
 import com.yamakotaro.ecolobby.listeners.DoubleJumpListener;
+import com.yamakotaro.ecolobby.listeners.EnderArrowListener;
 import com.yamakotaro.ecolobby.listeners.HotbarItemListener;
 import com.yamakotaro.ecolobby.listeners.JoinListener;
 import com.yamakotaro.ecolobby.listeners.JumpPadListener;
@@ -27,6 +28,8 @@ public class EcoLobbyPlugin extends JavaPlugin {
     private NamespacedKey visibilityToggleItemKey;
     private NamespacedKey quickReturnItemKey;
     private NamespacedKey adminPanelItemKey;
+    private NamespacedKey enderArrowBowKey;
+    private NamespacedKey enderArrowProjectileKey;
     private BukkitTask particleTrailTask;
     private long enabledAtMillis;
 
@@ -44,6 +47,8 @@ public class EcoLobbyPlugin extends JavaPlugin {
         this.visibilityToggleItemKey = new NamespacedKey(this, "visibility-toggle-item");
         this.quickReturnItemKey = new NamespacedKey(this, "quick-return-item");
         this.adminPanelItemKey = new NamespacedKey(this, "admin-panel-item");
+        this.enderArrowBowKey = new NamespacedKey(this, "ender-arrow-bow");
+        this.enderArrowProjectileKey = new NamespacedKey(this, "ender-arrow-projectile");
 
         BungeeConnector.register(this);
 
@@ -55,6 +60,7 @@ public class EcoLobbyPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new DoubleJumpListener(this), this);
             getServer().getPluginManager().registerEvents(new VoidTeleportListener(this), this);
             getServer().getPluginManager().registerEvents(new JumpPadListener(this), this);
+            getServer().getPluginManager().registerEvents(new EnderArrowListener(this), this);
         }
 
         this.particleTrailTask = new ParticleTrailTask(this).runTaskTimer(this, 5L, 5L);
@@ -128,6 +134,14 @@ public class EcoLobbyPlugin extends JavaPlugin {
 
     public NamespacedKey getAdminPanelItemKey() {
         return adminPanelItemKey;
+    }
+
+    public NamespacedKey getEnderArrowBowKey() {
+        return enderArrowBowKey;
+    }
+
+    public NamespacedKey getEnderArrowProjectileKey() {
+        return enderArrowProjectileKey;
     }
 
     public PlayerStateManager getPlayerStateManager() {

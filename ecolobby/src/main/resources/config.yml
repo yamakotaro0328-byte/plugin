@@ -30,12 +30,16 @@ is-lobby-server: true
 # left untouched - block/item protection below is what actually keeps the lobby tidy regardless
 # of gamemode. lobby-menu/particle-trail/random-teleport/rules-book/server-info/player-list/
 # double-jump-toggle/night-vision-toggle/leave-server/vote-menu control the items reachable from
-# the nether-star "lobby menu" item (see items: below for the menu item itself).
+# the nether-star "lobby menu" item (see items: below for the menu item itself). ender-arrow is
+# the shoot-to-teleport bow. join-title/join-broadcast control the welcome title and the chat
+# message shown to everyone when a player joins.
 # (日本語) ロビー専用の各機能を個別にON/OFFできる(いずれも上のis-lobby-server: trueが
 # 前提)。clear-inventory-on-joinは体力・満腹度・状態異常もリセットする(ゲームモードは
 # 変更しない - ロビーを荒らされないようにするのは下記のprotection設定の役目)。
 # lobby-menu以下は、ネザースターの「ロビーメニュー」アイテムから開けるサブ機能の
-# 個別ON/OFF(メニューアイテム自体の設定は下のitems:を参照)。
+# 個別ON/OFF(メニューアイテム自体の設定は下のitems:を参照)。ender-arrowは撃つと
+# 着弾地点へテレポートする弓。join-title/join-broadcastは参加時のタイトル表示と
+# 全体への参加チャットメッセージ。
 features:
   protection: true
   double-jump: true
@@ -56,6 +60,9 @@ features:
   night-vision-toggle: true
   leave-server: true
   vote-menu: true
+  ender-arrow: true
+  join-title: true
+  join-broadcast: true
 
 # (日本語) スポーン保護の詳細設定 (features.protection: true の場合のみ有効)
 protection:
@@ -104,6 +111,7 @@ items:
   quick-return-material: TOTEM_OF_UNDYING
   admin-panel-slot: 3
   admin-panel-material: BLAZE_ROD
+  ender-arrow-slot: 2
 
 # The servers listed in the server-select menu (features.server-menu). "name" must exactly match
 # that server's name on the proxy (same rule as lobby-server-name above) - display-name/lore are
@@ -187,6 +195,7 @@ messages:
       visibility-toggle-title: "&dHide/Show Players"
       quick-return-title: "&bBack to Spawn"
       admin-panel-title: "&cAdmin Panel"
+      ender-arrow-title: "&bEnder Arrow"
       particle-title: "&8Select a Particle Trail"
       playerlist-title: "&8Online Players"
       leave-title: "&8Leave the server?"
@@ -238,6 +247,10 @@ messages:
         lobby-menu: "&fLobby Menu Item"
     info:
       message: "&aOnline: &f{online}&7/&f{max} &7| &aUptime: &f{uptime}"
+    join:
+      title: "&6Welcome, {player}!"
+      subtitle: "&7Online: &f{online}"
+      broadcast: "&a{player} &7joined the lobby."
     rules:
       lines:
         - "&e--- Server Rules ---"
@@ -264,6 +277,7 @@ messages:
       visibility-toggle-title: "&d表示/非表示切替"
       quick-return-title: "&bロビーへ戻る"
       admin-panel-title: "&c管理者パネル"
+      ender-arrow-title: "&bエンダーアロー"
       particle-title: "&8パーティクルトレイルを選択"
       playerlist-title: "&8オンラインプレイヤー"
       leave-title: "&8サーバーから退出しますか?"
@@ -315,6 +329,10 @@ messages:
         lobby-menu: "&fロビーメニューアイテム"
     info:
       message: "&aオンライン: &f{online}&7/&f{max} &7| &a稼働時間: &f{uptime}"
+    join:
+      title: "&6ようこそ、{player}!"
+      subtitle: "&7オンライン: &f{online}人"
+      broadcast: "&a{player} &7がロビーに参加しました。"
     rules:
       lines:
         - "&e--- サーバールール ---"
