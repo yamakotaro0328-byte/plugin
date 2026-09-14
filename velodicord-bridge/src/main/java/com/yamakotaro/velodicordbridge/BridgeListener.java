@@ -1,7 +1,6 @@
 package com.yamakotaro.velodicordbridge;
 
 import io.papermc.paper.advancement.AdvancementDisplay;
-import io.papermc.paper.advancement.AdvancementDisplayType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.advancement.Advancement;
@@ -41,14 +40,14 @@ public class BridgeListener implements Listener {
     public void onPlayerAdvancement(PlayerAdvancementDoneEvent event) {
         Advancement advancement = event.getAdvancement();
         AdvancementDisplay display = advancement.getDisplay();
-        if (display == null || !display.shouldAnnounceChat()) return;
+        if (display == null || !display.doesAnnounceToChat()) return;
 
         String playerName = event.getPlayer().getName();
         String title = plain(display.title());
         String description = plain(display.description());
-        AdvancementDisplayType type = display.getType();
-        boolean isChallenge = type == AdvancementDisplayType.CHALLENGE;
-        String frameName = type == AdvancementDisplayType.TASK ? "進捗" : type == AdvancementDisplayType.GOAL ? "目標" : "挑戦";
+        AdvancementDisplay.Frame frame = display.frame();
+        boolean isChallenge = frame == AdvancementDisplay.Frame.CHALLENGE;
+        String frameName = frame == AdvancementDisplay.Frame.TASK ? "進捗" : frame == AdvancementDisplay.Frame.GOAL ? "目標" : "挑戦";
         String completionWord = isChallenge ? "完了" : "達成";
         String color = isChallenge ? "dark_purple" : "green";
 
