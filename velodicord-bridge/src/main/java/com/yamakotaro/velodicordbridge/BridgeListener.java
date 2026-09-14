@@ -1,10 +1,10 @@
 package com.yamakotaro.velodicordbridge;
 
+import io.papermc.paper.advancement.AdvancementDisplay;
+import io.papermc.paper.advancement.AdvancementDisplayType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.advancement.Advancement;
-import org.bukkit.advancement.AdvancementDisplay;
-import org.bukkit.advancement.AdvancementDisplayType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
