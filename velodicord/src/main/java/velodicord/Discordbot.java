@@ -1,0 +1,236 @@
+package velodicord;
+
+import lombok.Getter;
+import lombok.Setter;
+import moe.kyokobot.libdave.NativeDaveFactory;
+import moe.kyokobot.libdave.jda.LDJDADaveSessionFactory;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.audio.AudioModuleConfig;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.Webhook;
+import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import net.dv8tion.jda.api.utils.messages.MessageCreateData;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import velodicord.events.discord.CommandAutoCompleteInteraction;
+import velodicord.events.discord.GuildVoiceUpdate;
+import velodicord.events.discord.MessageReceived;
+import velodicord.events.discord.ModalInteraction;
+import velodicord.events.discord.SlashCommandInteraction;
+import velodicord.lavaplayer.PlayerManager;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+
+public class Discordbot {
+
+    @Getter
+    private static JDA jda;
+
+    @Getter
+    @Setter
+    private static Optional<ForumChannel> LogForumChannel;
+
+    @Getter
+    @Setter
+    private static ThreadChannel LogChannel;
+
+    @Getter
+    @Setter
+    private static TextChannel MainChannel;
+
+    @Getter
+    @Setter
+    private static TextChannel NoticeChannel;
+
+    @Getter
+    @Setter
+    private static TextChannel PosChannel;
+
+    @Getter
+    @Setter
+    private static String CommandChannel;
+
+    @Getter
+    @Setter
+    private static String voicechannel;
+
+    @Getter
+    @Setter
+    private static Role CommandRole;
+
+    /** アカウント連携(/link)完了時に付与するロール。config.jsonのLinkedRoleIDが未設定/無効ならnull。 */
+    @Getter
+    @Setter
+    private static Role LinkedRole;
+
+    @Getter
+    private static int DefaultSpeakerID;
+
+    @Getter
+    @Setter
+    private static Webhook webhook;
+
+    @Getter
+    @Setter
+    private static List<String> mentionable = new ArrayList<>();
+
+    @Getter
+    @Setter
+    private static Thread log;
+
+    private static final Path wavPath = Path.of(String.valueOf(Config.getDataDirectory().resolve("result.wav")));
+
+    static void init() {
+
+        jda = JDABuilder.createDefault(Config.getConfig().get("BotToken"))
+                .setAudioModuleConfig(new AudioModuleConfig().withDaveSessionFactory(new LDJDADaveSessionFactory(new NativeDaveFactory())))
+                .setChunkingFilter(ChunkingFilter.ALL)
+                .setMemberCachePolicy(MemberCachePolicy.ALL)
+                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
+                .addEventListeners(new GuildVoiceUpdate(), new MessageReceived(), new SlashCommandInteraction(), new CommandAutoCompleteInteraction(), new ModalInteraction())
+                .build();
+
+        try {
+            jda.awaitReady();
+        } catch (InterruptedException e) {
+            Velodicord.getVelodicord().getLogger().error("JDAの初期化に失敗: {}", ExceptionUtils.getStackTrace(e));
+        }
+
+        jda.updateCommands().addCommands(
+                Commands.slash("join", "ボイスチャンネルへの参加"),
+                Commands.slash("leave", "ボイスチャンネルからの退出"),
+                Commands.slash("dic", "辞書関係")
+                        .addSubcommands(
+                                new SubcommandData("show", "辞書に登録されている単語"),
+                                new SubcommandData("add", "辞書に新たな単語を登録・登録されている単語の読み方を変更(正規表現可)")
+                                        .addOption(OptionType.STRING, "word", "登録したい単語", true)
+                                        .addOption(OptionType.STRING, "read", "登録したい単語の読み方", true),
+                                new SubcommandData("del", "辞書に登録されている単語の削除")
+                                        .addOption(OptionType.STRING, "word", "削除したい単語", true, true)
+                        ),
+                Commands.slash("ch", "チャンネル関連")
+                        .addSubcommands(
+                                new SubcommandData("show", "設定されているチャンネル"),
+                                new SubcommandData("set", "チャンネルを設定")
+                                        .addOption(OptionType.STRING, "name", "設定したいチャンネル名", true, true)
+                                        .addOption(OptionType.CHANNEL, "channel", "設定したいチャンネル", true),
+                                new SubcommandData("del_log", "ログチャンネルを削除")
+                        ),
+                Commands.slash("commandrole", "コマンドロール関連")
+                        .addSubcommands(
+                                new SubcommandData("show", "設定されているロール"),
+                                new SubcommandData("set", "ロールを設定")
+                                        .addOption(OptionType.ROLE, "role", "設定したいロール", true)
+                        ),
+                Commands.slash("detectbot", "発言を無視しないbot関連")
+                        .addSubcommands(
+                                new SubcommandData("show", "登録されている発言を無視しないbot"),
+                                new SubcommandData("add", "新たに発言を無視しないbotを登録")
+                                        .addOption(OptionType.USER, "bot", "登録したいbot", true),
+                                new SubcommandData("del", "登録されている発言を無視しないbotの削除")
+                                        .addOption(OptionType.USER, "bot", "削除したいbot", true)
+                        ),
+                Commands.slash("speaker", "話者関連")
+                        .addSubcommandGroups(new SubcommandGroupData("show", "話者")
+                                .addSubcommands(
+                                        new SubcommandData("all", "話者の種類とID"),
+                                        new SubcommandData("your", "設定されている話者"),
+                                        new SubcommandData("default", "デフォルトの話者")
+                                )
+                        )
+                        .addSubcommands(new SubcommandData("set", "話者を設定")
+                                .addOption(OptionType.STRING, "which", "どの話者", true, true)
+                                .addOption(OptionType.INTEGER, "id", "話者のid", true, true)
+                        ),
+                Commands.slash("ignorecommand", "通知しないコマンド関連")
+                        .addSubcommands(
+                                new SubcommandData("show", "登録されている通知しないコマンド"),
+                                new SubcommandData("add", "新たに通知しないコマンドを登録")
+                                        .addOption(OptionType.STRING, "command", "登録したいコマンド", true),
+                                new SubcommandData("del", "登録されている通知しないコマンドの削除")
+                                        .addOption(OptionType.STRING, "command", "削除したいコマンド", true, true)
+                        ),
+                Commands.slash("mentionable", "メンション可能ロール関係")
+                        .addSubcommands(
+                                new SubcommandData("show", "登録されているメンション可能ロール"),
+                                new SubcommandData("set", "メンション可能ロールの設定")
+                                        .addOption(OptionType.STRING, "role1", "設定したいロール", false, true)
+                                        .addOption(OptionType.STRING, "role2", "設定したいロール", false, true)
+                                        .addOption(OptionType.STRING, "role3", "設定したいロール", false, true)
+                        ),
+                Commands.slash("server", "マイクラサーバー関連")
+                        .addSubcommands(
+                                new SubcommandData("info", "各サーバーの情報"),
+                                new SubcommandData("command", "マイクラコマンド実行")
+                                        .addOption(OptionType.STRING, "name", "実行するコマンドのサーバー名", true, true)
+                                        .addOption(OptionType.STRING, "command", "実行するコマンド", true, true)
+                        ),
+                Commands.slash("link", "Discordアカウントとマインクラフトアカウントを連携"),
+                Commands.slash("unlink", "連携を解除"),
+                Commands.slash("admincommand", "管理者コマンド関連")
+                        .addSubcommands(
+                                new SubcommandData("show", "登録されている管理者コマンド"),
+                                new SubcommandData("add", "新たに管理者コマンドを登録")
+                                        .addOption(OptionType.STRING, "which", "どのコマンド", true, true)
+                                        .addOption(OptionType.STRING, "command", "登録したいコマンド", true),
+                                new SubcommandData("del", "登録されている管理者コマンドの削除")
+                                        .addOption(OptionType.STRING, "which", "どのコマンド", true, true)
+                                        .addOption(OptionType.STRING, "command", "削除したいコマンド", true, true)
+                        )
+        ).queue();
+
+        LogForumChannel = Optional.ofNullable(jda.getForumChannelById(Config.getConfig().get("LogChannelID")));
+
+        LogForumChannel.ifPresent(forum -> {
+            forum.getThreadChannels().stream().filter(thread -> "velocity".equals(thread.getName())).findFirst().ifPresentOrElse(
+                    log -> LogChannel = log,
+
+                    () -> LogChannel = LogForumChannel.get().createForumPost("velocity", MessageCreateData.fromContent("velocity server's log"))
+                            .complete().getThreadChannel()
+            );
+            (log = new Thread(new Log(true))).start();
+        });
+
+        MainChannel = Optional.ofNullable(jda.getTextChannelById(Config.getConfig().get("MainChannelID"))).orElseThrow();
+        NoticeChannel = Optional.ofNullable(jda.getTextChannelById(Config.getConfig().get("NoticeChannelID"))).orElse(MainChannel);
+        PosChannel = Optional.ofNullable(jda.getTextChannelById(Config.getConfig().get("PosChannelID"))).orElse(MainChannel);
+        CommandChannel = Optional.ofNullable(jda.getTextChannelById(Config.getConfig().get("CommandChannelID"))).orElse(MainChannel).getId();
+
+        CommandRole = Optional.ofNullable(jda.getRoleById(Config.getConfig().get("CommandRoleID"))).orElseThrow();
+
+        String linkedRoleId = Config.getConfig().getOrDefault("LinkedRoleID", "");
+        LinkedRole = linkedRoleId.matches("\\d+") ? jda.getRoleById(linkedRoleId) : null;
+
+        DefaultSpeakerID = Integer.parseInt(Config.getConfig().get("DefaultSpeakerID"));
+
+        String webhookname = "Velodicord";
+        MainChannel.retrieveWebhooks().complete().forEach(webhook -> {
+            if (webhookname.equals(webhook.getName())) Discordbot.webhook = webhook;
+        });
+
+        if (webhook == null) {
+            webhook = MainChannel.createWebhook(webhookname).complete();
+        }
+    }
+
+    public static void sendvoicemessage(String msg, int id) {
+        if (voicechannel == null) return;
+
+        if (Voicevox.tts(msg, id, wavPath)) {
+            PlayerManager.getInstance().loadAndPlay(MainChannel, String.valueOf(wavPath));
+        }
+    }
+}
