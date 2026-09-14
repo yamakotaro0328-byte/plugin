@@ -41,7 +41,9 @@
         <!-- Lightweight embedded WebSocket server; this plugin listens, the Velocity-side
              Velodicord proxy connects out to it (same direction as Velodicord's existing
              WebSocketClient / WebSocketPluginMessageManager transport). Not proxy/server
-             provided, so it's shaded into this plugin's jar. -->
+             provided, so it's shaded into this plugin's jar (unrelocated - no other plugin
+             on this server bundles it, and shade-plugin 3.5.1's relocation rewrite can't
+             parse Paper's Java 25 (class file 69) bytecode in our own compiled classes). -->
         <dependency>
             <groupId>org.java-websocket</groupId>
             <artifactId>Java-WebSocket</artifactId>
@@ -77,14 +79,6 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                        <configuration>
-                            <relocations>
-                                <relocation>
-                                    <pattern>org.java_websocket</pattern>
-                                    <shadedPattern>com.yamakotaro.velodicordbridge.libs.java_websocket</shadedPattern>
-                                </relocation>
-                            </relocations>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
