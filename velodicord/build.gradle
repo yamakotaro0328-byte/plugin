@@ -38,7 +38,8 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok:1.18.38")
 
     compileOnly files('lib/velocity-3.3.0-SNAPSHOT-433.jar')
-    implementation files('lib/voicevoxcore-0.16.4.jar')
+    // VOICEVOX(TTS)機能は無効化済みのため未使用
+    // implementation files('lib/voicevoxcore-0.16.4.jar')
 }
 
 def targetJavaVersion = 17
