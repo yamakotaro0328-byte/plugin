@@ -1,0 +1,8 @@
+# このサーバーの名前。Velocityのvelocity.tomlに登録してあるサーバー名と
+# 完全に一致させてください(Discord側の/server系コマンドの表示名にもなります)。
+server-name: "survival"
+
+# Velodicord(プロキシ)側のconfig.jsonの"WebSocketPortIncrement"と
+# 必ず同じ値にしてください。このサーバーはポート番号(server.propertiesのserver-port)
+# + この値のポートでWebSocketサーバーを待ち受けます。
+port-increment: 1

@@ -67,6 +67,8 @@ public abstract class PluginMessageManager {
                 case "SEND", "READ" ->
                         Velodicord.getVelodicord().getProxy().sendMessage(MiniMessage.miniMessage().deserialize(data[2]));
 
+                case "NOTICE" -> getNoticeChannel().sendMessage(data[2]).queue();
+
                 case "POS" -> {
                     Velodicord.getVelodicord().getProxy().sendMessage(text()
                             .append(text("<%s> ".formatted(data[3]), BLUE))

@@ -1,0 +1,11 @@
+name: VelodicordBridge
+version: '${project.version}'
+main: com.yamakotaro.velodicordbridge.VelodicordBridgePlugin
+api-version: '26.2'
+author: yamakotaro0328
+description: Paper-side companion for Velodicord (death/advancement/pos reporting over a WebSocket, no Discord bot of its own).
+
+commands:
+  pos:
+    description: Share your current coordinates with Velodicord
+    usage: /pos [name]
