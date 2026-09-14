@@ -2,11 +2,8 @@ package velodicord;
 
 import lombok.Getter;
 import lombok.Setter;
-import moe.kyokobot.libdave.NativeDaveFactory;
-import moe.kyokobot.libdave.jda.LDJDADaveSessionFactory;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.audio.AudioModuleConfig;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
@@ -15,20 +12,16 @@ import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import velodicord.events.discord.CommandAutoCompleteInteraction;
-import velodicord.events.discord.GuildVoiceUpdate;
 import velodicord.events.discord.MessageReceived;
 import velodicord.events.discord.ModalInteraction;
 import velodicord.events.discord.SlashCommandInteraction;
-import velodicord.lavaplayer.PlayerManager;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -65,19 +58,12 @@ public class Discordbot {
 
     @Getter
     @Setter
-    private static String voicechannel;
-
-    @Getter
-    @Setter
     private static Role CommandRole;
 
     /** アカウント連携(/link)完了時に付与するロール。config.jsonのLinkedRoleIDが未設定/無効ならnull。 */
     @Getter
     @Setter
     private static Role LinkedRole;
-
-    @Getter
-    private static int DefaultSpeakerID;
 
     @Getter
     @Setter
@@ -91,16 +77,13 @@ public class Discordbot {
     @Setter
     private static Thread log;
 
-    private static final Path wavPath = Path.of(String.valueOf(Config.getDataDirectory().resolve("result.wav")));
-
     static void init() {
 
         jda = JDABuilder.createDefault(Config.getConfig().get("BotToken"))
-                .setAudioModuleConfig(new AudioModuleConfig().withDaveSessionFactory(new LDJDADaveSessionFactory(new NativeDaveFactory())))
                 .setChunkingFilter(ChunkingFilter.ALL)
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
-                .addEventListeners(new GuildVoiceUpdate(), new MessageReceived(), new SlashCommandInteraction(), new CommandAutoCompleteInteraction(), new ModalInteraction())
+                .addEventListeners(new MessageReceived(), new SlashCommandInteraction(), new CommandAutoCompleteInteraction(), new ModalInteraction())
                 .build();
 
         try {
@@ -110,8 +93,6 @@ public class Discordbot {
         }
 
         jda.updateCommands().addCommands(
-                Commands.slash("join", "ボイスチャンネルへの参加"),
-                Commands.slash("leave", "ボイスチャンネルからの退出"),
                 Commands.slash("dic", "辞書関係")
                         .addSubcommands(
                                 new SubcommandData("show", "辞書に登録されている単語"),
@@ -143,26 +124,6 @@ public class Discordbot {
                                 new SubcommandData("del", "登録されている発言を無視しないbotの削除")
                                         .addOption(OptionType.USER, "bot", "削除したいbot", true)
                         ),
-                Commands.slash("speaker", "話者関連")
-                        .addSubcommandGroups(new SubcommandGroupData("show", "話者")
-                                .addSubcommands(
-                                        new SubcommandData("all", "話者の種類とID"),
-                                        new SubcommandData("your", "設定されている話者"),
-                                        new SubcommandData("default", "デフォルトの話者")
-                                )
-                        )
-                        .addSubcommands(new SubcommandData("set", "話者を設定")
-                                .addOption(OptionType.STRING, "which", "どの話者", true, true)
-                                .addOption(OptionType.INTEGER, "id", "話者のid", true, true)
-                        ),
-                Commands.slash("ignorecommand", "通知しないコマンド関連")
-                        .addSubcommands(
-                                new SubcommandData("show", "登録されている通知しないコマンド"),
-                                new SubcommandData("add", "新たに通知しないコマンドを登録")
-                                        .addOption(OptionType.STRING, "command", "登録したいコマンド", true),
-                                new SubcommandData("del", "登録されている通知しないコマンドの削除")
-                                        .addOption(OptionType.STRING, "command", "削除したいコマンド", true, true)
-                        ),
                 Commands.slash("mentionable", "メンション可能ロール関係")
                         .addSubcommands(
                                 new SubcommandData("show", "登録されているメンション可能ロール"),
@@ -184,10 +145,8 @@ public class Discordbot {
                         .addSubcommands(
                                 new SubcommandData("show", "登録されている管理者コマンド"),
                                 new SubcommandData("add", "新たに管理者コマンドを登録")
-                                        .addOption(OptionType.STRING, "which", "どのコマンド", true, true)
                                         .addOption(OptionType.STRING, "command", "登録したいコマンド", true),
                                 new SubcommandData("del", "登録されている管理者コマンドの削除")
-                                        .addOption(OptionType.STRING, "which", "どのコマンド", true, true)
                                         .addOption(OptionType.STRING, "command", "削除したいコマンド", true, true)
                         )
         ).queue();
@@ -214,8 +173,6 @@ public class Discordbot {
         String linkedRoleId = Config.getConfig().getOrDefault("LinkedRoleID", "");
         LinkedRole = linkedRoleId.matches("\\d+") ? jda.getRoleById(linkedRoleId) : null;
 
-        DefaultSpeakerID = Integer.parseInt(Config.getConfig().get("DefaultSpeakerID"));
-
         String webhookname = "Velodicord";
         MainChannel.retrieveWebhooks().complete().forEach(webhook -> {
             if (webhookname.equals(webhook.getName())) Discordbot.webhook = webhook;
@@ -223,14 +180,6 @@ public class Discordbot {
 
         if (webhook == null) {
             webhook = MainChannel.createWebhook(webhookname).complete();
-        }
-    }
-
-    public static void sendvoicemessage(String msg, int id) {
-        if (voicechannel == null) return;
-
-        if (Voicevox.tts(msg, id, wavPath)) {
-            PlayerManager.getInstance().loadAndPlay(MainChannel, String.valueOf(wavPath));
         }
     }
 }

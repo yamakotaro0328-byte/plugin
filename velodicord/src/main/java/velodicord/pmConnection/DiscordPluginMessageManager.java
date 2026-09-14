@@ -28,7 +28,7 @@ public class DiscordPluginMessageManager extends PluginMessageManager {
         this.PMChannel = Optional.ofNullable(Discordbot.getJda().getTextChannelById(Config.getConfig().get("PMChannelID"))).orElse(Discordbot.getMainChannel());
 
         try {
-            sendMessage("ALL", "OK&%s&%s&%s&%s&%s&%s&%s".formatted(getNoticeChannel().getId(), getLogForumChannel().map(ForumChannel::getId).orElse(""), getCommandChannel(), Discordbot.getCommandRole().getId(), Files.readString(getIgnorecommandjson()), Files.readString(getDisadmincommandjson()), Files.readString(getMineadmincommandjson())));
+            sendMessage("ALL", "OK&%s&%s&%s&%s&%s".formatted(getNoticeChannel().getId(), getLogForumChannel().map(ForumChannel::getId).orElse(""), getCommandChannel(), Discordbot.getCommandRole().getId(), Files.readString(getDisadmincommandjson())));
         } catch (IOException e) {
             Velodicord.getVelodicord().getLogger().error("Failed to read command config files: {}", ExceptionUtils.getStackTrace(e));
         }

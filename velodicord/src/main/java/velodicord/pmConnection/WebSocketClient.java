@@ -52,12 +52,10 @@ public class WebSocketClient {
                                     Velodicord.getVelodicord().getLogger().info("WebSocket connection established.");
 
                                     try {
-                                        ws.sendText("OK&%s&%s&%s&%s&%s&%s&%s".formatted(getNoticeChannel().getId(), getLogForumChannel().map(ForumChannel::getId).orElse(""), getCommandChannel(), Discordbot.getCommandRole().getId(), Files.readString(getIgnorecommandjson()), Files.readString(getDisadmincommandjson()), Files.readString(getMineadmincommandjson())));
+                                        ws.sendText("OK&%s&%s&%s&%s&%s".formatted(getNoticeChannel().getId(), getLogForumChannel().map(ForumChannel::getId).orElse(""), getCommandChannel(), Discordbot.getCommandRole().getId(), Files.readString(getDisadmincommandjson())));
                                     } catch (IOException e) {
                                         Velodicord.getVelodicord().getLogger().error("Failed to read command config files: {}", ExceptionUtils.getStackTrace(e));
                                     }
-
-                                    Discordbot.sendvoicemessage("%sが起動しました".formatted(serverName), getDefaultSpeakerID());
                                 }
 
                                 @Override
@@ -113,7 +111,7 @@ public class WebSocketClient {
                     connecting = false;
 
                     try {
-                        sendMessage("OK&%s&%s&%s&%s&%s&%s&%s".formatted(getNoticeChannel().getId(), getLogForumChannel().map(ForumChannel::getId).orElse(""), getCommandChannel(), Discordbot.getCommandRole().getId(), Files.readString(getIgnorecommandjson()), Files.readString(getDisadmincommandjson()), Files.readString(getMineadmincommandjson())));
+                        sendMessage("OK&%s&%s&%s&%s&%s".formatted(getNoticeChannel().getId(), getLogForumChannel().map(ForumChannel::getId).orElse(""), getCommandChannel(), Discordbot.getCommandRole().getId(), Files.readString(getDisadmincommandjson())));
                     } catch (IOException e) {
                         Velodicord.getVelodicord().getLogger().error("Failed to read command config files: {}", ExceptionUtils.getStackTrace(e));
                     }

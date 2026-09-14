@@ -4,7 +4,6 @@ import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
 import net.dv8tion.jda.api.EmbedBuilder;
-import velodicord.Config;
 import velodicord.Discordbot;
 import velodicord.Velodicord;
 
@@ -27,11 +26,6 @@ public class Disconnect {
                 .setColor(Color.blue)
                 .setAuthor(playerName, null, "https://mc-heads.net/avatar/%s.png".formatted(playerName))
                 .build()).queue();
-        String message = "%sがマイクラサーバーから退出しました".formatted(playerName);
-        for (String word : Config.getDic().keySet()) {
-            message = message.replaceAll(word, Config.getDic().get(word));
-        }
-        Discordbot.sendvoicemessage(message, Discordbot.getDefaultSpeakerID());
 
         Velodicord.getVelodicord().getProxy().getAllPlayers().forEach(player -> player.getTabList().removeEntry(event.getPlayer().getUniqueId()));
     }

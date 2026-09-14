@@ -29,19 +29,7 @@ public class Config {
     private static ArrayList<String> detectbot;
 
     @Getter
-    private static ArrayList<String> ignorecommand;
-
-    @Getter
     private static ArrayList<String> disadmincommand;
-
-    @Getter
-    private static ArrayList<String> mineadmincommand;
-
-    @Getter
-    private static HashMap<String, Integer> disspeaker;
-
-    @Getter
-    private static HashMap<String, Integer> minespeaker;
 
     /** discordユーザーID -> マイクラプレイヤーUUID(文字列)。LinkManager経由でのみ書き込む。 */
     @Getter
@@ -49,9 +37,6 @@ public class Config {
 
     @Getter
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-    private static final Type intmaptype = new TypeToken<HashMap<String, Integer>>() {
-    }.getType();
 
     private static final Type listtype = new TypeToken<ArrayList<String>>() {
     }.getType();
@@ -75,23 +60,7 @@ public class Config {
 
     @Getter
     @Setter
-    private static Path ignorecommandjson;
-
-    @Getter
-    @Setter
     private static Path disadmincommandjson;
-
-    @Getter
-    @Setter
-    private static Path mineadmincommandjson;
-
-    @Getter
-    @Setter
-    private static Path disspeakerjson;
-
-    @Getter
-    @Setter
-    private static Path minespeakerjson;
 
     @Getter
     @Setter
@@ -135,27 +104,11 @@ public class Config {
             }
         }
 
-        if (Files.notExists(ignorecommandjson)) {
+        if (Files.notExists(disadmincommandjson)) {
             try {
-                Files.copy(Objects.requireNonNull(Velodicord.class.getResourceAsStream("/array.json")), ignorecommandjson);
+                Files.copy(Objects.requireNonNull(Velodicord.class.getResourceAsStream("/disadmincommand.json")), disadmincommandjson);
             } catch (IOException e) {
-                Velodicord.getVelodicord().getLogger().error("Velodicordのignorecommandリストを作成できませんでした: {}", ExceptionUtils.getStackTrace(e));
-            }
-        }
-
-        if (Files.notExists(disspeakerjson)) {
-            try {
-                Files.copy(Objects.requireNonNull(Velodicord.class.getResourceAsStream("/object.json")), disspeakerjson);
-            } catch (IOException e) {
-                Velodicord.getVelodicord().getLogger().error("Velodicordのdisspeakerリストを作成できませんでした: {}", ExceptionUtils.getStackTrace(e));
-            }
-        }
-
-        if (Files.notExists(minespeakerjson)) {
-            try {
-                Files.copy(Objects.requireNonNull(Velodicord.class.getResourceAsStream("/object.json")), minespeakerjson);
-            } catch (IOException e) {
-                Velodicord.getVelodicord().getLogger().error("Velodicordのminespeakerリストを作成できませんでした: {}", ExceptionUtils.getStackTrace(e));
+                Velodicord.getVelodicord().getLogger().error("Velodicordのdisadmincommandリストを作成できませんでした: {}", ExceptionUtils.getStackTrace(e));
             }
         }
 
@@ -167,27 +120,11 @@ public class Config {
             }
         }
 
-        if (Files.notExists(disadmincommandjson)) {
-            try {
-                Files.copy(Objects.requireNonNull(Velodicord.class.getResourceAsStream("/disadmincommand.json")), disadmincommandjson);
-            } catch (IOException e) {
-                Velodicord.getVelodicord().getLogger().error("Velodicordのdisadmincommandリストを作成できませんでした: {}", ExceptionUtils.getStackTrace(e));
-            }
-        }
-
         if (Files.notExists(linkjson)) {
             try {
                 Files.copy(Objects.requireNonNull(Velodicord.class.getResourceAsStream("/object.json")), linkjson);
             } catch (IOException e) {
                 Velodicord.getVelodicord().getLogger().error("Velodicordのlinkリストを作成できませんでした: {}", ExceptionUtils.getStackTrace(e));
-            }
-        }
-
-        if (Files.notExists(mineadmincommandjson)) {
-            try {
-                Files.copy(Objects.requireNonNull(Velodicord.class.getResourceAsStream("/mineadmincommand.json")), mineadmincommandjson);
-            } catch (IOException e) {
-                Velodicord.getVelodicord().getLogger().error("Velodicordのmineadmincommandリストを作成できませんでした: {}", ExceptionUtils.getStackTrace(e));
             }
         }
 
@@ -210,30 +147,10 @@ public class Config {
         } catch (IOException e) {
             Velodicord.getVelodicord().getLogger().error("Velodicordのdetectbotリストが見つかりませんでした: {}", ExceptionUtils.getStackTrace(e));
         }
-        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(String.valueOf(ignorecommandjson)), StandardCharsets.UTF_8))) {
-            ignorecommand = gson.fromJson(reader, listtype);
-        } catch (IOException e) {
-            Velodicord.getVelodicord().getLogger().error("Velodicordのignorecommandリストが見つかりませんでした: {}", ExceptionUtils.getStackTrace(e));
-        }
         try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(String.valueOf(disadmincommandjson)), StandardCharsets.UTF_8))) {
             disadmincommand = gson.fromJson(reader, listtype);
         } catch (IOException e) {
             Velodicord.getVelodicord().getLogger().error("Velodicordのdisadmincommandリストが見つかりませんでした: {}", ExceptionUtils.getStackTrace(e));
-        }
-        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(String.valueOf(mineadmincommandjson)), StandardCharsets.UTF_8))) {
-            mineadmincommand = gson.fromJson(reader, listtype);
-        } catch (IOException e) {
-            Velodicord.getVelodicord().getLogger().error("Velodicordのmineadmincommandリストが見つかりませんでした: {}", ExceptionUtils.getStackTrace(e));
-        }
-        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(String.valueOf(disspeakerjson)), StandardCharsets.UTF_8))) {
-            disspeaker = gson.fromJson(reader, intmaptype);
-        } catch (IOException e) {
-            Velodicord.getVelodicord().getLogger().error("Velodicordのdisspeakerリストが見つかりませんでした: {}", ExceptionUtils.getStackTrace(e));
-        }
-        try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(String.valueOf(minespeakerjson)), StandardCharsets.UTF_8))) {
-            minespeaker = gson.fromJson(reader, intmaptype);
-        } catch (IOException e) {
-            Velodicord.getVelodicord().getLogger().error("Velodicordのminespeakerリストが見つかりませんでした: {}", ExceptionUtils.getStackTrace(e));
         }
         try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(String.valueOf(mentionablejson)), StandardCharsets.UTF_8))) {
             Discordbot.setMentionable(gson.fromJson(reader, listtype));
@@ -246,7 +163,5 @@ public class Config {
         } catch (IOException e) {
             Velodicord.getVelodicord().getLogger().error("Velodicordのlinkリストが見つかりませんでした: {}", ExceptionUtils.getStackTrace(e));
         }
-
-        Voicevox.init();
     }
 }

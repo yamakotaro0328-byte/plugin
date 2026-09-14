@@ -15,11 +15,7 @@ public class CommandAutoCompleteInteraction extends ListenerAdapter {
 
     List<String> chs = new ArrayList<>(Arrays.asList("log", "main", "pm", "notice", "pos", "command"));
 
-    List<String> speakers = new ArrayList<>(Arrays.asList("your", "default"));
-
     List<String> mention = new ArrayList<>(Arrays.asList("users", "roles", "everyone"));
-
-    List<String> dismine = new ArrayList<>(Arrays.asList("discord", "マイクラ"));
 
     @Override
     public void onCommandAutoCompleteInteraction(@NotNull CommandAutoCompleteInteractionEvent event) {
@@ -45,42 +41,6 @@ public class CommandAutoCompleteInteraction extends ListenerAdapter {
                     event.replyChoices(chs.stream()
                             .filter(ch -> ch.contains(event.getFocusedOption().getValue()))
                             .map(ch -> new Command.Choice(ch, ch)).toList()).queue();
-                }
-            }
-
-            case "speaker" -> {
-                switch (event.getFocusedOption().getName()) {
-                    case "which" -> event.replyChoices(speakers.stream()
-                            .filter(speaker -> speaker.contains(event.getFocusedOption().getValue()))
-                            .map(speaker -> new Command.Choice(speaker, speaker)).toList()).queue();
-
-                    case "id" -> {
-                        List<Command.Choice> options = Voicevox.getVoicevox().stream()
-                                .filter(m -> m.name().contains(event.getFocusedOption().getValue())
-                                        || String.valueOf(m.id()).contains(event.getFocusedOption().getValue()))
-                                .map(m -> new Command.Choice(m.name(), m.id())).toList();
-
-                        if (options.size() > 25) {
-                            options = options.subList(0, 24);
-                        }
-
-                        event.replyChoices(options).queue();
-                    }
-                }
-            }
-
-            case "ignorecommand" -> {
-                if ("del".equals(event.getSubcommandName())) {
-                    List<Command.Choice> options = Config.getIgnorecommand().stream()
-                            .filter(command -> command.contains(event.getFocusedOption().getValue()))
-                            .map(command -> new Command.Choice(command, command)).toList();
-
-                    if (options.size() > 25) {
-                        options = options.subList(0, 23);
-                        options.add(new Command.Choice("...", "..."));
-                    }
-
-                    event.replyChoices(options).queue();
                 }
             }
 
@@ -121,18 +81,10 @@ public class CommandAutoCompleteInteraction extends ListenerAdapter {
             }
 
             case "admincommand" -> {
-                switch (event.getFocusedOption().getName()) {
-                    case "which" -> event.replyChoices(dismine.stream()
-                            .filter(disOrMine -> disOrMine.contains(event.getFocusedOption().getValue()))
-                            .map(disOrMine -> new Command.Choice(disOrMine, disOrMine)).toList()).queue();
-
-                    case "command" -> {
-                        if (!"del".equals(event.getSubcommandName())) return;
-
-                        event.replyChoices(("discord".equals(event.getOptions().get(0).getAsString()) ? Config.getDisadmincommand() : Config.getMineadmincommand()).stream()
-                                .filter(command -> command.contains(event.getFocusedOption().getValue()))
-                                .map(command -> new Command.Choice(command, command)).toList()).queue();
-                    }
+                if ("command".equals(event.getFocusedOption().getName()) && "del".equals(event.getSubcommandName())) {
+                    event.replyChoices(Config.getDisadmincommand().stream()
+                            .filter(command -> command.contains(event.getFocusedOption().getValue()))
+                            .map(command -> new Command.Choice(command, command)).toList()).queue();
                 }
             }
         }

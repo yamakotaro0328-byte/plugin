@@ -14,7 +14,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import velodicord.Config;
 import velodicord.Discordbot;
 import velodicord.Velodicord;
 
@@ -39,29 +38,12 @@ public class PlayerChat {
         TextComponent.Builder component = text()
                 .append(text("[%s]".formatted(server), DARK_GREEN))
                 .append(text("<%s> ".formatted(player.getUsername())));
-        String cutmessage = message;
-        for (String word : Config.getDic().keySet()) {
-            cutmessage = cutmessage.replaceAll(word, Config.getDic().get(word));
-        }
-        cutmessage = cutmessage.replaceAll("~~(.*?)~~", "$1")
-                .replaceAll("\\*\\*(.*?)\\*\\*", "$1")
-                .replaceAll("__(.*?)__", "$1")
-                .replaceAll("_(.*?)_", "$1")
-                .replaceAll("```(.*?)```", "コード省略")
-                .replaceAll("\\|\\|(.*?)\\|\\|", "ネタバレ")
-                .replace("@", "アット");
         message = message.replaceAll("~~(.*?)~~", "<st>$1</st>")
                 .replaceAll("\\*\\*(.*?)\\*\\*", "<b>$1</b>")
                 .replaceAll("__(.*?)__", "<u>$1</u>")
                 .replaceAll("_(.*?)_", "<i>$1</i>")
                 .replaceAll("```(.*?)```", "$1")
                 .replaceAll("\\|\\|(.*?)\\|\\|", "<ネタバレ>");
-
-        if (Pattern.compile("\\[.*?]\\(https?://.*?\\)").matcher(cutmessage).find()) {
-            cutmessage = cutmessage.replaceAll("\\[(.*?)]\\(https?://.*?\\)", "$1かっこゆーあーるえる");
-        } else if (Pattern.compile("https?://\\S+").matcher(cutmessage).find()) {
-            cutmessage = cutmessage.replaceAll("https?://\\S+", "ゆーあーるえる省略");
-        }
 
         if (Pattern.compile("\\[.*?]\\(https?://.*?\\)").matcher(message).find()) {
             message = message.replaceAll("\\[(.*?)]\\((https?://.*?)\\)", "<blue><u><click:open_url:'$2'>$1");
@@ -124,8 +106,5 @@ public class PlayerChat {
             }
         });
         executor.shutdown();
-
-        String japanized = Japanizer.japanize(cutmessage);
-        Discordbot.sendvoicemessage(japanized.isEmpty() ? cutmessage : japanized, Config.getMinespeaker().getOrDefault(event.getPlayer().getUniqueId().toString(), Discordbot.getDefaultSpeakerID()));
     }
 }

@@ -32,30 +32,10 @@ public class ListenerClose {
         } catch (IOException e) {
             Velodicord.getVelodicord().getLogger().error("Velodicordのdetectbotを保存できませんでした: {}", ExceptionUtils.getStackTrace(e));
         }
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(String.valueOf(getIgnorecommandjson())), StandardCharsets.UTF_8))) {
-            getGson().toJson(getIgnorecommand(), writer);
-        } catch (IOException e) {
-            Velodicord.getVelodicord().getLogger().error("Velodicordのignorecommandを保存できませんでした: {}", ExceptionUtils.getStackTrace(e));
-        }
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(String.valueOf(getDisadmincommandjson())), StandardCharsets.UTF_8))) {
             getGson().toJson(getDisadmincommand(), writer);
         } catch (IOException e) {
             Velodicord.getVelodicord().getLogger().error("Velodicordのdisadmincommandを保存できませんでした: {}", ExceptionUtils.getStackTrace(e));
-        }
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(String.valueOf(getMineadmincommandjson())), StandardCharsets.UTF_8))) {
-            getGson().toJson(getMineadmincommand(), writer);
-        } catch (IOException e) {
-            Velodicord.getVelodicord().getLogger().error("Velodicordのmineadmincommandを保存できませんでした: {}", ExceptionUtils.getStackTrace(e));
-        }
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(String.valueOf(Config.getDisspeakerjson())), StandardCharsets.UTF_8))) {
-            getGson().toJson(getDisspeaker(), writer);
-        } catch (IOException e) {
-            Velodicord.getVelodicord().getLogger().error("Velodicordのdisspeakerを保存できませんでした: {}", ExceptionUtils.getStackTrace(e));
-        }
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(String.valueOf(Config.getMinespeakerjson())), StandardCharsets.UTF_8))) {
-            getGson().toJson(getMinespeaker(), writer);
-        } catch (IOException e) {
-            Velodicord.getVelodicord().getLogger().error("Velodicordのminespeakerを保存できませんでした: {}", ExceptionUtils.getStackTrace(e));
         }
         try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(String.valueOf(getMentionablejson())), StandardCharsets.UTF_8))) {
             getGson().toJson(Discordbot.getMentionable(), writer);

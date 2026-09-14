@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import velodicord.Config;
 import velodicord.Discordbot;
 import velodicord.Velodicord;
 
@@ -34,7 +33,7 @@ public abstract class PluginMessageManager {
             switch (data[1]) {
                 case "OK" -> {
                     try {
-                        Velodicord.getPMManager().sendMessage(data[2], "RESOK&%s&%s&%s&%s&%s&%s&%s".formatted(getNoticeChannel().getId(), getLogForumChannel().map(ForumChannel::getId).orElse(""), getCommandChannel(), getCommandRole().getId(), Files.readString(getIgnorecommandjson()), Files.readString(getDisadmincommandjson()), Files.readString(getMineadmincommandjson())));
+                        Velodicord.getPMManager().sendMessage(data[2], "RESOK&%s&%s&%s&%s&%s".formatted(getNoticeChannel().getId(), getLogForumChannel().map(ForumChannel::getId).orElse(""), getCommandChannel(), getCommandRole().getId(), Files.readString(getDisadmincommandjson())));
                     } catch (IOException e) {
                         Velodicord.getVelodicord().getLogger().error("Failed to read json: {}", ExceptionUtils.getStackTrace(e));
                     }
@@ -43,8 +42,6 @@ public abstract class PluginMessageManager {
                             .append(text("[%s]".formatted(data[2]), DARK_GREEN))
                             .append(text(" が起動しました", YELLOW))
                     );
-
-                    Discordbot.sendvoicemessage("%sが起動しました".formatted(data[2]), getDefaultSpeakerID());
 
                     Arrays.stream(data[3].split(",")).forEach(playerName -> {
                         if (playerName.isEmpty()) return;
@@ -65,21 +62,10 @@ public abstract class PluginMessageManager {
                             .append(text("[%s]".formatted(data[2]), DARK_GREEN))
                             .append(text(" が停止しました", YELLOW))
                     );
-
-                    Discordbot.sendvoicemessage("%sが停止しました".formatted(data[2]), getDefaultSpeakerID());
                 }
 
-                case "SEND" ->
+                case "SEND", "READ" ->
                         Velodicord.getVelodicord().getProxy().sendMessage(MiniMessage.miniMessage().deserialize(data[2]));
-
-                case "READ" -> {
-                    Velodicord.getVelodicord().getProxy().sendMessage(MiniMessage.miniMessage().deserialize(data[2]));
-                    String message = data[3];
-                    for (String word : Config.getDic().keySet()) {
-                        message = message.replaceAll(word, Config.getDic().get(word));
-                    }
-                    Discordbot.sendvoicemessage(message, getDefaultSpeakerID());
-                }
 
                 case "POS" -> {
                     Velodicord.getVelodicord().getProxy().sendMessage(text()

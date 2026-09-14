@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import velodicord.commands.LinkCommand;
 import velodicord.commands.PlayerlistCommand;
 import velodicord.commands.ServerCommand;
-import velodicord.commands.SetspeakerCommand;
 import velodicord.events.minecraft.Disconnect;
 import velodicord.events.minecraft.ListenerClose;
 import velodicord.events.minecraft.PlayerChat;
@@ -62,11 +61,7 @@ public class Velodicord {
         Config.setConfigjson(dataDirectory.resolve("config.json"));
         Config.setDicjson(dataDirectory.resolve("dic.json"));
         Config.setDetectbotjson(dataDirectory.resolve("detectbot.json"));
-        Config.setIgnorecommandjson(dataDirectory.resolve("ignorecommand.json"));
         Config.setDisadmincommandjson(dataDirectory.resolve("disadmincommand.json"));
-        Config.setMineadmincommandjson(dataDirectory.resolve("mineadmincommand.json"));
-        Config.setDisspeakerjson(dataDirectory.resolve("disspeaker.json"));
-        Config.setMinespeakerjson(dataDirectory.resolve("minespeaker.json"));
         Config.setMentionablejson(dataDirectory.resolve("mentionable.json"));
         Config.setLinkjson(dataDirectory.resolve("link.json"));
         velodicord = this;
@@ -104,12 +99,10 @@ public class Velodicord {
 
         CommandMeta server = commandManager.metaBuilder(serverNames[0]).aliases(serverNames).plugin(this).build();
         CommandMeta playerlist = commandManager.metaBuilder("playerlist").plugin(this).build();
-        CommandMeta setspeaker = commandManager.metaBuilder("speaker").plugin(this).build();
         CommandMeta link = commandManager.metaBuilder("link").plugin(this).build();
 
         commandManager.register(server, new ServerCommand());
         commandManager.register(playerlist, new PlayerlistCommand());
-        commandManager.register(setspeaker, new SetspeakerCommand());
         commandManager.register(link, new LinkCommand());
     }
 

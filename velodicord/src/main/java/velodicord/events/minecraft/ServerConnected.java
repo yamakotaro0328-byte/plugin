@@ -6,7 +6,6 @@ import com.velocitypowered.api.proxy.player.TabListEntry;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import velodicord.Config;
 import velodicord.Discordbot;
 import velodicord.Velodicord;
 
@@ -49,11 +48,6 @@ public class ServerConnected {
                             .setColor(Color.blue)
                             .setAuthor(playerName, null, "https://mc-heads.net/avatar/%s.png".formatted(playerName))
                             .build()).queue();
-                    String message = "%sが%sに参加しました".formatted(playerName, targetServer);
-                    for (String word : Config.getDic().keySet()) {
-                        message = message.replaceAll(word, Config.getDic().get(word));
-                    }
-                    Discordbot.sendvoicemessage(message, Discordbot.getDefaultSpeakerID());
                 }
         );
 

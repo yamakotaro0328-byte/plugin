@@ -7,7 +7,7 @@
 
 # Velodicord
 ## 説明
-これはvelocity専用のプラグインで、discord-minecraft間のチャット共有、それの日本語化、それの読み上げ、velocityとバックエンドサーバーの起動・停止通知、プレイヤーの入退出・サーバー移動通知、プレイヤーの死亡通知、プレイヤーの進捗達成通知、プレイヤーのコマンド実行通知、/サーバー名でのサーバー移動、/posでの現在いる座標のdiscordへの通知、/playerで現在参加しているプレイヤー通知(discordからも可)、discordからのコマンド実行ができるとにかくプロキシサーバーに必要と思われる機能を全部つぎ込んだものです
+これはvelocity専用のプラグインで、discord-minecraft間のチャット共有、それの日本語化、velocityとバックエンドサーバーの起動・停止通知、プレイヤーの入退出・サーバー移動通知、プレイヤーの死亡通知、プレイヤーの進捗達成通知、/サーバー名でのサーバー移動、/posでの現在いる座標のdiscordへの通知、/playerで現在参加しているプレイヤー通知(discordからも可)、discordからのコマンド実行、discordアカウントとマインクラフトアカウントの連携ができるとにかくプロキシサーバーに必要と思われる機能を全部つぎ込んだものです
 > [!CAUTION]
 > **fabricサーバー側に[Fabdicord](https://modrinth.com/project/fabdicord)も必要です**(もし別ver.が必要なら[discordサーバー](https://discord.gg/352Cdy8MjV)のrequestまで)
 ## 使い方
@@ -30,10 +30,6 @@
 1. 楽しみましょう!
 ## コマンド
    - discord側
-     - join
-       - ボイスチャンネルへの参加
-     - leave
-       - ボイスチャンネルからの退出
      - dic (辞書関係)
        - show
          - 辞書に登録されている単語
@@ -60,23 +56,6 @@
          - 新たに発言を無視しないbotを登録
        - del [bot: User]
          - 登録されている発言を無視しないbotの削除
-     - speaker (話者関連)
-       - show
-         - all
-           - 話者の種類とID
-         - your
-           - 設定されている話者
-         - default
-           - デフォルトの話者
-       - set [which: String] [id: Integer]
-         - 話者を設定
-     - ignorecommand (通知しないコマンド関連)
-       - show
-         - 登録されている通知しないコマンド
-       - add [command: String]
-         - 新たに通知しないコマンドを登録
-       - del [command: String]
-         - 登録されている通知しないコマンドの削除
      - mentionable (メンション可能ロール関係)
        - show
          - 登録されているメンション可能ロール
@@ -89,9 +68,9 @@
          - マイクラコマンド実行
      - admincommand (管理者コマンド関連)
        - show
-       - add [which: String] [command: String]
+       - add [command: String]
          - 新たに管理者コマンドを登録
-       - del [which: String] [command: String]
+       - del [command: String]
          - 登録されている管理者コマンドの削除
      - link
        - Discordアカウントとマインクラフトアカウントの連携用モーダルを開く(マイクラ側で発行したコードを入力する)
@@ -117,10 +96,6 @@
   "PosChannelID": "000000",
   "_cccomment_": "discordのコマンドチャンネルID(オプション)",
   "CommandChannelID": "000000",
-  "_vcomment_": "VOICEVOXのタイプ CPU : 1 DirectML : 2 CUDA : 3",
-  "VOICEVOX-type": "1",
-  "_dcomment_": "デフォルトの読み上げの声のID",
-  "DefaultSpeakerID": "3",
   "_crcomment_": "管理者コマンドを実行できるロールID",
   "CommandRoleID": "aaaaaa",
   "_pmtcomment_": "プラグインメッセージのタイプ Discord : 1 WebSocket : 2",
@@ -128,7 +103,9 @@
   "_pmcomment_": "discordのプラグインメッセージチャンネルID(PMTypeが1のとき必須)",
   "PMChannelID": "000000",
   "_wcomment_": "websocketで使うポート番号をマイクラサーバーのポート番号からいくつインクリメントするか(PMTypeが2のとき必須)",
-  "WebSocketPortIncrement": "1"
+  "WebSocketPortIncrement": "1",
+  "_lrcomment_": "アカウント連携(/link)が完了した人に付与するロールID(オプション、空なら付与しない)",
+  "LinkedRoleID": "000000"
 }
 ```
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/U7U213BUNP)
