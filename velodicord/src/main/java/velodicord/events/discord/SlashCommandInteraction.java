@@ -24,7 +24,9 @@ import static velodicord.Discordbot.*;
 public class SlashCommandInteraction extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        if (!getCommandChannel().equals(event.getChannelId())) {
+        boolean channelExempt = "linkpanel".equals(event.getName());
+
+        if (!channelExempt && !getCommandChannel().equals(event.getChannelId())) {
             event.replyEmbeds(new EmbedBuilder()
                     .setColor(Color.red)
                     .setTitle("不明なチャンネルです")
@@ -32,7 +34,7 @@ public class SlashCommandInteraction extends ListenerAdapter {
             ).setEphemeral(true).queue();
             return;
         } else if (!Objects.requireNonNull(event.getMember()).getRoles().contains(getCommandRole()) &&
-                getDisadmincommand().stream().anyMatch(event.getCommandString().substring(1)::startsWith)) {
+                (channelExempt || getDisadmincommand().stream().anyMatch(event.getCommandString().substring(1)::startsWith))) {
             event.replyEmbeds(new EmbedBuilder()
                     .setColor(Color.red)
                     .setTitle("このコマンドを実行するのに必要な権限がありません")
