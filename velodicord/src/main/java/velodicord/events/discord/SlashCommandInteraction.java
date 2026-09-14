@@ -6,11 +6,9 @@ import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.components.label.Label;
-import net.dv8tion.jda.api.components.textinput.TextInput;
-import net.dv8tion.jda.api.components.textinput.TextInputStyle;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.dv8tion.jda.api.modals.Modal;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.jetbrains.annotations.NotNull;
 import velodicord.*;
@@ -349,17 +347,20 @@ public class SlashCommandInteraction extends ListenerAdapter {
                 }
             }
 
-            case "link" -> {
-                TextInput codeInput = TextInput.create("code", TextInputStyle.SHORT)
-                        .setPlaceholder("123456")
-                        .setMinLength(6)
-                        .setMaxLength(6)
-                        .setRequired(true)
-                        .build();
-                Modal modal = Modal.create("link-modal", "アカウント連携")
-                        .addComponents(Label.of("マイクラで発行されたコード", codeInput))
-                        .build();
-                event.replyModal(modal).queue();
+            case "link" -> event.replyModal(ModalInteraction.buildLinkModal()).queue();
+
+            case "linkpanel" -> {
+                event.getChannel().sendMessageEmbeds(new EmbedBuilder()
+                        .setColor(Color.blue)
+                        .setTitle("アカウント連携")
+                        .setDescription("下のボタンを押して、マイクラで /link を実行して発行されたコードを入力してください")
+                        .build()
+                ).setComponents(ActionRow.of(Button.primary("link-panel-open", "連携する"))).queue();
+                event.replyEmbeds(new EmbedBuilder()
+                        .setColor(Color.blue)
+                        .setTitle("連携パネルを設置しました")
+                        .build()
+                ).setEphemeral(true).queue();
             }
 
             case "unlink" -> {

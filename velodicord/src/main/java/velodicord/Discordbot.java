@@ -18,6 +18,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import velodicord.events.discord.CommandAutoCompleteInteraction;
+import velodicord.events.discord.LinkPanelButton;
 import velodicord.events.discord.MessageReceived;
 import velodicord.events.discord.ModalInteraction;
 import velodicord.events.discord.SlashCommandInteraction;
@@ -83,7 +84,7 @@ public class Discordbot {
                 .setChunkingFilter(ChunkingFilter.ALL)
                 .setMemberCachePolicy(MemberCachePolicy.ALL)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
-                .addEventListeners(new MessageReceived(), new SlashCommandInteraction(), new CommandAutoCompleteInteraction(), new ModalInteraction())
+                .addEventListeners(new MessageReceived(), new SlashCommandInteraction(), new CommandAutoCompleteInteraction(), new ModalInteraction(), new LinkPanelButton())
                 .build();
 
         try {
@@ -141,6 +142,7 @@ public class Discordbot {
                         ),
                 Commands.slash("link", "Discordアカウントとマインクラフトアカウントを連携"),
                 Commands.slash("unlink", "連携を解除"),
+                Commands.slash("linkpanel", "アカウント連携用のボタン付きパネルをこのチャンネルに設置"),
                 Commands.slash("admincommand", "管理者コマンド関連")
                         .addSubcommands(
                                 new SubcommandData("show", "登録されている管理者コマンド"),

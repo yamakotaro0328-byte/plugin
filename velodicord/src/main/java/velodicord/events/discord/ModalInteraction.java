@@ -1,9 +1,13 @@
 package velodicord.events.discord;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.components.label.Label;
+import net.dv8tion.jda.api.components.textinput.TextInput;
+import net.dv8tion.jda.api.components.textinput.TextInputStyle;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.modals.Modal;
 import org.jetbrains.annotations.NotNull;
 import velodicord.Discordbot;
 import velodicord.link.LinkManager;
@@ -11,10 +15,23 @@ import velodicord.link.LinkManager;
 import java.awt.*;
 import java.util.Optional;
 
-/** /linkモーダル(SlashCommandInteractionのcase "link"参照)の送信を受け取り、
+/** /linkモーダル(SlashCommandInteractionのcase "link"、LinkPanelButtonのボタンから開かれる)の送信を受け取り、
  * マイクラ側で発行されたコードと照合してアカウント連携を完了させる。連携が完了したら
  * config.jsonのLinkedRoleIDが設定されていればそのロールを付与する。 */
 public class ModalInteraction extends ListenerAdapter {
+
+    public static Modal buildLinkModal() {
+        TextInput codeInput = TextInput.create("code", TextInputStyle.SHORT)
+                .setPlaceholder("123456")
+                .setMinLength(6)
+                .setMaxLength(6)
+                .setRequired(true)
+                .build();
+        return Modal.create("link-modal", "アカウント連携")
+                .addComponents(Label.of("マイクラで発行されたコード", codeInput))
+                .build();
+    }
+
     @Override
     public void onModalInteraction(@NotNull ModalInteractionEvent event) {
         if (!"link-modal".equals(event.getModalId())) {
