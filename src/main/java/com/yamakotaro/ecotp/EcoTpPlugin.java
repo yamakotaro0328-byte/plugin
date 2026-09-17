@@ -23,6 +23,7 @@ import com.yamakotaro.ecotp.commands.TpaCommand;
 import com.yamakotaro.ecotp.commands.TpaDenyCommand;
 import com.yamakotaro.ecotp.commands.TphereCommand;
 import com.yamakotaro.ecotp.gui.GuiListener;
+import com.yamakotaro.ecotp.listeners.ChatFormatListener;
 import com.yamakotaro.ecotp.listeners.ChatLinkListener;
 import com.yamakotaro.ecotp.listeners.EcoItemListener;
 import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
@@ -198,6 +199,7 @@ public class EcoTpPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EcoItemListener(this), this);
         getServer().getPluginManager().registerEvents(new MenuItemListener(this), this);
         getServer().getPluginManager().registerEvents(new ChatLinkListener(this), this);
+        getServer().getPluginManager().registerEvents(new ChatFormatListener(this), this);
         new VoteRewardListener(this).register();
         votifierServer.start();
 

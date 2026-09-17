@@ -167,6 +167,24 @@ economy:
 チャット内のURL自動リンク化 (`features.chat-link-detection`) もここで無効化できます。プレイヤーが
 チャットに `https://...` や `www...` を書くと、自動的にクリックで開けるリンクに変換されます。
 
+## チャット整形 (chat-format、任意)
+
+LunaChat等の別のチャット装飾プラグインを使わずに、接頭辞+プレイヤー名+本文だけの簡易な
+整形で済ませたい場合、`config.yml` の `chat-format.enabled` を `true` にすると使えます
+(デフォルトは無効)。接頭辞はVaultのChatサービス(LuckPerms等が提供)から取得します。
+
+```yaml
+chat-format:
+  enabled: false
+  format: "{prefix}&f{player}&7: &f{message}"
+```
+
+**他のチャット装飾プラグインと併用しないでください。** 同じチャットメッセージを2つの
+プラグインが作り直すと、片方(特に古い文字列ベースのチャットAPIを使っている方)が
+もう片方の変更 (`chat-link-detection` が付けたクリック可能なリンクなど) を気づかないうちに
+消してしまうことがあります。これを使う場合は既存のチャット装飾プラグインを無効化・削除
+してください。
+
 ## 投票報酬 (Votifier)
 
 EcoTPはVotifierプロトコル互換のリスナーを自前で内蔵しているため、NuVotifier等を別途導入

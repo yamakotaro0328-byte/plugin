@@ -56,6 +56,28 @@ features:
   # 依存しません)。
   chat-link-detection: true
 
+# Optional, lightweight built-in chat formatting (prefix + player name + message), meant as
+# a way to drop a separate chat-formatting plugin (e.g. LunaChat) entirely rather than run
+# both at once - having two plugins rewrite the same chat message tends to make one of them
+# (often whichever uses the older, string-based chat API) silently discard formatting the
+# other added, such as chat-link-detection's clickable links. Off by default so existing
+# setups with their own chat plugin aren't affected; turn this on AND remove the other chat
+# plugin, don't run both. The prefix comes from Vault's Chat service (provided by LuckPerms
+# or a similar permissions plugin) if one is installed, otherwise it's just blank.
+# (日本語) 任意の軽量なチャット整形(接頭辞+プレイヤー名+本文)機能。LunaChat等の別の
+# チャット装飾プラグインを併用するのではなく、これに置き換えるための機能。同じチャット
+# メッセージを2つのプラグインが作り直すと、片方(特に古い文字列ベースのチャットAPIを
+# 使っている方)がもう片方の変更(chat-link-detectionが付けたクリック可能なリンク等)を
+# 気づかないうちに消してしまうことがある。既存のチャットプラグイン利用環境に影響しない
+# よう、デフォルトは無効。有効にする場合は他のチャット装飾プラグインを併用せず、置き換える
+# こと。接頭辞はVaultのChatサービス(LuckPerms等の権限プラグインが提供)があれば取得され、
+# 無ければ空になる。
+chat-format:
+  enabled: false
+  # {prefix} - 上記の接頭辞。{player} - プレイヤー名。{message} - チャット本文
+  # (chat-link-detectionが有効なら、この時点で既にクリック可能なリンクに変換済み)。
+  format: "{prefix}&f{player}&7: &f{message}"
+
 # /daily: a once-per-day claim. Claiming again within streak-window-hours of the last
 # claim increases your streak (capped at max-streak-bonus-days), which raises the reward;
 # missing that window resets the streak back to day 1.
