@@ -1,9 +1,15 @@
 package com.yamakotaro.ecotp.gui;
 
 import com.yamakotaro.ecotp.BalanceEntry;
+import com.yamakotaro.ecotp.ChatUtil;
 import com.yamakotaro.ecotp.EcoTpEconomy;
 import com.yamakotaro.ecotp.EcoTpPlugin;
 import com.yamakotaro.ecotp.TpaManager;
+import com.yamakotaro.ecotp.VoteRewardManager;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -197,6 +203,7 @@ public class GuiListener implements Listener {
             case MainMenuHolder.SLOT_BALTOP -> openBaltop(player, 0);
             case MainMenuHolder.SLOT_DAILY -> runAndClose(player, "daily");
             case MainMenuHolder.SLOT_DONATE -> openPlayerSelectAndClose(player, PlayerSelectHolder.Purpose.DONATE);
+            case MainMenuHolder.SLOT_VOTE -> openVoteSites(player);
             case MainMenuHolder.SLOT_CLOSE -> player.closeInventory();
             default -> {
                 // 枠 (ガラス板) や無効化された機能のスロットをクリックしただけ: 何もしない
@@ -225,6 +232,24 @@ public class GuiListener implements Listener {
         }
         player.closeInventory();
         player.openInventory(new HomeSelectHolder(plugin, player, 0).getInventory());
+    }
+
+    /** 投票サイトへのリンクをクリック可能なチャットメッセージとして送る。未設定なら何もしない
+     * (情報表示だけのタイルのまま)。 */
+    private void openVoteSites(Player player) {
+        List<VoteRewardManager.VoteSite> sites = plugin.getVoteRewardManager().getSites();
+        if (sites.isEmpty()) {
+            return;
+        }
+        player.closeInventory();
+        player.sendMessage(plugin.msg("vote.sites-header"));
+        for (VoteRewardManager.VoteSite site : sites) {
+            TextComponent line = new TextComponent(ChatUtil.color("&b▶ " + site.name()));
+            line.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, site.url()));
+            line.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                    new ComponentBuilder(plugin.getMessages().get("vote.site-hover", "url", site.url())).create()));
+            player.spigot().sendMessage(line);
+        }
     }
 
     private void openBaltop(Player player, int page) {

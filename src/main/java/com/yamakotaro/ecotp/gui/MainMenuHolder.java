@@ -78,9 +78,11 @@ public class MainMenuHolder implements InventoryHolder {
                 Material.CLOCK, dailyLore(plugin, viewer), dailyClaimable);
         putIfEnabled(plugin, SLOT_DONATE, "donate", Material.NETHER_STAR, messages.getList("menu.lore.donate"));
         if (plugin.getVoteRewardManager().isEnabled()) {
-            double amount = plugin.getConfig().getDouble("vote-reward.amount", 1000.0);
+            double amount = plugin.getVoteRewardManager().rewardAmount();
+            boolean hasSites = !plugin.getVoteRewardManager().getSites().isEmpty();
+            String loreKey = hasSites ? "menu.lore.vote-clickable" : "menu.lore.vote";
             inventory.setItem(SLOT_VOTE, MenuItems.item(Material.PAPER, messages.get("menu.vote"),
-                    messages.getList("menu.lore.vote", "amount", ChatUtil.formatMoney(amount))));
+                    messages.getList(loreKey, "amount", ChatUtil.formatMoney(amount))));
         }
 
         inventory.setItem(SLOT_CLOSE, MenuItems.item(Material.BARRIER, messages.get("menu.close"), null));

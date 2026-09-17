@@ -143,6 +143,8 @@ donatemessage:
 vote:
   thanks: "&aThanks for voting! You received {amount}."
   broadcast: "&b&l[Vote] &e{player} &bvoted for the server and received &e{amount}&b! Thank you!"
+  sites-header: "&b&lVoting sites &7(click to open):"
+  site-hover: "&7Click to open &f{url}"
 
 daily:
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
@@ -267,3 +269,7 @@ menu:
     vote:
       - "&7Vote for the server on a voting site to"
       - "&7receive &f{amount}&7 as a reward."
+    vote-clickable:
+      - "&7Vote for the server on a voting site to"
+      - "&7receive &f{amount}&7 as a reward."
+      - "&7Click to see the voting site links."

@@ -143,6 +143,8 @@ donatemessage:
 vote:
   thanks: "&a投票ありがとうございます！{amount}を受け取りました。"
   broadcast: "&b&l[投票] &e{player} &bさんがサーバーに投票して &e{amount} &bを受け取りました！ありがとうございます！"
+  sites-header: "&b&l投票サイト &7(クリックで開きます):"
+  site-hover: "&7クリックして &f{url} &7を開く"
 
 daily:
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
@@ -267,3 +269,7 @@ menu:
     vote:
       - "&7投票サイトでサーバーに投票すると"
       - "&7報酬として &f{amount} &7がもらえます。"
+    vote-clickable:
+      - "&7投票サイトでサーバーに投票すると"
+      - "&7報酬として &f{amount} &7がもらえます。"
+      - "&7クリックすると投票サイトのリンクを表示します。"

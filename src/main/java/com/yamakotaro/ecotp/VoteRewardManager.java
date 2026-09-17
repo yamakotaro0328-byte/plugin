@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -41,12 +42,28 @@ public class VoteRewardManager {
         return plugin.getConfig().getBoolean("vote-reward.enabled", true);
     }
 
-    private double rewardAmount() {
+    public double rewardAmount() {
         return plugin.getConfig().getDouble("vote-reward.amount", 1000.0);
     }
 
     private long duplicateWindowMillis() {
         return plugin.getConfig().getLong("vote-reward.duplicate-window-seconds", 60) * 1000L;
+    }
+
+    /** config.yml の vote-reward.sites (name/url のペアの一覧)。管理者が未設定なら空。 */
+    public List<VoteSite> getSites() {
+        List<VoteSite> result = new ArrayList<>();
+        for (Map<?, ?> entry : plugin.getConfig().getMapList("vote-reward.sites")) {
+            Object name = entry.get("name");
+            Object url = entry.get("url");
+            if (name != null && url != null) {
+                result.add(new VoteSite(name.toString(), url.toString()));
+            }
+        }
+        return result;
+    }
+
+    public record VoteSite(String name, String url) {
     }
 
     public void handleVote(String username, String serviceName) {
