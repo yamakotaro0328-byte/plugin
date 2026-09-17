@@ -8,6 +8,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 import java.util.regex.Matcher;
@@ -37,7 +38,10 @@ public class ChatLinkListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler
+    // 他のチャット装飾プラグイン(接頭辞・チャンネル表示など)より後に実行する。先に実行すると、
+    // それらのプラグインがメッセージ全体を作り直した際にこちらが付けたクリック情報ごと
+    // 上書きされてしまうことがある。
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onChat(AsyncChatEvent event) {
         if (!plugin.isFeatureEnabled("chat-link-detection")) {
             return;
