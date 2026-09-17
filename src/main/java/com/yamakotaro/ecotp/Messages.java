@@ -107,7 +107,14 @@ public class Messages {
      * @param replacements "key1", value1, "key2", value2 ... のペア。value は toString() される。
      */
     public String get(String path, Object... replacements) {
-        String template = data.getString(path, path);
+        // data.getString(path, def) (2引数版) は data.setDefaults() で仕込んだ同梱テンプレートへの
+        // フォールバックを一切参照しない (ユーザーの messages.yml 自身に無ければ即座に def を返す)。
+        // 新しいバージョンで追加されたキーが古い messages.yml に無いケースをちゃんと拾うには、
+        // defaults チェーンを辿る1引数版 getString(path) を使う必要がある。
+        String template = data.getString(path);
+        if (template == null) {
+            template = path;
+        }
         for (int i = 0; i + 1 < replacements.length; i += 2) {
             String key = "{" + replacements[i] + "}";
             String value = String.valueOf(replacements[i + 1]);
@@ -137,11 +144,13 @@ public class Messages {
     }
 
     public String currencySingular() {
-        return data.getString("currency.singular", "coin");
+        String value = data.getString("currency.singular");
+        return value != null ? value : "coin";
     }
 
     public String currencyPlural() {
-        return data.getString("currency.plural", "coins");
+        String value = data.getString("currency.plural");
+        return value != null ? value : "coins";
     }
 
     public String formatMoney(double amount) {
@@ -149,7 +158,10 @@ public class Messages {
         String unit = rounded == 1 ? currencySingular() : currencyPlural();
         // 数字と単位の間にスペースを入れるかどうかは言語によって異なるため、
         // テンプレート自体を messages.yml 側 (currency.format) で決められるようにしてある。
-        String format = data.getString("currency.format", "{amount} {unit}");
+        String format = data.getString("currency.format");
+        if (format == null) {
+            format = "{amount} {unit}";
+        }
         return format.replace("{amount}", String.valueOf(rounded)).replace("{unit}", unit);
     }
 }

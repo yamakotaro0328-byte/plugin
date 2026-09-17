@@ -175,7 +175,9 @@ menu:
   pay: "&ePay"
   baltop: "&bLeaderboard"
   daily: "&6Claim daily reward"
+  daily-claimed: "&7Daily reward already claimed"
   donate: "&dDonate to a player"
+  vote: "&bVote for the server"
   close: "&cClose"
   back: "&7« Back"
   profile-title: "&6&l{player}"
@@ -262,3 +264,6 @@ menu:
     donate:
       - "&7Donate money to another player."
       - "&7Broadcasts a thank-you message server-wide."
+    vote:
+      - "&7Vote for the server on a voting site to"
+      - "&7receive &f{amount}&7 as a reward."

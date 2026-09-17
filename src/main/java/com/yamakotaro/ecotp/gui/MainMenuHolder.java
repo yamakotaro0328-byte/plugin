@@ -40,6 +40,7 @@ public class MainMenuHolder implements InventoryHolder {
     public static final int SLOT_BALTOP = 20;
     public static final int SLOT_DAILY = 22;
     public static final int SLOT_DONATE = 24;
+    public static final int SLOT_VOTE = 26;
     public static final int SLOT_CLOSE = 40;
 
     private final Inventory inventory;
@@ -71,23 +72,33 @@ public class MainMenuHolder implements InventoryHolder {
                 balanceLore(plugin, viewer)));
         putIfEnabled(plugin, SLOT_PAY, "pay", Material.EMERALD, messages.getList("menu.lore.pay"));
         putIfEnabled(plugin, SLOT_BALTOP, "baltop", Material.DIAMOND, messages.getList("menu.lore.baltop"));
-        putIfEnabled(plugin, SLOT_DAILY, "daily", Material.CLOCK, dailyLore(plugin, viewer),
-                plugin.getDailyRewardManager().isClaimable(viewer.getUniqueId()));
+        boolean dailyClaimable = plugin.getDailyRewardManager().isClaimable(viewer.getUniqueId());
+        putIfEnabled(plugin, SLOT_DAILY, "daily",
+                messages.get(dailyClaimable ? "menu.daily" : "menu.daily-claimed"),
+                Material.CLOCK, dailyLore(plugin, viewer), dailyClaimable);
         putIfEnabled(plugin, SLOT_DONATE, "donate", Material.NETHER_STAR, messages.getList("menu.lore.donate"));
+        if (plugin.getVoteRewardManager().isEnabled()) {
+            double amount = plugin.getConfig().getDouble("vote-reward.amount", 1000.0);
+            inventory.setItem(SLOT_VOTE, MenuItems.item(Material.PAPER, messages.get("menu.vote"),
+                    messages.getList("menu.lore.vote", "amount", ChatUtil.formatMoney(amount))));
+        }
 
         inventory.setItem(SLOT_CLOSE, MenuItems.item(Material.BARRIER, messages.get("menu.close"), null));
         MenuItems.playOpenSound(viewer);
     }
 
     private void putIfEnabled(EcoTpPlugin plugin, int slot, String featureKey, Material material, List<String> lore) {
-        putIfEnabled(plugin, slot, featureKey, material, lore, false);
+        putIfEnabled(plugin, slot, featureKey, plugin.getMessages().get("menu." + featureKey), material, lore, false);
     }
 
     private void putIfEnabled(EcoTpPlugin plugin, int slot, String featureKey, Material material, List<String> lore, boolean glint) {
+        putIfEnabled(plugin, slot, featureKey, plugin.getMessages().get("menu." + featureKey), material, lore, glint);
+    }
+
+    private void putIfEnabled(EcoTpPlugin plugin, int slot, String featureKey, String displayName, Material material, List<String> lore, boolean glint) {
         if (!plugin.isFeatureEnabled(featureKey)) {
             return; // 枠のガラス板のまま (無効な機能はメニューに出さない)
         }
-        String displayName = plugin.getMessages().get("menu." + featureKey);
         inventory.setItem(slot, MenuItems.item(material, displayName, lore, glint));
     }
 
