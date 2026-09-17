@@ -7,16 +7,25 @@ import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.user.User;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import velodicord.Discordbot;
 import velodicord.Velodicord;
 
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
@@ -35,9 +44,14 @@ public class PlayerChat {
         String japanese = Japanizer.japanize(message);
         Player player = event.getPlayer();
         String server = player.getCurrentServer().orElseThrow().getServerInfo().getName();
+        Component nameComponent = text("<%s> ".formatted(player.getUsername()));
+        TextColor nameColor = luckPermsNameColor(player);
+        if (nameColor != null) {
+            nameComponent = nameComponent.color(nameColor);
+        }
         TextComponent.Builder component = text()
                 .append(text("[%s]".formatted(server), DARK_GREEN))
-                .append(text("<%s> ".formatted(player.getUsername())));
+                .append(nameComponent);
         message = message.replaceAll("~~(.*?)~~", "<st>$1</st>")
                 .replaceAll("\\*\\*(.*?)\\*\\*", "<b>$1</b>")
                 .replaceAll("__(.*?)__", "<u>$1</u>")
@@ -83,7 +97,14 @@ public class PlayerChat {
             component.append(text("(%s)".formatted(japanese), GOLD));
             discord += "(%s)".formatted(japanese);
         }
-        Velodicord.getVelodicord().getProxy().sendMessage(component);
+        // 発言元のサーバーには通常のバニラチャットが既に流れているため、他サーバーにだけ同期する(二重表示防止)。
+        Component finalComponent = component.build();
+        for (RegisteredServer registeredServer : Velodicord.getVelodicord().getProxy().getAllServers()) {
+            if (registeredServer.getServerInfo().getName().equals(server)) continue;
+            for (Player recipient : registeredServer.getPlayersConnected()) {
+                recipient.sendMessage(finalComponent);
+            }
+        }
         JsonObject body = new JsonObject();
         body.addProperty("content", discord);
         body.addProperty("username", player.getUsername());
@@ -106,5 +127,30 @@ public class PlayerChat {
             }
         });
         executor.shutdown();
+    }
+
+    /** LuckPermsで"color"メタが設定されているプレイヤーだけ、その色を名前に適用する。
+     * LuckPerms未導入時やメタ未設定時はnullを返し、呼び出し側は無色のままにする。 */
+    private static TextColor luckPermsNameColor(Player player) {
+        try {
+            LuckPerms luckPerms = LuckPermsProvider.get();
+            User user = luckPerms.getUserManager().getUser(player.getUniqueId());
+            if (user == null) return null;
+            return parseColor(user.getCachedData().getMetaData().getMetaValue("color"));
+        } catch (IllegalStateException | NoClassDefFoundError e) {
+            return null;
+        }
+    }
+
+    private static TextColor parseColor(String value) {
+        if (value == null || value.isBlank()) return null;
+        value = value.trim();
+        if (value.startsWith("#")) {
+            return TextColor.fromHexString(value);
+        }
+        if (value.length() == 1) {
+            return LegacyComponentSerializer.legacyAmpersand().deserialize("&" + value + "x").color();
+        }
+        return NamedTextColor.NAMES.value(value.toLowerCase(Locale.ROOT));
     }
 }

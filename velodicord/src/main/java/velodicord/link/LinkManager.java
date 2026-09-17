@@ -37,10 +37,13 @@ public final class LinkManager {
         return code;
     }
 
-    /** Discord側のモーダル送信時に呼ばれる。コードが有効ならlinkに登録して結果を返す。 */
+    /** Discord側のモーダル送信時に呼ばれる。コードが有効かつどちらの side もまだ未連携ならlinkに登録して結果を返す。 */
     public static Optional<PendingLink> complete(String code, String discordUserId) {
+        if (isDiscordLinked(discordUserId)) {
+            return Optional.empty();
+        }
         PendingLink entry = pending.remove(code);
-        if (entry == null || entry.isExpired()) {
+        if (entry == null || entry.isExpired() || isMinecraftLinked(entry.uuid())) {
             return Optional.empty();
         }
         Config.getLink().put(discordUserId, entry.uuid().toString());
@@ -50,5 +53,15 @@ public final class LinkManager {
     public static Optional<UUID> linkedUuid(String discordUserId) {
         String uuid = Config.getLink().get(discordUserId);
         return uuid == null ? Optional.empty() : Optional.of(UUID.fromString(uuid));
+    }
+
+    /** このDiscordアカウントが既にどこかのマイクラアカウントと連携済みか。 */
+    public static boolean isDiscordLinked(String discordUserId) {
+        return Config.getLink().containsKey(discordUserId);
+    }
+
+    /** このマイクラアカウントが既にどこかのDiscordアカウントと連携済みか。 */
+    public static boolean isMinecraftLinked(UUID uuid) {
+        return Config.getLink().containsValue(uuid.toString());
     }
 }
