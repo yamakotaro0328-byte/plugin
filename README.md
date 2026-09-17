@@ -164,6 +164,22 @@ economy:
 `config.yml` の `features.*` で、`/home`・`/sethome`・`/spawn`・`/tpa`・`/tphere`・`/pay`・`/baltop`・`/menu`
 を個別に無効化できます (デフォルトすべて `true`)。無効化されたコマンドは実行時にその旨のメッセージを返します。
 
+## 投票報酬 (Votifier)
+
+EcoTPはVotifierプロトコル互換のリスナーを自前で内蔵しているため、NuVotifier等を別途導入
+しなくても投票サイトから直接投票報酬を受け取れます (`config.yml` の `vote-reward`)。
+古典的なV1プロトコル(鍵方式)と、NuVotifierのプロトコルv2(トークン方式)の**両方**に対応
+しています。投票サイト側には、そのサイトが対応している方に応じて次のいずれかと、
+`votifier.host`・`votifier.port` (デフォルト `8192`) を設定してください。
+
+- **v1 (鍵方式)**: `plugins/EcoTP/votifier-rsa/public.key` の中身
+- **v2 (トークン方式)**: `plugins/EcoTP/votifier-tokens.yml` の `tokens.default` の値
+
+どちらのファイルも初回起動時に自動生成されます。最近の投票サイトはv2のみ対応している
+ことが多いので、投票してもサーバー側に何も記録されず失敗する場合は、v2のトークンを
+使っているか確認してください。NuVotifier(またはその互換品)を別途導入している場合、
+EcoTP側のリスナーは自動的に起動を見送ります (ポート8192の競合を避けるため)。
+
 ## 言語 (messages.yml)
 
 `config.yml` の `language` (デフォルト `en`) で、初回生成される `messages.yml` の言語を選べます

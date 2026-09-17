@@ -105,22 +105,35 @@ vote-reward:
   amount: 1000.0
   duplicate-window-seconds: 60
 
-# EcoTP includes its OWN Votifier(V1)-protocol-compatible listener, so voting sites can
-# point directly at this server WITHOUT installing NuVotifier or any other vote plugin —
-# just start the server once, then give your voting sites the contents of
-# plugins/EcoTP/votifier-rsa/public.key (generated automatically on first run) and this
-# host:port. If NuVotifier (or a compatible fork) is ALSO installed, EcoTP automatically
-# skips starting this listener (both default to port 8192 - starting both would have one
-# silently steal votes meant for the other) and instead picks up NuVotifier's own vote
-# events directly; you don't need to set enabled: false yourself for that case, though you
-# still can to force this listener off for any other reason.
-# (日本語) EcoTPはVotifier(V1)プロトコル互換のリスナーを自前で内蔵しているため、
-# NuVotifier等を別途導入しなくても投票サイトから直接この設定を使えます。初回起動時に
-# 自動生成される plugins/EcoTP/votifier-rsa/public.key の中身と、このhost:portを
-# 投票サイト側に設定してください。NuVotifier(またはその互換品)も導入されている場合、
-# 両方が既定でポート8192を使うため(片方の投票をもう片方が横取りしてしまう)、EcoTPは
-# 自動的にこのリスナーの起動を見送り、NuVotifier側の投票イベントを直接検出します -
-# その場合にenabled: falseを自分で設定する必要はありません(他の理由で強制的に
+# EcoTP includes its OWN Votifier-protocol-compatible listener (BOTH the classic V1 protocol
+# AND NuVotifier's protocol v2), so voting sites can point directly at this server WITHOUT
+# installing NuVotifier or any other vote plugin — just start the server once, then give
+# your voting sites either:
+#   - protocol v1 (RSA key): the contents of plugins/EcoTP/votifier-rsa/public.key
+#   - protocol v2 (token): the "tokens.default" value from plugins/EcoTP/votifier-tokens.yml
+# (both files are generated automatically on first run) plus this host:port. Most modern
+# voting sites only support protocol v2 (the old V1 protocol has no way to tell the site
+# whether a vote actually succeeded, and some v2-only sites will silently refuse to even
+# send a vote at all if the server doesn't greet them with the v2 handshake — this used to
+# be a real "voting just doesn't work, with nothing in the server log" bug here). If
+# NuVotifier (or a compatible fork) is ALSO installed, EcoTP automatically skips starting
+# this listener (both default to port 8192 - starting both would have one silently steal
+# votes meant for the other) and instead picks up NuVotifier's own vote events directly;
+# you don't need to set enabled: false yourself for that case, though you still can to
+# force this listener off for any other reason.
+# (日本語) EcoTPはVotifierプロトコル互換のリスナーを自前で内蔵しているため(V1・v2の両方に
+# 対応)、NuVotifier等を別途導入しなくても投票サイトから直接この設定を使えます。
+# 投票サイト側には、次のいずれかと、このhost:portを設定してください(どちらも初回起動時に
+# 自動生成される):
+#   - V1(鍵方式): plugins/EcoTP/votifier-rsa/public.key の中身
+#   - v2(トークン方式): plugins/EcoTP/votifier-tokens.yml の tokens.default の値
+# 最近の投票サイトはv2のみ対応していることが多い(古いV1プロトコルには投票が成功したかを
+# サイト側へ伝える仕組みが無く、v2専用のサイトの中にはサーバーがv2の挨拶を返してこないと
+# 投票そのものを送信すらしないものがある - これが原因で「投票してもサーバーログに何も
+# 残らないまま投票できない」不具合が過去に発生していた)。NuVotifier(またはその互換品)も
+# 導入されている場合、両方が既定でポート8192を使うため(片方の投票をもう片方が横取りして
+# しまう)、EcoTPは自動的にこのリスナーの起動を見送り、NuVotifier側の投票イベントを直接
+# 検出します - その場合にenabled: falseを自分で設定する必要はありません(他の理由で強制的に
 # 無効化したい場合はもちろん設定可能です)。
 votifier:
   enabled: true
