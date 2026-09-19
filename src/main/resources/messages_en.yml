@@ -159,6 +159,10 @@ ecoitem:
   item-lore: "&7Right-click to redeem for currency"
   redeemed: "&aRedeemed for &f{amount}&a!"
 
+romaji:
+  enabled: "&aRomaji-to-Japanese chat conversion is now &fON&a."
+  disabled: "&7Romaji-to-Japanese chat conversion is now &foff&7."
+
 menu-item:
   name: "&6EcoTP Menu"
   lore:

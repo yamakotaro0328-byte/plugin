@@ -55,6 +55,17 @@ features:
   # クリックで開けるリンクに変換します(プレイヤー個々のクライアント設定「チャットリンク」に
   # 依存しません)。
   chat-link-detection: true
+  # /roma lets a player toggle auto-converting their own chat messages from romaji to
+  # Japanese (kana/kanji). Off per player by default until they run /roma. Uses an
+  # unofficial, undocumented Google endpoint (inputtools.google.com) - no signup or API key
+  # needed, but it could change or stop working without notice; conversion failures are
+  # silent and just leave the original message untouched (chat never gets blocked by this).
+  # (日本語) /roma で、プレイヤーが自分のチャットメッセージのローマ字→日本語(かな/漢字)
+  # 自動変換をオン/オフできます(デフォルトはプレイヤーごとにオフ、/romaを実行するまで)。
+  # Google非公式の内部エンドポイント(inputtools.google.com)を使用しており、登録やAPIキーは
+  # 不要ですが、予告なく仕様変更・停止される可能性があります。変換に失敗した場合は何も
+  # 起きず、元のメッセージがそのまま送信されるだけです(チャット自体が止まることはありません)。
+  romaji-conversion: true
 
 # Optional, lightweight built-in chat formatting (prefix + player name + message), meant as
 # a way to drop a separate chat-formatting plugin (e.g. LunaChat) entirely rather than run

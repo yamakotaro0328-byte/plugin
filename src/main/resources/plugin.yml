@@ -116,6 +116,9 @@ commands:
   ecoitem:
     description: Give a player a physical, redeemable currency item (admin)
     usage: /ecoitem give <player> <amount> [quantity]
+  roma:
+    description: Toggle auto-converting your own chat messages from romaji to Japanese
+    usage: /roma
 
 permissions:
   ecotp.player:
@@ -138,6 +141,7 @@ permissions:
       ecotp.donate: true
       ecotp.daily: true
       ecotp.baltop: true
+      ecotp.romaji: true
       ecotpqa.quickmenu: true
       ecotpqa.weathervote: true
       ecotpqa.adminshop: true
@@ -184,3 +188,6 @@ permissions:
   ecotp.ecoitem:
     description: Can use /ecoitem give (admin)
     default: op
+  ecotp.romaji:
+    description: Can use /roma
+    default: false

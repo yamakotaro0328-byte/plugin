@@ -159,6 +159,10 @@ ecoitem:
   item-lore: "&7右クリックで換金"
   redeemed: "&f{amount}&aを換金しました！"
 
+romaji:
+  enabled: "&aローマ字→日本語変換を&fON&aにしました。"
+  disabled: "&7ローマ字→日本語変換を&fオフ&7にしました。"
+
 menu-item:
   name: "&6EcoTPメニュー"
   lore:

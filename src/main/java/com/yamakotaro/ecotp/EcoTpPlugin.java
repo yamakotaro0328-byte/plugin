@@ -14,6 +14,7 @@ import com.yamakotaro.ecotp.commands.HomeCommand;
 import com.yamakotaro.ecotp.commands.HomesCommand;
 import com.yamakotaro.ecotp.commands.MenuCommand;
 import com.yamakotaro.ecotp.commands.PayCommand;
+import com.yamakotaro.ecotp.commands.RomajiCommand;
 import com.yamakotaro.ecotp.commands.SetHomeCommand;
 import com.yamakotaro.ecotp.commands.SetSpawnCommand;
 import com.yamakotaro.ecotp.commands.SpawnCommand;
@@ -29,6 +30,7 @@ import com.yamakotaro.ecotp.listeners.EcoItemListener;
 import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
 import com.yamakotaro.ecotp.listeners.MenuItemListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
+import com.yamakotaro.ecotp.listeners.RomajiConversionListener;
 import com.yamakotaro.ecotp.listeners.VoteRewardJoinListener;
 import com.yamakotaro.ecotp.web.WebDashboard;
 import org.bukkit.event.EventHandler;
@@ -73,6 +75,7 @@ public class EcoTpPlugin extends JavaPlugin {
     private DailyRewardManager dailyRewardManager;
     private EcoItemManager ecoItemManager;
     private MenuItemManager menuItemManager;
+    private RomajiConversionManager romajiConversionManager;
     private WebDashboard webDashboard;
 
     @Override
@@ -141,6 +144,7 @@ public class EcoTpPlugin extends JavaPlugin {
         this.dailyRewardManager = new DailyRewardManager(this, dailyRewardStorage);
         this.ecoItemManager = new EcoItemManager(this);
         this.menuItemManager = new MenuItemManager(this);
+        this.romajiConversionManager = new RomajiConversionManager();
 
         HomeCommand homeCommand = new HomeCommand(this);
         getCommand("home").setExecutor(homeCommand);
@@ -188,6 +192,7 @@ public class EcoTpPlugin extends JavaPlugin {
         EcoItemCommand ecoItemCommand = new EcoItemCommand(this);
         getCommand("ecoitem").setExecutor(ecoItemCommand);
         getCommand("ecoitem").setTabCompleter(ecoItemCommand);
+        getCommand("roma").setExecutor(new RomajiCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
         getServer().getPluginManager().registerEvents(new EconomyJoinListener(this), this);
@@ -198,6 +203,7 @@ public class EcoTpPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new GuiListener(this), this);
         getServer().getPluginManager().registerEvents(new EcoItemListener(this), this);
         getServer().getPluginManager().registerEvents(new MenuItemListener(this), this);
+        getServer().getPluginManager().registerEvents(new RomajiConversionListener(this), this);
         getServer().getPluginManager().registerEvents(new ChatLinkListener(this), this);
         getServer().getPluginManager().registerEvents(new ChatFormatListener(this), this);
         new VoteRewardListener(this).register();
@@ -344,6 +350,10 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public MenuItemManager getMenuItemManager() {
         return menuItemManager;
+    }
+
+    public RomajiConversionManager getRomajiConversionManager() {
+        return romajiConversionManager;
     }
 
     public Messages getMessages() {
