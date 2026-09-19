@@ -110,6 +110,13 @@ pay:
   failed: "&cPayment failed: {error}"
   refunded: "&cPayment failed and was refunded: {error}"
 
+msg:
+  usage: "&cUsage: /msg <player> <message>"
+  usage-reply: "&cUsage: /reply <message>"
+  no-reply-target: "&cThere's no one to reply to yet."
+  sent: "&d[You -> {player}]&f {message}"
+  received: "&d[{player} -> You]&f {message}"
+
 eco:
   usage: "&cUsage: /eco <give|take|set> <player> <amount>"
   invalid-amount: "&cThe amount must be a number."

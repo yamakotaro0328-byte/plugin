@@ -13,7 +13,9 @@ import com.yamakotaro.ecotp.commands.EcoTpCommand;
 import com.yamakotaro.ecotp.commands.HomeCommand;
 import com.yamakotaro.ecotp.commands.HomesCommand;
 import com.yamakotaro.ecotp.commands.MenuCommand;
+import com.yamakotaro.ecotp.commands.MsgCommand;
 import com.yamakotaro.ecotp.commands.PayCommand;
+import com.yamakotaro.ecotp.commands.ReplyCommand;
 import com.yamakotaro.ecotp.commands.RomajiCommand;
 import com.yamakotaro.ecotp.commands.SetHomeCommand;
 import com.yamakotaro.ecotp.commands.SetSpawnCommand;
@@ -76,6 +78,7 @@ public class EcoTpPlugin extends JavaPlugin {
     private EcoItemManager ecoItemManager;
     private MenuItemManager menuItemManager;
     private RomajiConversionManager romajiConversionManager;
+    private PrivateMessageManager privateMessageManager;
     private WebDashboard webDashboard;
 
     @Override
@@ -145,6 +148,7 @@ public class EcoTpPlugin extends JavaPlugin {
         this.ecoItemManager = new EcoItemManager(this);
         this.menuItemManager = new MenuItemManager(this);
         this.romajiConversionManager = new RomajiConversionManager();
+        this.privateMessageManager = new PrivateMessageManager();
 
         HomeCommand homeCommand = new HomeCommand(this);
         getCommand("home").setExecutor(homeCommand);
@@ -193,6 +197,10 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("ecoitem").setExecutor(ecoItemCommand);
         getCommand("ecoitem").setTabCompleter(ecoItemCommand);
         getCommand("roma").setExecutor(new RomajiCommand(this));
+        MsgCommand msgCommand = new MsgCommand(this);
+        getCommand("msg").setExecutor(msgCommand);
+        getCommand("msg").setTabCompleter(msgCommand);
+        getCommand("reply").setExecutor(new ReplyCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
         getServer().getPluginManager().registerEvents(new EconomyJoinListener(this), this);
@@ -354,6 +362,10 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public RomajiConversionManager getRomajiConversionManager() {
         return romajiConversionManager;
+    }
+
+    public PrivateMessageManager getPrivateMessageManager() {
+        return privateMessageManager;
     }
 
     public Messages getMessages() {

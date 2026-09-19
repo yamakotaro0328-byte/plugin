@@ -110,6 +110,13 @@ pay:
   failed: "&c送金に失敗しました: {error}"
   refunded: "&c送金に失敗したため取り消しました: {error}"
 
+msg:
+  usage: "&c使い方: /msg <プレイヤー名> <メッセージ>"
+  usage-reply: "&c使い方: /reply <メッセージ>"
+  no-reply-target: "&c返信できる相手がいません。"
+  sent: "&d[あなた → {player}]&f {message}"
+  received: "&d[{player} → あなた]&f {message}"
+
 eco:
   usage: "&c使い方: /eco <give|take|set> <プレイヤー名> <金額>"
   invalid-amount: "&c金額は数値で指定してください。"

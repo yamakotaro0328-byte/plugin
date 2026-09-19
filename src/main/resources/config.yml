@@ -48,6 +48,7 @@ features:
   daily: true
   eco-item: true
   menu-item: true
+  msg: true
   # Auto-detects URLs (http(s):// or www.) in player chat messages and turns them into
   # clickable, hoverable links (regardless of each player's own client-side "Chat Links"
   # accessibility setting).

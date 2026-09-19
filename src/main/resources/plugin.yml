@@ -119,6 +119,14 @@ commands:
   roma:
     description: Toggle auto-converting your own chat messages from romaji to Japanese
     usage: /roma
+  msg:
+    description: Send a private message to another player
+    usage: /msg <player> <message>
+    aliases: [tell, w, pm]
+  reply:
+    description: Reply to the last player who /msg'd you (or that you /msg'd)
+    usage: /reply <message>
+    aliases: [r]
 
 permissions:
   ecotp.player:
@@ -142,6 +150,7 @@ permissions:
       ecotp.daily: true
       ecotp.baltop: true
       ecotp.romaji: true
+      ecotp.msg: true
       ecotpqa.quickmenu: true
       ecotpqa.weathervote: true
       ecotpqa.adminshop: true
@@ -190,4 +199,7 @@ permissions:
     default: op
   ecotp.romaji:
     description: Can use /roma
+    default: false
+  ecotp.msg:
+    description: Can use /msg, /reply
     default: false
