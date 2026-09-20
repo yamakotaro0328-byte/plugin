@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import velodicord.commands.LinkCommand;
 import velodicord.commands.PlayerlistCommand;
 import velodicord.commands.ServerCommand;
+import velodicord.events.minecraft.ChatInputSignal;
 import velodicord.events.minecraft.Disconnect;
 import velodicord.events.minecraft.ListenerClose;
 import velodicord.events.minecraft.PlayerChat;
@@ -84,6 +85,9 @@ public class Velodicord {
         proxy.getEventManager().register(this, new ServerConnected());
 
         proxy.getEventManager().register(this, new PlayerChat());
+
+        proxy.getChannelRegistrar().register(ChatInputSignal.CHANNEL);
+        proxy.getEventManager().register(this, new ChatInputSignal());
 
         proxy.getEventManager().register(this, ProxyShutdownEvent.class, e -> {
             if (PMManager instanceof WebSocketPluginMessageManager manager) manager.closeAll();

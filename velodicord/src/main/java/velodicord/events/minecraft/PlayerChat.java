@@ -24,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import velodicord.Discordbot;
 import velodicord.Velodicord;
+import velodicord.chatinput.ChatInputSuppressor;
 
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
@@ -39,6 +40,11 @@ public class PlayerChat {
 
     @Subscribe(order = PostOrder.FIRST)
     public void onPlayerChat(PlayerChatEvent event) {
+        if (ChatInputSuppressor.consume(event.getPlayer().getUniqueId())) {
+            // GUIプラグイン(例: EcoTPの金額入力)への一往復入力なので、通常のチャットとしては中継しない。
+            // バックエンドへの転送自体は止めないので、そちら側の入力待ちリスナーはそのまま消費できる。
+            return;
+        }
         String discord;
         String message = discord = event.getMessage();
         String japanese = Japanizer.japanize(message);
