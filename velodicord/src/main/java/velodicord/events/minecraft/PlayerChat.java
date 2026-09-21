@@ -3,9 +3,6 @@ package velodicord.events.minecraft;
 import com.github.ucchyocean.lc3.japanize.Japanizer;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.velocitypowered.api.event.PostOrder;
-import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.player.PlayerChatEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import net.dv8tion.jda.api.entities.Member;
@@ -24,9 +21,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import velodicord.Discordbot;
 import velodicord.Velodicord;
-import velodicord.chatinput.ChatInputSuppressor;
 
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
@@ -35,22 +32,28 @@ import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.DARK_GREEN;
 import static net.kyori.adventure.text.format.NamedTextColor.GOLD;
 
-public class PlayerChat {
-    private final OkHttpClient httpClient = new OkHttpClient();
+/**
+ * velodicord-bridgeのBridgeListener#onChat(MONITOR優先度)が「他の全プラグイン(ミュート、
+ * GUI入力待ち、国/タウンチャットなど)がキャンセルしなかった、本物の公開チャットです」と
+ * 報告してきたとき(PluginMessageManagerのCHATケース)だけ呼ばれる。つまりここに来た時点で
+ * 何もフィルタせずそのままDiscord/他サーバーへ中継してよい。
+ */
+public final class PlayerChat {
 
-    @Subscribe(order = PostOrder.FIRST)
-    public void onPlayerChat(PlayerChatEvent event) {
-        if (ChatInputSuppressor.consume(event.getPlayer().getUniqueId())) {
-            // GUIプラグイン(例: EcoTPの金額入力)への一往復入力なので、通常のチャットとしては中継しない。
-            // バックエンドへの転送自体は止めないので、そちら側の入力待ちリスナーはそのまま消費できる。
-            return;
-        }
+    private static final OkHttpClient httpClient = new OkHttpClient();
+
+    private PlayerChat() {
+    }
+
+    public static void relay(String server, String playerName, String rawMessage) {
+        Optional<Player> maybePlayer = Velodicord.getVelodicord().getProxy().getPlayer(playerName);
+        if (maybePlayer.isEmpty()) return;
+        Player player = maybePlayer.get();
+
         String discord;
-        String message = discord = event.getMessage();
+        String message = discord = rawMessage;
         String japanese = Japanizer.japanize(message);
-        Player player = event.getPlayer();
-        String server = player.getCurrentServer().orElseThrow().getServerInfo().getName();
-        Component nameComponent = text("<%s> ".formatted(player.getUsername()));
+        Component nameComponent = text("<%s> ".formatted(playerName));
         TextColor nameColor = luckPermsNameColor(player);
         if (nameColor != null) {
             nameComponent = nameComponent.color(nameColor);
@@ -99,7 +102,7 @@ public class PlayerChat {
         }
         component.append(MiniMessage.miniMessage().deserialize(message));
         discord = "[%s] %s".formatted(server, discord);
-        if (!japanese.isEmpty() && !event.getMessage().contains("https://") && !event.getMessage().contains("http://") && !event.getMessage().contains("```")) {
+        if (!japanese.isEmpty() && !rawMessage.contains("https://") && !rawMessage.contains("http://") && !rawMessage.contains("```")) {
             component.append(text("(%s)".formatted(japanese), GOLD));
             discord += "(%s)".formatted(japanese);
         }
@@ -113,8 +116,8 @@ public class PlayerChat {
         }
         JsonObject body = new JsonObject();
         body.addProperty("content", discord);
-        body.addProperty("username", player.getUsername());
-        body.addProperty("avatar_url", "https://mc-heads.net/avatar/%s.png".formatted(player.getUsername()));
+        body.addProperty("username", playerName);
+        body.addProperty("avatar_url", "https://mc-heads.net/avatar/%s.png".formatted(playerName));
         JsonObject allowedMentions = new JsonObject();
         allowedMentions.add("parse", new Gson().toJsonTree(Discordbot.getMentionable()).getAsJsonArray());
         body.add("allowed_mentions", allowedMentions);

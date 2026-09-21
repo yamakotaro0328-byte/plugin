@@ -130,7 +130,6 @@ public class EcoTpPlugin extends JavaPlugin {
         this.combatTracker = new CombatTracker(this);
         this.teleportSafetyManager = new TeleportSafetyManager(this, combatTracker);
         this.chatInputManager = new ChatInputManager(this);
-        getServer().getMessenger().registerOutgoingPluginChannel(this, ChatInputManager.SUPPRESS_CHANNEL);
         this.donationManager = new DonationManager(this);
         this.voteRewardManager = new VoteRewardManager(this);
         this.votifierServer = new VotifierServer(this);

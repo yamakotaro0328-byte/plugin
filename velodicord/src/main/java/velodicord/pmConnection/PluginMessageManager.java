@@ -69,6 +69,15 @@ public abstract class PluginMessageManager {
 
                 case "NOTICE" -> getNoticeChannel().sendMessage(data[2]).queue();
 
+                case "CHAT" -> {
+                    // data[4]以降にプレイヤーの発言自体が来る可能性があるので、"&"の数に関わらず
+                    // メッセージ部分がちぎれないよう、生の文字列を改めて上限付きで分割し直す。
+                    String[] chatData = msg.split("&", 5);
+                    if (chatData.length == 5) {
+                        velodicord.events.minecraft.PlayerChat.relay(chatData[2], chatData[3], chatData[4]);
+                    }
+                }
+
                 case "POS" -> {
                     Velodicord.getVelodicord().getProxy().sendMessage(text()
                             .append(text("<%s> ".formatted(data[3]), BLUE))

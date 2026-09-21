@@ -7,14 +7,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 
 /**
  * GUIから「チャットに入力してください」という一往復のやり取りを実現するための仕組み。
@@ -24,12 +20,6 @@ import java.util.logging.Level;
  * そのため通常の HashMap ではなく ConcurrentHashMap を使う。
  */
 public class ChatInputManager implements Listener {
-
-    /** Velodicord(Velocityプロキシ)に「次のこのプレイヤーの発言はGUI入力なので
-     * Discord/他サーバーへ中継しないで」と伝えるためのプラグインメッセージチャンネル。
-     * Velodicordが導入されていないサーバーではこの送信は単に無視されるだけなので、
-     * 常時送って問題ない。 */
-    public static final String SUPPRESS_CHANNEL = "velodicord:chatinput";
 
     private final EcoTpPlugin plugin;
     private final Map<UUID, PendingInput> pending = new ConcurrentHashMap<>();
@@ -55,7 +45,6 @@ public class ChatInputManager implements Listener {
     public void request(Player player, Consumer<String> onInput) {
         UUID uuid = player.getUniqueId();
         cancelSilently(uuid);
-        sendSuppressSignal(player);
 
         BukkitTask task = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             pending.remove(uuid);
@@ -95,16 +84,5 @@ public class ChatInputManager implements Listener {
         if (input != null) {
             input.timeoutTask.cancel();
         }
-    }
-
-    private void sendSuppressSignal(Player player) {
-        ByteArrayOutputStream payloadBytes = new ByteArrayOutputStream();
-        try (DataOutputStream payload = new DataOutputStream(payloadBytes)) {
-            payload.writeUTF(player.getUniqueId().toString());
-        } catch (IOException e) {
-            plugin.getLogger().log(Level.WARNING, "Failed to build a chat-input suppress signal", e);
-            return;
-        }
-        player.sendPluginMessage(plugin, SUPPRESS_CHANNEL, payloadBytes.toByteArray());
     }
 }
