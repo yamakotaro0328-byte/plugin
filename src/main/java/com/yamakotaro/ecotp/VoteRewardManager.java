@@ -82,6 +82,10 @@ public class VoteRewardManager {
             reward(online);
             return;
         }
+        // オフラインだと reward() (チャット通知・全体ブロードキャスト) が一切呼ばれないため、
+        // このログが無いと投票が実際に届いたことをコンソールから確認する手段が無かった。
+        plugin.getLogger().info("Received a vote for " + username + " (" + serviceName
+                + ") while offline - reward queued and will be paid out on next login.");
         pendingUsernames.add(username.toLowerCase());
         save();
     }
