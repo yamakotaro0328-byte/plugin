@@ -3,3 +3,5 @@ target/
 .idea/
 *.iml
 .vscode/
+# maven-shade-plugin writes this to the project root (not target/) during `mvn package`.
+dependency-reduced-pom.xml
