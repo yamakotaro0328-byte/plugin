@@ -21,4 +21,9 @@ public class PrivateMessageManager {
     public UUID getReplyTarget(UUID uuid) {
         return replyTarget.get(uuid);
     }
+
+    /** 退出時に呼ぶ。相手側に残る記録は、/reply 時にオフライン扱いになるだけなので消さない。 */
+    public void clear(UUID uuid) {
+        replyTarget.remove(uuid);
+    }
 }

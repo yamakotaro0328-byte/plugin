@@ -21,5 +21,6 @@ public class PlayerCleanupListener implements Listener {
         plugin.getTeleportSafetyManager().cancelSilently(uuid);
         plugin.getChatInputManager().cancelSilently(uuid);
         plugin.getCombatTracker().clear(uuid);
+        plugin.getPrivateMessageManager().clear(uuid);
     }
 }

@@ -1,8 +1,8 @@
 package com.yamakotaro.ecotp;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * /roma でオン/オフする、プレイヤーごとのローマ字→日本語自動変換の設定。
@@ -11,7 +11,8 @@ import java.util.UUID;
  */
 public class RomajiConversionManager {
 
-    private final Set<UUID> enabled = new HashSet<>();
+    // /roma (メインスレッド) と AsyncChatEvent (非同期スレッド) の両方から触られる。
+    private final Set<UUID> enabled = ConcurrentHashMap.newKeySet();
 
     public boolean isEnabled(UUID uuid) {
         return enabled.contains(uuid);
