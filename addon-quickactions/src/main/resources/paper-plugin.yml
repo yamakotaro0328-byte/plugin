@@ -4,7 +4,7 @@ main: com.yamakotaro.ecotpquickactions.EcoTpQuickActionsPlugin
 bootstrapper: com.yamakotaro.ecotpquickactions.EcoTpQuickActionsBootstrap
 api-version: '26.2'
 author: yamakotaro0328
-description: Adds a vanilla Quick Actions (G key) menu for EcoTP's commands, plus a weather vote.
+description: Configurable vanilla Quick Actions (G key) menu plus a per-player /quickmenu (status, categories, player picker with TPA/pay), shops and a weather vote.
 
 # EcoTP itself is not a hard requirement: every button in the Quick Actions dialog just
 # runs a normal chat command (e.g. "home", "menu") the same way a player typing it would,
@@ -36,6 +36,9 @@ permissions:
   ecotpqa.quickmenu:
     description: Can use /quickmenu and the vanilla Quick Actions (G key) dialog
     default: true
+  ecotpqa.quickmenu.admin:
+    description: Can run /quickmenu reload
+    default: op
   ecotpqa.weathervote:
     description: Can start/join a /weathervote
     default: true

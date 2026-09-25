@@ -26,6 +26,9 @@ player-shop:
   history-limit: 20
 
 weather-vote:
+  # Turn the weather vote on/off (/weathervote and its menu buttons).
+  # (日本語) 天気投票機能のオン/オフ(/weathervote とメニューのボタン)。
+  enabled: true
   # How long (seconds) a vote stays open collecting votes before it fails for lack of support.
   # (日本語) 賛成が足りずに失敗するまで、投票を受け付け続ける秒数。
   duration-seconds: 60
@@ -48,6 +51,28 @@ messages:
     usage: "&cUsage: /weathervote <clear|rain>"
     no-permission: "&cYou don't have permission to do that."
     players-only: "&cThis command can only be used by players."
+    weather-disabled: "&cWeather votes are disabled."
+    quickmenu:
+      status: "&f{player}\n&7Balance: &e{balance}\n&7World: &f{world} &7({x}, {y}, {z})\n&7Online: &f{online}"
+      close: "Close"
+      back: "« Back"
+      empty: "&7(nothing here)"
+      players-title: "Players"
+      players-page: "&7Pick a player (page {page}/{pages})"
+      no-players: "&7No other players are online."
+      prev: "« Prev"
+      next: "Next »"
+      player-info: "&f{target}\n&7World: &f{world}"
+      player-offline: "&c{target} is no longer online."
+      pay-title: "Send money to {target}"
+      pay-body: "&7Your balance: &e{balance}\n&7Pick an amount, or type one below."
+      pay-amount-label: "Amount"
+      pay-preset: "Send {amount}"
+      pay-custom: "Send typed amount"
+      invalid-amount: "&cPlease enter a valid amount."
+      unavailable: "&cThat option isn't available right now."
+      unknown: "&cUnknown menu entry: {id}"
+      reloaded: "&aReloaded menu.yml. (The G-key dialog updates after a server restart.)"
     adminshop:
       title: "Admin Shop"
       admin-title: "Admin Shop (edit mode)"
@@ -126,6 +151,28 @@ messages:
     usage: "&c使い方: /weathervote <clear|rain>"
     no-permission: "&cこの操作を行う権限がありません。"
     players-only: "&cこのコマンドはプレイヤーのみ使用できます。"
+    weather-disabled: "&c天気投票は無効になっています。"
+    quickmenu:
+      status: "&f{player}\n&7所持金: &e{balance}\n&7ワールド: &f{world} &7({x}, {y}, {z})\n&7オンライン: &f{online}人"
+      close: "閉じる"
+      back: "« 戻る"
+      empty: "&7(項目がありません)"
+      players-title: "プレイヤー"
+      players-page: "&7相手を選んでください ({page}/{pages}ページ)"
+      no-players: "&7他にオンラインのプレイヤーはいません。"
+      prev: "« 前へ"
+      next: "次へ »"
+      player-info: "&f{target}\n&7ワールド: &f{world}"
+      player-offline: "&c{target} はもうオンラインではありません。"
+      pay-title: "{target} に送金"
+      pay-body: "&7あなたの所持金: &e{balance}\n&7金額を選ぶか、下に入力してください。"
+      pay-amount-label: "金額"
+      pay-preset: "{amount} 送る"
+      pay-custom: "入力した金額を送る"
+      invalid-amount: "&c正しい金額を入力してください。"
+      unavailable: "&cその項目は現在利用できません。"
+      unknown: "&c不明なメニュー項目です: {id}"
+      reloaded: "&amenu.yml を再読み込みしました。(Gキーのダイアログはサーバー再起動後に反映されます)"
     adminshop:
       title: "アドミンショップ"
       admin-title: "アドミンショップ (編集モード)"

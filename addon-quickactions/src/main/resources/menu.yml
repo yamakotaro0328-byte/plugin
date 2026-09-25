@@ -1,0 +1,146 @@
+# EcoTP-QuickActions menu definition
+# (日本語) クイックアクションメニューの定義ファイル
+#
+# Every button has a label (and optional tooltip) in both languages, plus exactly one action:
+#   command: "home"        run this command as the player (no leading slash)
+#   menu: teleport         open another category of this file
+#   builtin: players       players = online player picker (TPA / TPHere / pay ...)
+#                          hub     = the main menu
+# Optional per button:
+#   permission: "some.node"    hide/deny the button for players without it
+#   requires: adminshop        hide it while that feature is off
+#                              (adminshop / playershop / weathervote / economy)
+# Placeholders in commands: {player} = the clicking player, {target} = the picked player
+# (player-actions only).
+#
+# (日本語) 各ボタンには2言語のラベル(とツールチップ)と、次のいずれか1つの動作を書く:
+#   command: "home"   プレイヤーとしてコマンドを実行(先頭の / は不要)
+#   menu: teleport    このファイルの別カテゴリを開く
+#   builtin: players  players = オンラインプレイヤー選択 / hub = メインメニュー
+# 任意: permission (権限がない人には非表示) / requires (その機能がオフなら非表示)
+# コマンド内のプレースホルダー: {player} = 押した本人、{target} = 選んだ相手(player-actionsのみ)
+#
+# NOTE: the vanilla G-key dialog (g-key below) is generated at server START, so edits to
+# g-key need a restart. Everything else is re-read by /quickmenu reload.
+# (日本語) Gキーのダイアログ(g-key)はサーバー起動時に生成されるため、変更には再起動が必要。
+# それ以外は /quickmenu reload で即反映される。
+
+title:
+  en: "EcoTP"
+  ja: "EcoTP"
+
+# Buttons shown directly when a player presses the vanilla Quick Actions key (default G).
+# (日本語) バニラのクイックアクションキー(デフォルトG)で直接表示されるボタン。
+g-key:
+  columns: 2
+  buttons: [hub, home, spawn, players, balance, shops-menu, votes-menu]
+
+# Categories listed on the /quickmenu main menu, in order.
+# (日本語) /quickmenu のメインメニューに並べるカテゴリ(この順番)。
+hub:
+  columns: 2
+  categories: [teleport, economy, shops, votes]
+
+categories:
+  teleport:
+    label: { en: "Teleport", ja: "テレポート" }
+    columns: 2
+    buttons: [home, homes, sethome, spawn, players, tpaccept, tpdeny]
+  economy:
+    label: { en: "Money", ja: "お金" }
+    columns: 2
+    buttons: [balance, baltop, daily, players]
+  shops:
+    label: { en: "Shops", ja: "ショップ" }
+    columns: 2
+    buttons: [adminshop, pshop-browse, pshop-my, pshop-history]
+  votes:
+    label: { en: "Votes", ja: "投票" }
+    columns: 2
+    buttons: [vote-clear, vote-rain]
+
+# Buttons shown after picking a player from the player list. {target} = that player's name.
+# (日本語) プレイヤー一覧から相手を選んだ後に表示されるボタン。{target} = 相手の名前。
+player-actions: [tpa, tphere, pay]
+
+# Preset amounts offered on the pay dialog (a free-form amount box is always shown too).
+# (日本語) 送金ダイアログに並べる金額のプリセット(自由入力欄も常に表示される)。
+pay-presets: [100, 1000, 10000]
+
+buttons:
+  hub:
+    label: { en: "Main menu", ja: "メインメニュー" }
+    tooltip: { en: "Everything in one place", ja: "すべての機能をまとめて表示" }
+    builtin: hub
+  players:
+    label: { en: "Players", ja: "プレイヤー" }
+    tooltip: { en: "TPA / TPHere / pay another player", ja: "TPA・呼び寄せ・送金" }
+    builtin: players
+  home:
+    label: { en: "Home", ja: "ホーム" }
+    command: "home"
+  homes:
+    label: { en: "My homes", ja: "ホーム一覧" }
+    command: "homes"
+  sethome:
+    label: { en: "Set home here", ja: "ここをホームに設定" }
+    command: "sethome"
+  spawn:
+    label: { en: "Spawn", ja: "スポーン" }
+    command: "spawn"
+  tpaccept:
+    label: { en: "Accept TP request", ja: "TPリクエストを承認" }
+    command: "tpaccept"
+  tpdeny:
+    label: { en: "Deny TP request", ja: "TPリクエストを拒否" }
+    command: "tpdeny"
+  balance:
+    label: { en: "Balance", ja: "残高" }
+    command: "balance"
+  baltop:
+    label: { en: "Richest players", ja: "所持金ランキング" }
+    command: "baltop"
+  daily:
+    label: { en: "Daily bonus", ja: "デイリーボーナス" }
+    command: "daily"
+  adminshop:
+    label: { en: "Admin shop", ja: "アドミンショップ" }
+    command: "adminshop"
+    requires: adminshop
+  pshop-browse:
+    label: { en: "Player shop", ja: "プレイヤーショップ" }
+    command: "pshop browse"
+    requires: playershop
+  pshop-my:
+    label: { en: "My shop", ja: "マイショップ" }
+    command: "pshop my"
+    requires: playershop
+  pshop-history:
+    label: { en: "Trade history", ja: "取引履歴" }
+    command: "pshop history"
+    requires: playershop
+  vote-clear:
+    label: { en: "Vote: clear weather", ja: "投票: 晴れにする" }
+    command: "weathervote clear"
+    requires: weathervote
+  vote-rain:
+    label: { en: "Vote: rain", ja: "投票: 雨を降らせる" }
+    command: "weathervote rain"
+    requires: weathervote
+  shops-menu:
+    label: { en: "Shops", ja: "ショップ" }
+    menu: shops
+  votes-menu:
+    label: { en: "Votes", ja: "投票" }
+    menu: votes
+    requires: weathervote
+  tpa:
+    label: { en: "Request TP to them", ja: "相手にTPリクエスト" }
+    command: "tpa {target}"
+  tphere:
+    label: { en: "Call them here", ja: "相手を呼び寄せる" }
+    command: "tphere {target}"
+  pay:
+    label: { en: "Send money", ja: "お金を送る" }
+    builtin: pay
+    requires: economy

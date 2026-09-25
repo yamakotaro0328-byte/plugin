@@ -1,12 +1,11 @@
 package com.yamakotaro.ecotpquickactions;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import io.papermc.paper.registry.RegistryAccess;
-import io.papermc.paper.registry.RegistryKey;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -14,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * このプラグイン自体はEcoTPのJavaクラスを一切参照しない。/quickmenu ダイアログの各ボタンは
@@ -27,16 +27,21 @@ public class EcoTpQuickActionsPlugin extends JavaPlugin {
     private EconomyHolder economyHolder;
     private AdminShopManager adminShopManager;
     private PlayerShopManager playerShopManager;
+    private QuickMenuService quickMenu;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        if (!new java.io.File(getDataFolder(), "menu.yml").exists()) {
+            saveResource("menu.yml", false);
+        }
         this.messages = new Messages(this);
         this.weatherVoteManager = new WeatherVoteManager(this, messages);
         this.economyHolder = new EconomyHolder(this);
         economyHolder.setup();
         this.adminShopManager = new AdminShopManager(this, economyHolder, messages);
         this.playerShopManager = new PlayerShopManager(this, economyHolder, messages);
+        this.quickMenu = new QuickMenuService(this, messages, economyHolder, adminShopManager, playerShopManager);
         getServer().getPluginManager().registerEvents(new NumberInputListener(), this);
         getServer().getPluginManager().registerEvents(
                 new AdminShopListener(this, adminShopManager, messages), this);
@@ -62,9 +67,35 @@ public class EcoTpQuickActionsPlugin extends JavaPlugin {
 
             registrar.register(
                     Commands.literal("quickmenu")
-                            .executes(this::runQuickMenu)
+                            .executes(ctx -> withMenuPlayer(ctx, (p, c) -> quickMenu.openHub(p)))
+                            .then(Commands.literal("players")
+                                    .executes(ctx -> withMenuPlayer(ctx, (p, c) -> quickMenu.openPlayerList(p, 0))))
+                            .then(Commands.literal("open")
+                                    .then(Commands.argument("category", StringArgumentType.word())
+                                            .suggests((ctx, builder) -> {
+                                                quickMenu.categoryIds().forEach(builder::suggest);
+                                                return builder.buildFuture();
+                                            })
+                                            .executes(ctx -> withMenuPlayer(ctx, (p, c) -> quickMenu.openCategory(p,
+                                                    StringArgumentType.getString(c, "category"))))))
+                            .then(Commands.literal("run")
+                                    .then(Commands.argument("id", StringArgumentType.word())
+                                            .suggests((ctx, builder) -> {
+                                                quickMenu.buttonIds().forEach(builder::suggest);
+                                                return builder.buildFuture();
+                                            })
+                                            .executes(ctx -> withMenuPlayer(ctx, (p, c) -> quickMenu.runButton(p,
+                                                    StringArgumentType.getString(c, "id"), null)))))
+                            .then(Commands.literal("reload")
+                                    .requires(src -> src.getSender().hasPermission("ecotpqa.quickmenu.admin"))
+                                    .executes(ctx -> {
+                                        quickMenu.reload();
+                                        ctx.getSource().getSender().sendMessage(messages.get("quickmenu.reloaded", Map.of()));
+                                        return Command.SINGLE_SUCCESS;
+                                    }))
                             .build(),
-                    "Open the EcoTP quick actions dialog");
+                    "Open the EcoTP quick actions menu",
+                    List.of("qm"));
 
             registrar.register(
                     Commands.literal("adminshop")
@@ -95,11 +126,16 @@ public class EcoTpQuickActionsPlugin extends JavaPlugin {
             player.sendMessage(messages.get("no-permission", Map.of()));
             return Command.SINGLE_SUCCESS;
         }
+        if (!getConfig().getBoolean("weather-vote.enabled", true)) {
+            player.sendMessage(messages.get("weather-disabled", Map.of()));
+            return Command.SINGLE_SUCCESS;
+        }
         weatherVoteManager.startOrJoin(player, weather);
         return Command.SINGLE_SUCCESS;
     }
 
-    private int runQuickMenu(CommandContext<CommandSourceStack> ctx) {
+    private int withMenuPlayer(CommandContext<CommandSourceStack> ctx,
+                               BiConsumer<Player, CommandContext<CommandSourceStack>> action) {
         CommandSourceStack source = ctx.getSource();
         if (!(source.getSender() instanceof Player player)) {
             source.getSender().sendMessage(messages.get("players-only", Map.of()));
@@ -109,12 +145,7 @@ public class EcoTpQuickActionsPlugin extends JavaPlugin {
             player.sendMessage(messages.get("no-permission", Map.of()));
             return Command.SINGLE_SUCCESS;
         }
-        var dialog = RegistryAccess.registryAccess()
-                .getRegistry(RegistryKey.DIALOG)
-                .get(EcoTpQuickActionsBootstrap.DIALOG_KEY);
-        if (dialog != null) {
-            player.showDialog(dialog);
-        }
+        action.accept(player, ctx);
         return Command.SINGLE_SUCCESS;
     }
 
