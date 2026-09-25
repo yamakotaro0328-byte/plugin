@@ -1,6 +1,7 @@
 package com.yamakotaro.ecotp;
 
 import com.yamakotaro.ecotp.commands.AcceptCommand;
+import com.yamakotaro.ecotp.commands.AfkCommand;
 import com.yamakotaro.ecotp.commands.BalanceCommand;
 import com.yamakotaro.ecotp.commands.BaltopCommand;
 import com.yamakotaro.ecotp.commands.DailyCommand;
@@ -19,12 +20,15 @@ import com.yamakotaro.ecotp.commands.ReplyCommand;
 import com.yamakotaro.ecotp.commands.RomajiCommand;
 import com.yamakotaro.ecotp.commands.SetHomeCommand;
 import com.yamakotaro.ecotp.commands.SetSpawnCommand;
+import com.yamakotaro.ecotp.commands.SetWarpCommand;
 import com.yamakotaro.ecotp.commands.SpawnCommand;
 import com.yamakotaro.ecotp.commands.TpaAcceptCommand;
 import com.yamakotaro.ecotp.commands.TpaCancelCommand;
 import com.yamakotaro.ecotp.commands.TpaCommand;
 import com.yamakotaro.ecotp.commands.TpaDenyCommand;
 import com.yamakotaro.ecotp.commands.TphereCommand;
+import com.yamakotaro.ecotp.commands.VoteTopCommand;
+import com.yamakotaro.ecotp.commands.WarpCommand;
 import com.yamakotaro.ecotp.gui.GuiListener;
 import com.yamakotaro.ecotp.listeners.ChatFormatListener;
 import com.yamakotaro.ecotp.listeners.ChatLinkListener;
@@ -79,6 +83,8 @@ public class EcoTpPlugin extends JavaPlugin {
     private MenuItemManager menuItemManager;
     private RomajiConversionManager romajiConversionManager;
     private PrivateMessageManager privateMessageManager;
+    private WarpManager warpManager;
+    private AfkManager afkManager;
     private WebDashboard webDashboard;
 
     @Override
@@ -149,6 +155,8 @@ public class EcoTpPlugin extends JavaPlugin {
         this.menuItemManager = new MenuItemManager(this);
         this.romajiConversionManager = new RomajiConversionManager();
         this.privateMessageManager = new PrivateMessageManager();
+        this.warpManager = new WarpManager(this);
+        this.afkManager = new AfkManager(this);
 
         HomeCommand homeCommand = new HomeCommand(this);
         getCommand("home").setExecutor(homeCommand);
@@ -201,6 +209,17 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("msg").setExecutor(msgCommand);
         getCommand("msg").setTabCompleter(msgCommand);
         getCommand("reply").setExecutor(new ReplyCommand(this));
+        WarpCommand warpCommand = new WarpCommand(this);
+        getCommand("warp").setExecutor(warpCommand);
+        getCommand("warp").setTabCompleter(warpCommand);
+        SetWarpCommand setWarpCommand = new SetWarpCommand(this, false);
+        getCommand("setwarp").setExecutor(setWarpCommand);
+        getCommand("setwarp").setTabCompleter(setWarpCommand);
+        SetWarpCommand delWarpCommand = new SetWarpCommand(this, true);
+        getCommand("delwarp").setExecutor(delWarpCommand);
+        getCommand("delwarp").setTabCompleter(delWarpCommand);
+        getCommand("votetop").setExecutor(new VoteTopCommand(this));
+        getCommand("afk").setExecutor(new AfkCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
         getServer().getPluginManager().registerEvents(new EconomyJoinListener(this), this);
@@ -214,6 +233,8 @@ public class EcoTpPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new RomajiConversionListener(this), this);
         getServer().getPluginManager().registerEvents(new ChatLinkListener(this), this);
         getServer().getPluginManager().registerEvents(new ChatFormatListener(this), this);
+        getServer().getPluginManager().registerEvents(afkManager, this);
+        afkManager.start();
         new VoteRewardListener(this).register();
         votifierServer.start();
 
@@ -366,6 +387,14 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public PrivateMessageManager getPrivateMessageManager() {
         return privateMessageManager;
+    }
+
+    public WarpManager getWarpManager() {
+        return warpManager;
+    }
+
+    public AfkManager getAfkManager() {
+        return afkManager;
     }
 
     public Messages getMessages() {

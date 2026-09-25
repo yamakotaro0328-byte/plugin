@@ -127,6 +127,22 @@ commands:
     description: Reply to the last player who /msg'd you (or that you /msg'd)
     usage: /reply <message>
     aliases: [r]
+  warp:
+    description: List warps, or teleport to one (distance-priced like /spawn)
+    usage: /warp [name]
+    aliases: [warps]
+  setwarp:
+    description: Create (or move) a warp at your current location (admin)
+    usage: /setwarp <name>
+  delwarp:
+    description: Delete a warp (admin)
+    usage: /delwarp <name>
+  votetop:
+    description: Show the vote leaderboard
+    usage: /votetop
+  afk:
+    description: Toggle your AFK status
+    usage: /afk
 
 permissions:
   ecotp.player:
@@ -151,6 +167,9 @@ permissions:
       ecotp.baltop: true
       ecotp.romaji: true
       ecotp.msg: true
+      ecotp.warp: true
+      ecotp.votetop: true
+      ecotp.afk: true
       ecotpqa.quickmenu: true
       ecotpqa.weathervote: true
       ecotpqa.adminshop: true
@@ -203,3 +222,18 @@ permissions:
   ecotp.msg:
     description: Can use /msg, /reply
     default: false
+  ecotp.warp:
+    description: Can use /warp
+    default: false
+  ecotp.setwarp:
+    description: Can use /setwarp and /delwarp (admin)
+    default: op
+  ecotp.votetop:
+    description: Can use /votetop
+    default: false
+  ecotp.afk:
+    description: Can use /afk
+    default: false
+  ecotp.afk.kickexempt:
+    description: Never kicked for being AFK (only matters if afk.kick-seconds > 0)
+    default: op

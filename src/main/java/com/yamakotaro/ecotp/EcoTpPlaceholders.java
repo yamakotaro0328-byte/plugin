@@ -48,6 +48,8 @@ public class EcoTpPlaceholders extends PlaceholderExpansion {
             case "balance" -> economy == null ? "0" : String.valueOf(Math.round(economy.getBalance(player)));
             case "balance_formatted" -> economy == null ? ChatUtil.formatMoney(0) : ChatUtil.formatMoney(economy.getBalance(player));
             case "sethome_cost" -> ChatUtil.formatMoney(plugin.getHomeManager().getNextSetHomeCost(player.getUniqueId()));
+            case "votes" -> String.valueOf(plugin.getVoteRewardManager().getVoteCount(player.getName()));
+            case "afk" -> plugin.getAfkManager().isAfk(player.getUniqueId()) ? plugin.getMessages().get("afk.tag") : "";
             default -> null;
         };
     }

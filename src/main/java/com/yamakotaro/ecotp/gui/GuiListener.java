@@ -34,7 +34,7 @@ public class GuiListener implements Listener {
     public void onDrag(InventoryDragEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
         if (holder instanceof MainMenuHolder || holder instanceof PlayerSelectHolder
-                || holder instanceof HomeSelectHolder || holder instanceof BaltopHolder
+                || holder instanceof HomeSelectHolder || holder instanceof WarpSelectHolder || holder instanceof BaltopHolder
                 || holder instanceof AmountSelectHolder || holder instanceof IncomingRequestHolder) {
             // これらのGUIは表示専用: ドラッグでアイテムを置かせない
             // (空いたスロットにアイテムをドロップされて紛失するのを防ぐ)。
@@ -110,6 +110,36 @@ public class GuiListener implements Listener {
             }
             player.closeInventory();
             player.performCommand("home " + homeName);
+            return;
+        }
+
+        if (holder instanceof WarpSelectHolder warpHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) {
+                return;
+            }
+            int slot = event.getSlot();
+            if (slot == WarpSelectHolder.SLOT_BACK) {
+                backToMainMenu(player);
+                return;
+            }
+            if (slot == WarpSelectHolder.SLOT_PREV) {
+                player.openInventory(new WarpSelectHolder(plugin, player, warpHolder.getPage() - 1).getInventory());
+                return;
+            }
+            if (slot == WarpSelectHolder.SLOT_NEXT) {
+                player.openInventory(new WarpSelectHolder(plugin, player, warpHolder.getPage() + 1).getInventory());
+                return;
+            }
+            if (slot >= WarpSelectHolder.CONTENT_SIZE) {
+                return;
+            }
+            String warpName = warpHolder.nameAt(slot);
+            if (warpName == null) {
+                return;
+            }
+            player.closeInventory();
+            player.performCommand("warp " + warpName);
             return;
         }
 
@@ -201,6 +231,7 @@ public class GuiListener implements Listener {
             case MainMenuHolder.SLOT_BALANCE -> runAndClose(player, "balance");
             case MainMenuHolder.SLOT_PAY -> openPlayerSelectAndClose(player, PlayerSelectHolder.Purpose.PAY);
             case MainMenuHolder.SLOT_BALTOP -> openBaltop(player, 0);
+            case MainMenuHolder.SLOT_WARP -> openWarps(player);
             case MainMenuHolder.SLOT_DAILY -> runAndClose(player, "daily");
             case MainMenuHolder.SLOT_DONATE -> openPlayerSelectAndClose(player, PlayerSelectHolder.Purpose.DONATE);
             case MainMenuHolder.SLOT_VOTE -> openVoteSites(player);
@@ -221,6 +252,15 @@ public class GuiListener implements Listener {
         player.closeInventory();
         TpaManager.IncomingRequestInfo request = info.get();
         player.openInventory(new IncomingRequestHolder(plugin, player, request.type(), request.requesterName()).getInventory());
+    }
+
+    private void openWarps(Player player) {
+        player.closeInventory();
+        if (plugin.getWarpManager().getWarpNames().isEmpty()) {
+            player.sendMessage(plugin.msg("warp.empty"));
+            return;
+        }
+        player.openInventory(new WarpSelectHolder(plugin, player, 0).getInventory());
     }
 
     private void handleHomeClick(Player player) {

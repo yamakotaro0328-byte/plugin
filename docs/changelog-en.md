@@ -1,19 +1,24 @@
-[SIZE=5][B]Update: Donations & Vote Rewards[/B][/SIZE]
+[SIZE=5][B]EcoTP 1.6.0 — Warps, Vote Leaderboard, Private Messages & AFK[/B][/SIZE]
 
-[B]New: /donate[/B]
+[B]New[/B]
 [LIST]
-[*][I]/donate <player> <amount>[/I] — send money to another player as a donation. Works just like [I]/pay[/I] (same confirmation step, refunded automatically if the deposit somehow fails), but on success it broadcasts a thank-you message to the whole server.
-[*]The [I]recipient[/I] controls what that broadcast says: [I]/donatemessage <text>[/I] sets your own personal thank-you message (placeholders: [I]{player}[/I] = the donor's name, [I]{amount}[/I] = the amount). [I]/donatemessage reset[/I] goes back to the default template in messages.yml.
-[*]Toggle the whole feature with [I]features.donate: true/false[/I] in config.yml, same as any other command.
+[*][B]Warps[/B] — [I]/setwarp <name>[/I] and [I]/delwarp <name>[/I] (admin) manage shared warp points; players use [I]/warp <name>[/I] ([I]/warp[/I] alone lists them) or the new Warps tile in [I]/menu[/I]. Priced by distance with the same confirmation and teleport safety checks as [I]/spawn[/I].
+[*][B]/votetop[/B] — every vote is now counted; shows the top voters and your own total.
+[*][B]Vote milestones[/B] — reaching a configured total (default 10 / 50 / 100 votes) pays an extra one-time bonus on top of the normal reward, announced server-wide. Configure under [I]vote-reward.milestones[/I].
+[*][B]/msg and /reply[/B] — private messages (aliases /tell, /w, /pm, /r). /reply answers whoever you were last talking with, from either side.
+[*][B]AFK[/B] — [I]/afk[/I], or automatically after [I]afk.auto-seconds[/I] (default 300) of no activity. [AFK] tab-list tag, a heads-up when you /msg someone AFK, and an optional AFK kick ([I]afk.kick-seconds[/I], [I]ecotp.afk.kickexempt[/I] to exempt).
+[*][B]Built-in chat format[/B] (optional, off by default) — prefix + name + message, meant to replace a separate chat-formatting plugin.
+[*][B]/roma[/B] — toggle automatic romaji → Japanese conversion of your own chat.
+[*]New placeholders: [I]%ecotp_votes%[/I], [I]%ecotp_afk%[/I].
 [/LIST]
 
-[B]New: Vote Rewards — no extra plugin required[/B]
+[B]Fixes[/B]
 [LIST]
-[*]EcoTP now ships its own built-in Votifier(V1)-protocol-compatible listener, so voting sites can point directly at your server — [B]no NuVotifier or any other vote plugin needed[/B]. On first startup it generates an RSA keypair under [I]plugins/EcoTP/votifier-rsa/[/I]; give voting sites the contents of [I]public.key[/I] plus your server's host and port ([I]votifier.port[/I], default [B]8192[/B]).
-[*]Already running NuVotifier for other plugins? EcoTP also auto-detects it (via [I]vote-reward[/I]) so you don't have to change anything — just set [I]votifier.enabled: false[/I] in config.yml to avoid a port conflict with it.
-[*]Either way, when a player votes they're rewarded with currency (default [B]1000[/B], set via [I]vote-reward.amount[/I]) and a server-wide broadcast announces it.
-[*]Voted while offline? The reward is queued and paid out automatically the next time that player joins — nothing is lost.
-[*]Turn off rewards entirely with [I]vote-reward.enabled: false[/I], or just the built-in listener with [I]votifier.enabled: false[/I].
+[*]Voting on several sites while offline only paid [I]one[/I] reward — every queued vote is now paid on next login (existing pending votes carry over).
+[*]Voting on two different sites within 60 seconds had the second vote thrown away as a "retry" — the retry guard is now per site.
+[*]Offline votes are now logged to the console when they arrive.
+[*]EcoTP failed to load on 26.2 servers ("Unsupported API version 26.3") — api-version is back to 26.2.
+[*]Chat links could lose their click action when another chat plugin reformatted the message.
 [/LIST]
 
-Both features work out of the box with the defaults above; nothing needs to be enabled manually beyond what's already set in config.yml.
+[B]Upgrading:[/B] config.yml is only generated on a fresh install, so on an existing server copy the new [I]afk:[/I] section and the [I]vote-reward.top-limit[/I] / [I]vote-reward.milestones[/I] keys from the bundled config.yml if you want to change them. Milestone bonuses stay [B]off[/B] until you add [I]milestones[/I] yourself; everything else works with built-in defaults.

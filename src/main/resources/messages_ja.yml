@@ -116,6 +116,36 @@ msg:
   no-reply-target: "&c返信できる相手がいません。"
   sent: "&d[あなた → {player}]&f {message}"
   received: "&d[{player} → あなた]&f {message}"
+  target-afk: "&e{player} さんは放置中のため、すぐには読まれないかもしれません。"
+
+warp:
+  list: "&aワープ一覧: &f{warps}"
+  empty: "&cワープ地点がまだ設定されていません。"
+  not-found: "&c「{name}」という名前のワープはありません。"
+  world-missing: "&cそのワープ地点のワールドが見つかりません。"
+  teleporting: "ワープ「{name}」へワープします"
+  success: "&a「{name}」にワープしました。({cost} 支払いました)"
+
+setwarp:
+  usage: "&c使い方: /setwarp <名前>"
+  invalid-name: "&cワープ名には英数字と日本語のみ使えます(16文字まで)。"
+  success: "&aワープ「{name}」を現在地に設定しました。"
+
+delwarp:
+  usage: "&c使い方: /delwarp <名前>"
+  success: "&aワープ「{name}」を削除しました。"
+
+votetop:
+  header: "&6&l--- 投票ランキング ---"
+  line: "&e{rank}. &f{player} &7- &b{count}回"
+  self: "&7あなたの投票数: &b{count}回"
+  empty: "&cまだ誰も投票していません。"
+
+afk:
+  now-afk: "&7* {player} さんが放置中になりました。"
+  no-longer-afk: "&7* {player} さんが戻ってきました。"
+  tag: "&7[AFK] "
+  kick-reason: "長時間放置していたためキックされました。"
 
 eco:
   usage: "&c使い方: /eco <give|take|set> <プレイヤー名> <金額>"
@@ -150,6 +180,7 @@ donatemessage:
 vote:
   thanks: "&a投票ありがとうございます！{amount}を受け取りました。"
   broadcast: "&b&l[投票] &e{player} &bさんがサーバーに投票して &e{amount} &bを受け取りました！ありがとうございます！"
+  milestone: "&6&l[投票] &e{player} &6さんが累計 &e{count} &6回投票を達成し、ボーナス &e{bonus} &6を受け取りました！ありがとうございます！"
   sites-header: "&b&l投票サイト &7(クリックで開きます):"
   site-hover: "&7クリックして &f{url} &7を開く"
 
@@ -187,6 +218,8 @@ menu:
   balance: "&6所持金確認"
   pay: "&e送金"
   baltop: "&b所持金ランキング"
+  warp: "&bワープ"
+  select-warp-title: "ワープ地点を選択"
   daily: "&6デイリーボーナスを受け取る"
   daily-claimed: "&7デイリーボーナスは受け取り済み"
   donate: "&d寄付する"
@@ -268,6 +301,11 @@ menu:
       - "&7他のプレイヤーに送金します。"
     baltop:
       - "&7所持金ランキングを表示します。"
+    warp-entry-missing:
+      - "&cこのワープ地点のワールドはもう存在しません。"
+    warp:
+      - "&7ワープ地点へ移動します。"
+      - "&7ワープ数: &f{count}"
     daily:
       - "&71日1回のボーナスを受け取ります。"
       - "&7連続日数: &f{streak}日"

@@ -54,6 +54,9 @@ public class ReplyCommand implements CommandExecutor {
         plugin.getPrivateMessageManager().recordConversation(player.getUniqueId(), target.getUniqueId());
         player.sendMessage(plugin.msg("msg.sent", "player", target.getName(), "message", message));
         target.sendMessage(plugin.msg("msg.received", "player", player.getName(), "message", message));
+        if (plugin.getAfkManager().isAfk(target.getUniqueId())) {
+            player.sendMessage(plugin.msg("msg.target-afk", "player", target.getName()));
+        }
         return true;
     }
 }

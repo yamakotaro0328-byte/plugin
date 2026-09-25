@@ -116,6 +116,36 @@ msg:
   no-reply-target: "&cThere's no one to reply to yet."
   sent: "&d[You -> {player}]&f {message}"
   received: "&d[{player} -> You]&f {message}"
+  target-afk: "&e{player} is AFK and may not see your message right away."
+
+warp:
+  list: "&aWarps: &f{warps}"
+  empty: "&cNo warps have been set yet."
+  not-found: "&cNo warp named \"{name}\" exists."
+  world-missing: "&cThe world for that warp could not be found."
+  teleporting: "warp \"{name}\""
+  success: "&aWarped to \"{name}\". (paid {cost})"
+
+setwarp:
+  usage: "&cUsage: /setwarp <name>"
+  invalid-name: "&cWarp names can only use letters, numbers, and Japanese (up to 16 characters)."
+  success: "&aWarp \"{name}\" set to your current location."
+
+delwarp:
+  usage: "&cUsage: /delwarp <name>"
+  success: "&aDeleted warp \"{name}\"."
+
+votetop:
+  header: "&6&l--- Vote Leaderboard ---"
+  line: "&e{rank}. &f{player} &7- &b{count} vote(s)"
+  self: "&7Your votes: &b{count}"
+  empty: "&cNo one has voted yet."
+
+afk:
+  now-afk: "&7* {player} is now AFK."
+  no-longer-afk: "&7* {player} is no longer AFK."
+  tag: "&7[AFK] "
+  kick-reason: "You were kicked for being AFK too long."
 
 eco:
   usage: "&cUsage: /eco <give|take|set> <player> <amount>"
@@ -150,6 +180,7 @@ donatemessage:
 vote:
   thanks: "&aThanks for voting! You received {amount}."
   broadcast: "&b&l[Vote] &e{player} &bvoted for the server and received &e{amount}&b! Thank you!"
+  milestone: "&6&l[Vote] &e{player} &6reached &e{count} &6votes and got a &e{bonus} &6bonus! Thank you!"
   sites-header: "&b&lVoting sites &7(click to open):"
   site-hover: "&7Click to open &f{url}"
 
@@ -187,6 +218,8 @@ menu:
   balance: "&6Check balance"
   pay: "&ePay"
   baltop: "&bLeaderboard"
+  warp: "&bWarps"
+  select-warp-title: "Select a warp"
   daily: "&6Claim daily reward"
   daily-claimed: "&7Daily reward already claimed"
   donate: "&dDonate to a player"
@@ -268,6 +301,11 @@ menu:
       - "&7Send money to another player."
     baltop:
       - "&7Show the balance leaderboard."
+    warp:
+      - "&7Teleport to a warp point."
+      - "&7Warps: &f{count}"
+    warp-entry-missing:
+      - "&cThis warp's world no longer exists."
     daily:
       - "&7Claim your once-per-day reward."
       - "&7Streak: &f{streak} day(s)"

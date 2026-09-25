@@ -6,7 +6,7 @@
 
     <groupId>com.yamakotaro</groupId>
     <artifactId>ecotp-plugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.6.0</version>
     <packaging>jar</packaging>
 
     <name>EcoTP</name>

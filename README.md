@@ -203,6 +203,27 @@ Google非公式の内部エンドポイント(`inputtools.google.com`、登録�
 やり取りした相手(送った相手・送られてきた相手のどちら側からでも)へ、名前を打たずに
 返信できます。`config.yml` の `features.msg` で無効化できます。
 
+相手が放置(AFK)中の場合は、送った側に「放置中のため、すぐには読まれないかもしれません」と
+表示されます。
+
+## ワープ (/warp)
+
+管理者が `/setwarp <名前>` で現在地を全員共通のワープ地点として登録し(`/delwarp <名前>` で
+削除)、プレイヤーは `/warp <名前>` でそこへ移動できます。`/warp` だけなら一覧表示、`/menu` の
+「ワープ」からGUIでも選べます。料金・確認・安全条件は `/spawn` と同じ(距離制、詠唱中に動くと
+中断・課金なし)。名前の規則はホームと同じです(英数字・日本語、16文字まで)。
+`features.warp` で無効化できます。
+
+## 放置 (AFK)
+
+`/afk` で放置状態を切り替えられます。何も操作しないまま `afk.auto-seconds` 秒(デフォルト
+300秒)経つと自動で放置状態になり、移動・視点移動・チャット・コマンド・クリックで解除されます。
+放置状態になった/戻った時は全体に通知され、タブリストの名前の前に `[AFK]` が付きます
+(TAB等のタブリストプラグインを使っている場合は `afk.tablist-tag: false` にして、そちらで
+`%ecotp_afk%` を使ってください)。`afk.kick-seconds` を0より大きくすると、その秒数放置した
+プレイヤーをキックします(`ecotp.afk.kickexempt` 権限を持つ人は対象外)。`features.afk` で
+無効化できます。
+
 ## 投票報酬 (Votifier)
 
 EcoTPはVotifierプロトコル互換のリスナーを自前で内蔵しているため、NuVotifier等を別途導入
@@ -214,7 +235,14 @@ EcoTPはVotifierプロトコル互換のリスナーを自前で内蔵してい�
 - **v1 (鍵方式)**: `plugins/EcoTP/votifier-rsa/public.key` の中身
 - **v2 (トークン方式)**: `plugins/EcoTP/votifier-tokens.yml` の `tokens.default` の値
 
-どちらのファイルも初回起動時に自動生成されます。最近の投票サイトはv2のみ対応している
+どちらのファイルも初回起動時に自動生成されます。
+
+累計投票数は記録され、`/votetop` でランキングを表示できます。`vote-reward.milestones` で
+設定した回数(デフォルト: 10回・50回・100回)にちょうど達した投票では、通常の報酬に
+ボーナスが上乗せされ、全体に通知されます。オフライン中に複数のサイトで投票した場合も、
+次回ログイン時に全部まとめて付与されます。
+
+最近の投票サイトはv2のみ対応している
 ことが多いので、投票してもサーバー側に何も記録されず失敗する場合は、v2のトークンを
 使っているか確認してください。NuVotifier(またはその互換品)を別途導入している場合、
 EcoTP側のリスナーは自動的に起動を見送ります (ポート8192の競合を避けるため)。
@@ -232,7 +260,7 @@ EcoTP側のリスナーは自動的に起動を見送ります (ポート8192の
 ## 導入方法
 
 1. **Vault を導入する (必須)**。入っていないとEcoTPはロードされません。
-2. 本プラグインをビルドし (`mvn package`)、生成された `target/ecotp-plugin-1.0.0.jar` を `plugins/` に入れる。
+2. 本プラグインをビルドし (`mvn package`)、生成された `target/ecotp-plugin-1.6.0.jar` を `plugins/` に入れる。
    (GitHub Actions が push のたびに自動でビルドし、Artifact として jar を公開しています)
 3. サーバーを再起動する。`plugins/EcoTP/config.yml` で料金や初期所持金、`plugins/EcoTP/messages.yml`
    で文言・通貨単位を調整できる。
@@ -248,11 +276,13 @@ EcoTP側のリスナーは自動的に起動を見送ります (ポート8192の
 | `%ecotp_balance%` | 所持金 (数値のみ) |
 | `%ecotp_balance_formatted%` | 所持金 (「1000円」のように整形) |
 | `%ecotp_sethome_cost%` | 次に `/sethome` を使ったときの料金 |
+| `%ecotp_votes%` | 累計投票数 |
+| `%ecotp_afk%` | 放置中なら `[AFK] `(messages.yml の `afk.tag`)、そうでなければ空 |
 
 ## 権限
 
 `ecotp.player` (デフォルト全員) を持っていれば、基本的なプレイヤー機能
-(home/sethome/spawn/tpa/tphere/pay/menu) がまとめて使えます。個別に制限したい場合は、
+(home/sethome/spawn/tpa/tphere/pay/menu/msg/warp/votetop/afk/roma など) がまとめて使えます。個別に制限したい場合は、
 `ecotp.player` を外したうえで必要な個別権限だけを付与してください。
 
 | 権限 | デフォルト | 説明 |
@@ -266,6 +296,13 @@ EcoTP側のリスナーは自動的に起動を見送ります (ポート8192の
 | `ecotp.tphere` | (親経由) | `/tphere` を使用できる |
 | `ecotp.pay` | (親経由) | `/pay` を使用できる |
 | `ecotp.menu` | (親経由) | `/menu` を使用できる |
+| `ecotp.msg` | (親経由) | `/msg`, `/reply` を使用できる |
+| `ecotp.warp` | (親経由) | `/warp` を使用できる |
+| `ecotp.setwarp` | op | `/setwarp`, `/delwarp` を使用できる |
+| `ecotp.votetop` | (親経由) | `/votetop` を使用できる |
+| `ecotp.afk` | (親経由) | `/afk` を使用できる |
+| `ecotp.afk.kickexempt` | op | 放置によるキックの対象外になる |
+| `ecotp.romaji` | (親経由) | `/roma` を使用できる |
 | `ecotp.balance.others` | op | 他人の `/balance` を確認できる |
 | `ecotp.admin` | op | `/eco` と `/ecotp reload` を使用できる |
 

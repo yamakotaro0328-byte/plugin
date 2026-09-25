@@ -49,6 +49,8 @@ features:
   eco-item: true
   menu-item: true
   msg: true
+  warp: true
+  afk: true
   # Auto-detects URLs (http(s):// or www.) in player chat messages and turns them into
   # clickable, hoverable links (regardless of each player's own client-side "Chat Links"
   # accessibility setting).
@@ -67,6 +69,21 @@ features:
   # 不要ですが、予告なく仕様変更・停止される可能性があります。変換に失敗した場合は何も
   # 起きず、元のメッセージがそのまま送信されるだけです(チャット自体が止まることはありません)。
   romaji-conversion: true
+
+# AFK (/afk). A player becomes AFK automatically after auto-seconds with no movement, looking
+# around, chat, commands, or clicks (0 = only via /afk), and is kicked after kick-seconds of
+# inactivity (0 = never; players with ecotp.afk.kickexempt are never kicked). tablist-tag adds
+# the afk.tag text from messages.yml in front of their name in the tab list - turn it off if a
+# tab-list plugin such as TAB manages names; use %ecotp_afk% in that plugin instead.
+# (日本語) AFK(/afk)。移動・視点移動・チャット・コマンド・クリックが auto-seconds 秒無いと
+# 自動でAFKになる(0なら /afk でのみ)。kick-seconds 秒放置するとキック(0で無効、
+# ecotp.afk.kickexempt 権限を持つ人は対象外)。tablist-tag はタブリストの名前の前に
+# messages.yml の afk.tag を付ける - TAB等のタブリストプラグインで名前を管理している場合は
+# false にし、そちらで %ecotp_afk% を使ってください。
+afk:
+  auto-seconds: 300
+  kick-seconds: 0
+  tablist-tag: true
 
 # Optional, lightweight built-in chat formatting (prefix + player name + message), meant as
 # a way to drop a separate chat-formatting plugin (e.g. LunaChat) entirely rather than run
@@ -132,15 +149,17 @@ menu-item:
 # duplicate-window-seconds: the classic Votifier protocol never tells the voting site whether
 #   a vote actually succeeded, so a site that thinks its request failed (timeout, no response)
 #   may silently retry it - each retry otherwise looks like a brand new, valid vote and would
-#   pay out again. A second "vote" for the same username within this many seconds of the last
-#   rewarded one is treated as a retry and ignored rather than paid again.
+#   pay out again. A second "vote" for the same username from the same site within this many
+#   seconds of the last rewarded one is treated as a retry and ignored rather than paid again
+#   (votes on different sites back to back are always counted).
 # (日本語) 投票サイトでの投票報酬。投票時にオフラインだった場合は保留され、
 # 次回ログイン時に付与される。
 # duplicate-window-seconds: 古典的なVotifierプロトコルには投票が実際に成功したかを
 #   投票サイト側へ伝える仕組みが無いため、サイト側が「失敗した」と判断すると(タイムアウト等)
 #   黙って再送してくることがある - 対策が無いと再送のたびに新しい投票として報酬が
-#   支払われてしまう。直近に報酬を支払った同じユーザー名からの投票が、この秒数以内に
-#   再度届いた場合は再送とみなし、報酬を支払わずに無視する。
+#   支払われてしまう。直近に報酬を支払った同じユーザー名・同じサイトからの投票が、この秒数
+#   以内に再度届いた場合は再送とみなし、報酬を支払わずに無視する(別々のサイトで続けて
+#   投票した場合は、それぞれきちんと数える)。
 # sites: /menu の投票タイルをクリックしたときに、クリックで開けるリンクとしてチャットに
 #   表示される投票サイトの一覧 (任意)。空のままなら、タイルは説明表示のみでクリックしても
 #   何も起きない。
@@ -148,6 +167,16 @@ vote-reward:
   enabled: true
   amount: 1000.0
   duplicate-window-seconds: 60
+  # /votetop に表示する人数。 (Number of players shown by /votetop.)
+  top-limit: 10
+  # Extra one-time bonus paid on top of the normal reward when a player's total vote count
+  # reaches exactly this number. Add, change, or remove entries freely ({} to disable).
+  # (日本語) 累計投票数がちょうどこの回数に達した時、通常の報酬に上乗せで1回だけ支払う
+  # ボーナス。自由に追加・変更・削除できます({} にすると無効)。
+  milestones:
+    10: 5000.0
+    50: 30000.0
+    100: 100000.0
   sites: []
     # - name: "Server List Site A"
     #   url: "https://example.com/vote/myserver"

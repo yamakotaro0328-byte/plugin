@@ -17,9 +17,15 @@ No Essentials or any other economy plugin required — EcoTP manages balances it
 [*][B]Physical currency item ([I]/ecoitem[/I])[/B] — mint a stack of a configurable value per item; it can be dropped, traded, or stored in a chest like any other item, and right-clicking redeems the whole stack.
 [*][B]Optional web dashboard[/B] — a lightweight built-in web UI (off by default) to look up and adjust balances from a browser, with support for multiple named staff logins.
 [*][B]Fully configurable[/B] — every message and the currency name/unit live in messages.yml (English by default; a Japanese translation is bundled too). Individual features and the built-in economy itself can each be toggled on/off.
-[*][B]PlaceholderAPI support[/B] — %ecotp_balance%, %ecotp_balance_formatted%, %ecotp_sethome_cost%.
+[*][B]PlaceholderAPI support[/B] — %ecotp_balance%, %ecotp_balance_formatted%, %ecotp_sethome_cost%, %ecotp_votes%, %ecotp_afk%.
 [*][B]/donate[/B] — send money to another player framed as a donation; on success it broadcasts a server-wide thank-you message. Recipients can personalize their own message with [I]/donatemessage <text>[/I] (placeholders: {player}, {amount}), or [I]/donatemessage reset[/I] to go back to the default.
 [*][B]Vote rewards, no extra plugin needed[/B] — EcoTP ships its own built-in Votifier listener supporting [B]both[/B] the classic v1 (RSA key) protocol and NuVotifier's protocol v2 (token-based) — most modern voting sites only support v2, and it's fully covered out of the box. Already running NuVotifier for other plugins? EcoTP detects that too. Either way, voters get currency (1000 by default, configurable) plus a server-wide broadcast; a vote for a currently-offline player is queued and paid out the next time they join. List your voting sites in config.yml and the Vote tile in /menu shows them as clickable links in chat.
+[*][B]Warps[/B] — admins set shared warp points with [I]/setwarp <name>[/I]; players travel with [I]/warp <name>[/I] (or pick from the GUI menu), priced by distance and protected by the same teleport safety checks as [I]/spawn[/I].
+[*][B]Vote leaderboard & milestone bonuses[/B] — every vote is counted; [I]/votetop[/I] shows the ranking, and reaching configurable totals (10 / 50 / 100 votes by default) pays an extra one-time bonus with a server-wide announcement. Votes on several sites while offline are all paid out on next login.
+[*][B]Private messages[/B] — [I]/msg <player> <message>[/I] (aliases /tell, /w, /pm) and [I]/reply[/I] ([I]/r[/I]) to answer whoever you were last talking with.
+[*][B]AFK[/B] — [I]/afk[/I] or automatic after a configurable idle time, with an [AFK] tab-list tag, a heads-up when you /msg someone who's AFK, and an optional AFK kick.
+[*][B]Built-in chat format (optional)[/B] — a lightweight prefix + name + message chat format (prefix from LuckPerms via Vault), meant to replace a separate chat-formatting plugin rather than run alongside one.
+[*][B]Romaji → Japanese (/roma)[/B] — players can toggle automatic conversion of their own romaji chat into Japanese (kana/kanji).
 [*][B]Clickable chat links[/B] — any http(s):// or www. URL a player types in chat is automatically turned into a clickable, hoverable link, regardless of each player's own client-side "Chat Links" setting.
 [/LIST]
 
@@ -27,7 +33,7 @@ No Essentials or any other economy plugin required — EcoTP manages balances it
 [CODE]/home, /sethome, /delhome, /homes, /spawn, /setspawn, /tpa, /tphere,
 /tpaccept, /tpdeny, /tpacancel, /accept (alias /ok), /balance, /pay,
 /eco, /baltop, /menu, /ecotp reload, /donate, /donatemessage, /daily,
-/ecoitem[/CODE]
+/ecoitem, /warp, /setwarp, /delwarp, /votetop, /msg, /reply, /afk, /roma[/CODE]
 
 [SIZE=5][B]Requirements[/B][/SIZE]
 [LIST]

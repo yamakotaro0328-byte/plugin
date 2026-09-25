@@ -38,6 +38,7 @@ public class MainMenuHolder implements InventoryHolder {
     public static final int SLOT_BALANCE = 15;
     public static final int SLOT_PAY = 16;
     public static final int SLOT_BALTOP = 20;
+    public static final int SLOT_WARP = 21;
     public static final int SLOT_DAILY = 22;
     public static final int SLOT_DONATE = 24;
     public static final int SLOT_VOTE = 26;
@@ -72,6 +73,8 @@ public class MainMenuHolder implements InventoryHolder {
                 balanceLore(plugin, viewer)));
         putIfEnabled(plugin, SLOT_PAY, "pay", Material.EMERALD, messages.getList("menu.lore.pay"));
         putIfEnabled(plugin, SLOT_BALTOP, "baltop", Material.DIAMOND, messages.getList("menu.lore.baltop"));
+        putIfEnabled(plugin, SLOT_WARP, "warp", Material.LODESTONE,
+                messages.getList("menu.lore.warp", "count", String.valueOf(plugin.getWarpManager().getWarpNames().size())));
         boolean dailyClaimable = plugin.getDailyRewardManager().isClaimable(viewer.getUniqueId());
         putIfEnabled(plugin, SLOT_DAILY, "daily",
                 messages.get(dailyClaimable ? "menu.daily" : "menu.daily-claimed"),
