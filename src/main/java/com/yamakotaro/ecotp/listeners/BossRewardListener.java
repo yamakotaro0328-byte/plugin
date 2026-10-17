@@ -23,7 +23,7 @@ public class BossRewardListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDeath(EntityDeathEvent event) {
         if (!plugin.getConfig().getBoolean("boss-rewards.enabled", true)) {
             return;

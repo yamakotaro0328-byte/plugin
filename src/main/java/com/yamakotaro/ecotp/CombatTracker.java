@@ -24,8 +24,13 @@ public class CombatTracker implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler
+    // 保護エリアで止められた攻撃や、雪玉のような0ダメージの攻撃では PvP 扱いにしない
+    // (でないと殴り続けるだけで相手のテレポートを妨害できた)。
+    @EventHandler(priority = org.bukkit.event.EventPriority.MONITOR, ignoreCancelled = true)
     public void onDamage(EntityDamageByEntityEvent event) {
+        if (event.getFinalDamage() <= 0) {
+            return;
+        }
         Player victim = event.getEntity() instanceof Player p ? p : null;
         Player attacker = resolvePlayerAttacker(event);
 

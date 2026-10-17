@@ -121,7 +121,7 @@ public class GuiListener implements Listener {
             if (event.getClickedInventory() != event.getInventory()) {
                 return; // 自分の持ち物側のクリックは無視 (アイテムを取られないように)
             }
-            handleMainMenuClick(player, event.getSlot());
+            handleMainMenuClick(player, event.getSlot(), event.getCurrentItem());
             return;
         }
 
@@ -246,12 +246,22 @@ public class GuiListener implements Listener {
             return;
         }
 
-        if (holder instanceof IncomingRequestHolder) {
+        if (holder instanceof IncomingRequestHolder requestHolder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getInventory()) {
                 return;
             }
             int slot = event.getSlot();
+            if (slot == IncomingRequestHolder.SLOT_ACCEPT || slot == IncomingRequestHolder.SLOT_DENY) {
+                // 画面を開いた後にリクエストが別の人のものに置き換わっていたら、そのまま応答しない
+                // (表示と違う相手を承諾してしまうのを防ぐ)。
+                var current = plugin.getTpaManager().getIncomingRequest(player.getUniqueId());
+                if (current.isEmpty() || !requestHolder.matches(current.get())) {
+                    player.closeInventory();
+                    player.sendMessage(plugin.msg("menu.request-changed"));
+                    return;
+                }
+            }
             if (slot == IncomingRequestHolder.SLOT_ACCEPT) {
                 player.closeInventory();
                 player.performCommand("tpaccept");
@@ -297,7 +307,11 @@ public class GuiListener implements Listener {
         player.openInventory(new MainMenuHolder(plugin, player).getInventory());
     }
 
-    private void handleMainMenuClick(Player player, int slot) {
+    private void handleMainMenuClick(Player player, int slot, ItemStack clicked) {
+        if (clicked == null || clicked.getType().name().endsWith("STAINED_GLASS_PANE")) {
+            // 枠・段の見出し・無効な機能 (アイコンが出ていない) のスロット: 何もしない
+            return;
+        }
         switch (slot) {
             case MainMenuHolder.SLOT_INCOMING_REQUEST -> openIncomingRequest(player);
             case MainMenuHolder.SLOT_HOME -> handleHomeClick(player);
@@ -311,7 +325,14 @@ public class GuiListener implements Listener {
             case MainMenuHolder.SLOT_WARP -> openWarps(player);
             case MainMenuHolder.SLOT_DAILY -> player.openInventory(new LoginCalendarHolder(plugin, player).getInventory());
             case MainMenuHolder.SLOT_DONATE -> openPlayerSelectAndClose(player, PlayerSelectHolder.Purpose.DONATE);
-            case MainMenuHolder.SLOT_VOTE, MainMenuHolder.SLOT_VOTE_GOAL -> openVoteMenu(player);
+            case MainMenuHolder.SLOT_VOTE -> openVoteMenu(player);
+            case MainMenuHolder.SLOT_VOTE_GOAL -> {
+                if (plugin.getVoteRewardManager().isEnabled()) {
+                    openVoteMenu(player);
+                } else {
+                    runAndClose(player, "votegoal");
+                }
+            }
             case MainMenuHolder.SLOT_SETTINGS -> player.openInventory(new SettingsHolder(plugin, player).getInventory());
             case MainMenuHolder.SLOT_CLOSE -> player.closeInventory();
             default -> {
@@ -344,8 +365,9 @@ public class GuiListener implements Listener {
     private void handleHomeClick(Player player) {
         List<String> homes = plugin.getHomeManager().getHomeNames(player.getUniqueId());
         if (homes.size() <= 1) {
-            // ホームが0か1個しか無いなら、選択GUIを挟まず直接 /home を実行する。
-            runAndClose(player, "home");
+            // ホームが0か1個しか無いなら、選択GUIを挟まず直接 /home を実行する
+            // (1個なら名前を付けて: "home" 以外の名前でも飛べるように)。
+            runAndClose(player, homes.isEmpty() ? "home" : "home " + homes.get(0));
             return;
         }
         player.closeInventory();
@@ -370,6 +392,11 @@ public class GuiListener implements Listener {
     }
 
     private void openBaltop(Player player, int page) {
+        if (!plugin.isFeatureEnabled("baltop")) {
+            player.closeInventory();
+            player.sendMessage(plugin.msg("general.feature-disabled"));
+            return;
+        }
         EcoTpEconomy ecoTpEconomy = plugin.getEcoTpEconomy();
         if (ecoTpEconomy == null) {
             // 外部の経済プラグインを使っている場合は GUI 化できない (/baltop 参照)。

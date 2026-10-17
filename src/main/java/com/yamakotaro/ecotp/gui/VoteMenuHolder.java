@@ -119,8 +119,12 @@ public class VoteMenuHolder implements EcoTpMenu {
         ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta meta = stack.getItemMeta();
         if (meta instanceof SkullMeta skull) {
-            OfflinePlayer owner = Bukkit.getOfflinePlayer(entry.name());
-            skull.setOwningPlayer(owner);
+            // getOfflinePlayer(名前) は未知の名前だと Mojang に問い合わせてサーバーが止まるので、
+            // キャッシュにある人だけ頭の見た目を付ける。
+            OfflinePlayer owner = Bukkit.getOfflinePlayerIfCached(entry.name());
+            if (owner != null) {
+                skull.setOwningPlayer(owner);
+            }
             String color = switch (rank) {
                 case 1 -> "&6&l";
                 case 2 -> "&7&l";

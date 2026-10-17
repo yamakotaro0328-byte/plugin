@@ -67,8 +67,10 @@ public class BaltopHolder implements EcoTpMenu {
         ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta meta = stack.getItemMeta();
         if (meta instanceof SkullMeta skullMeta) {
-            OfflinePlayer owner = Bukkit.getOfflinePlayer(entry.name());
-            skullMeta.setOwningPlayer(owner);
+            OfflinePlayer owner = Bukkit.getOfflinePlayerIfCached(entry.name());
+            if (owner != null) {
+                skullMeta.setOwningPlayer(owner);
+            }
             String rankColor = switch (rank) {
                 case 1 -> "&6&l";
                 case 2 -> "&7&l";

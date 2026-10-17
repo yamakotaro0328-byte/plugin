@@ -18,6 +18,7 @@ general:
   no-economy: "&cNo economy is available right now. Try again later."
 
 confirm:
+  replaced: "&eYour previous confirmation was replaced by this new one. Old [Accept] buttons now confirm this instead."
   accept-button: "[Accept]"
   accept-hover: "Click to accept (re-running the same command, /accept, or /ok also work)"
   cancel-button: "[Cancel]"
@@ -29,6 +30,7 @@ confirm:
   timed-out: "&cThe confirmation timed out."
 
 teleport-safety:
+  blocked: "&cThe teleport was blocked (e.g. by a protected area). You were not charged."
   countdown: "&eTeleporting to {description} in &f{seconds}s&e... moving or taking damage will cancel it"
   cancelled-move: "&cCancelled because you moved."
   cancelled-damage: "&cCancelled because you took damage."
@@ -45,6 +47,7 @@ home:
   success: "&aTeleported to home \"{name}\". (paid {cost})"
 
 sethome:
+  save-failed: "&cCouldn't save your home right now (database problem). You were not charged."
   description: "setting home \"{name}\" here"
   success: "&aHome \"{name}\" set. (paid {cost})"
   invalid-name: "&cHome names may only contain letters, digits, and Japanese characters, up to 16 characters."
@@ -67,6 +70,7 @@ setspawn:
   success: "&aSpawn set to your current location."
 
 tpa:
+  replaced: "&eYour teleport request to {player} was replaced by someone else's request."
   usage: "&cUsage: /tpa <player>"
   description: "a teleport request to {player}"
   travel-description: "{player}"
@@ -213,6 +217,7 @@ teleport-effects:
   arrived-subtitle: "&7Welcome!"
 
 daily:
+  storage-error: "&cCouldn't reach the reward database right now. Please try again in a moment."
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
   claimed: "&aDaily reward claimed: &f{amount}&a! (streak: {streak} day(s))"
   login-bonus: "&6[Login Bonus] &aYou received &f{amount}&a! (streak: {streak} day(s))"
@@ -242,6 +247,7 @@ menu-item:
 
 menu:
   title: "EcoTP Menu"
+  request-changed: "&eThat request is no longer the one waiting for you. Check the new one and try again."
   category:
     teleport: "&b&l✈ Teleport"
     money: "&e&l💰 Money"

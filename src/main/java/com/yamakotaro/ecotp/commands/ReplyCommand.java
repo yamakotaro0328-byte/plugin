@@ -50,7 +50,9 @@ public class ReplyCommand implements CommandExecutor {
             return true;
         }
 
-        String message = String.join(" ", args);
+        String message = String.join(" ", args)
+                // 文中の & は色コードとして扱わない (&k や偽のシステムメッセージを防ぐ)。
+                .replace("&", "&\u200B");
         plugin.getPrivateMessageManager().recordConversation(player.getUniqueId(), target.getUniqueId());
         player.sendMessage(plugin.msg("msg.sent", "player", target.getName(), "message", message));
         target.sendMessage(plugin.msg("msg.received", "player", player.getName(), "message", message));

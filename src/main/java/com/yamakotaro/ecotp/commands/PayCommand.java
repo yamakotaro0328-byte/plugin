@@ -64,6 +64,11 @@ public class PayCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(plugin.msg("pay.invalid-amount"));
             return true;
         }
+        if (!Double.isFinite(amount) || amount != Math.floor(amount)) {
+            // 経済は小数点以下を表示しないので、端数の送金は受け付けない (残高が見えない端数になる)。
+            player.sendMessage(plugin.msg("pay.invalid-amount"));
+            return true;
+        }
         if (amount <= 0) {
             player.sendMessage(plugin.msg("pay.amount-too-low"));
             return true;

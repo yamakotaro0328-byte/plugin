@@ -188,7 +188,7 @@ public class EcoTpEconomy implements Economy {
     }
 
     private EconomyResponse withdraw(UUID uuid, String name, double amount) {
-        if (amount < 0) {
+        if (amount < 0 || !Double.isFinite(amount)) {
             return new EconomyResponse(0, balances.getBalance(uuid), ResponseType.FAILURE, "マイナスの金額は指定できません。");
         }
         double balance = balances.getBalance(uuid);
@@ -226,7 +226,7 @@ public class EcoTpEconomy implements Economy {
     }
 
     private EconomyResponse deposit(UUID uuid, String name, double amount) {
-        if (amount < 0) {
+        if (amount < 0 || !Double.isFinite(amount)) {
             return new EconomyResponse(0, balances.getBalance(uuid), ResponseType.FAILURE, "マイナスの金額は指定できません。");
         }
         double newBalance = balances.getBalance(uuid) + amount;

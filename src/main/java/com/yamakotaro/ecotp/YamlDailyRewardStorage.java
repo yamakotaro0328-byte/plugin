@@ -35,7 +35,7 @@ public class YamlDailyRewardStorage implements DailyRewardStorage {
     }
 
     @Override
-    public void recordClaim(UUID uuid, long claimMillis, int newStreak) {
+    public boolean recordClaim(UUID uuid, long claimMillis, int newStreak) {
         String path = uuid.toString();
         data.set(path + ".last-claim", claimMillis);
         data.set(path + ".streak", newStreak);
@@ -44,6 +44,8 @@ public class YamlDailyRewardStorage implements DailyRewardStorage {
         } catch (IOException e) {
             plugin.getLogger().log(Level.WARNING, "Failed to save daily-rewards.yml", e);
         }
+        // メモリ上には反映済み (保存失敗はログに出す) なので、二重受け取りにはならない。
+        return true;
     }
 
     @Override

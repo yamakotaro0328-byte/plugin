@@ -45,9 +45,14 @@ public class HomeManager {
         return storage.getHomeNames(uuid).size() < max;
     }
 
-    public void setHome(UUID uuid, String name, Location location) {
+    /** @return 実際に保存できたら true (MySQL に繋がらない等で失敗したら false)。 */
+    public boolean setHome(UUID uuid, String name, Location location) {
         storage.setHome(uuid, name, location);
+        if (storage.getHome(uuid, name) == null) {
+            return false;
+        }
         storage.incrementSetHomeCount(uuid);
+        return true;
     }
 
     /**

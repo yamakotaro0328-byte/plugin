@@ -47,6 +47,12 @@ public class ConfirmationManager {
      */
     public void request(Player player, String actionKey, double cost, String description, Runnable onConfirm) {
         UUID uuid = player.getUniqueId();
+        Pending old = pending.get(uuid);
+        if (old != null && !old.actionKey.equals(actionKey)) {
+            // 承諾ボタンはどれも /accept なので、前の確認が黙って置き換わると古いボタンで
+            // 別の操作を承諾してしまう。置き換わったことをはっきり伝える。
+            player.sendMessage(plugin.msg("confirm.replaced"));
+        }
         cancelSilently(uuid);
 
         int timeoutSeconds = plugin.getConfig().getInt("confirmation-timeout-seconds", 30);

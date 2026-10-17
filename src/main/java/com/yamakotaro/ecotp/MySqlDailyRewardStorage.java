@@ -47,7 +47,7 @@ public class MySqlDailyRewardStorage implements DailyRewardStorage {
     public long getLastClaimMillis(UUID uuid) {
         Connection conn = connectionProvider.get();
         if (conn == null) {
-            return 0L;
+            return -1L;
         }
         String sql = "SELECT last_claim FROM " + table + " WHERE uuid = ?";
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -57,7 +57,7 @@ public class MySqlDailyRewardStorage implements DailyRewardStorage {
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to fetch last daily claim (" + uuid + ")", e);
-            return 0L;
+            return -1L;
         }
     }
 
@@ -65,7 +65,7 @@ public class MySqlDailyRewardStorage implements DailyRewardStorage {
     public int getStreak(UUID uuid) {
         Connection conn = connectionProvider.get();
         if (conn == null) {
-            return 0;
+            return -1;
         }
         String sql = "SELECT streak FROM " + table + " WHERE uuid = ?";
         try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -75,15 +75,15 @@ public class MySqlDailyRewardStorage implements DailyRewardStorage {
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to fetch daily streak (" + uuid + ")", e);
-            return 0;
+            return -1;
         }
     }
 
     @Override
-    public void recordClaim(UUID uuid, long claimMillis, int newStreak) {
+    public boolean recordClaim(UUID uuid, long claimMillis, int newStreak) {
         Connection conn = connectionProvider.get();
         if (conn == null) {
-            return;
+            return false;
         }
         String sql = "INSERT INTO " + table + " (uuid, last_claim, streak) VALUES (?, ?, ?) "
                 + "ON DUPLICATE KEY UPDATE last_claim = VALUES(last_claim), streak = VALUES(streak)";
@@ -92,8 +92,10 @@ public class MySqlDailyRewardStorage implements DailyRewardStorage {
             statement.setLong(2, claimMillis);
             statement.setInt(3, newStreak);
             statement.executeUpdate();
+            return true;
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to record daily claim (" + uuid + ")", e);
+            return false;
         }
     }
 

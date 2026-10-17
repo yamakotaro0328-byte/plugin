@@ -53,7 +53,9 @@ public class MsgCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
+        String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length))
+                // 文中の & は色コードとして扱わない (&k や偽のシステムメッセージを防ぐ)。
+                .replace("&", "&\u200B");
         plugin.getPrivateMessageManager().recordConversation(player.getUniqueId(), target.getUniqueId());
         player.sendMessage(plugin.msg("msg.sent", "player", target.getName(), "message", message));
         target.sendMessage(plugin.msg("msg.received", "player", player.getName(), "message", message));

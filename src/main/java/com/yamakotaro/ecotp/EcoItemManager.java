@@ -75,7 +75,9 @@ public class EcoItemManager {
             return 0;
         }
         double total = perItem * stack.getAmount();
-        economy.depositPlayer(player, total);
+        if (!Double.isFinite(total) || total <= 0 || !economy.depositPlayer(player, total).transactionSuccess()) {
+            return 0; // 支払えなかった: アイテムは消さない
+        }
         player.getInventory().setItemInMainHand(null);
         return total;
     }

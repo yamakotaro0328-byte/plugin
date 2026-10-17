@@ -40,6 +40,15 @@ public final class YamlIo {
         if (parent != null) {
             parent.mkdirs();
         }
-        Files.writeString(file.toPath(), config.saveToString(), StandardCharsets.UTF_8);
+        // 一時ファイルに書いてから差し替える: 書き込み中にサーバーが落ちても元のファイルが壊れない。
+        java.nio.file.Path target = file.toPath();
+        java.nio.file.Path temp = target.resolveSibling(file.getName() + ".tmp");
+        Files.writeString(temp, config.saveToString(), StandardCharsets.UTF_8);
+        try {
+            Files.move(temp, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                    java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+        } catch (java.nio.file.AtomicMoveNotSupportedException e) {
+            Files.move(temp, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 }

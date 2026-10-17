@@ -40,7 +40,9 @@ public class LoginCalendarHolder implements EcoTpMenu {
 
         int cycle = daily.calendarCycle();
         int display = Math.min(MAX_DAYS, cycle > 0 ? cycle : 28);
-        int doneInCycle = streak == 0 ? 0 : Math.min(daily.calendarDay(streak), display);
+        // 表示している日数ごとに区切る (カレンダー未設定や calendar-repeat: false でも
+        // 連続日数が表示日数を超えた時に画面が行ったり来たりしないように)。
+        int doneInCycle = streak == 0 ? 0 : (streak - 1) % display + 1;
         if (claimable && doneInCycle >= display) {
             doneInCycle = 0; // 1周終わった: 次の受け取りから新しい周期
         }

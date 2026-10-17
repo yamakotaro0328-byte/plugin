@@ -20,7 +20,7 @@ public class PlayerCleanupListener implements Listener {
         plugin.getTpaManager().cancelSilently(uuid);
         plugin.getTeleportSafetyManager().cancelSilently(uuid);
         plugin.getChatInputManager().cancelSilently(uuid);
-        plugin.getCombatTracker().clear(uuid);
+        // PvP のタグは消さない: 消すと戦闘中に入り直すだけで /home できてしまう。
         plugin.getPrivateMessageManager().clear(uuid);
     }
 }

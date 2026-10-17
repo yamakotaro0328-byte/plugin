@@ -199,6 +199,29 @@ public class TeleportSafetyManager implements Listener {
     }
 
     /**
+     * 料金を引いてからテレポートする。テレポートが他のプラグイン (保護・戦闘ログ等) に
+     * 止められたら返金する (以前は料金だけ取られて移動しないことがあった)。
+     * @return 実際に移動できたら true (演出も再生済み)。false なら呼び出し側は成功メッセージを出さない。
+     */
+    public boolean chargeAndTeleport(Player player, net.milkbowl.vault.economy.Economy economy, double cost, Location destination) {
+        if (cost > 0 && !economy.withdrawPlayer(player, cost).transactionSuccess()) {
+            player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(cost)));
+            departures.remove(player.getUniqueId());
+            return false;
+        }
+        if (!player.teleport(destination)) {
+            if (cost > 0) {
+                economy.depositPlayer(player, cost);
+            }
+            departures.remove(player.getUniqueId());
+            player.sendMessage(plugin.msg("teleport-safety.blocked"));
+            return false;
+        }
+        playTeleportEffects(player);
+        return true;
+    }
+
+    /**
      * テレポート成功時の演出 (効果音 + パーティクル)。実際に player.teleport(...) した直後に呼ぶこと。
      * config.yml の teleport-safety.play-effects で無効化できる。
      */
@@ -234,9 +257,9 @@ public class TeleportSafetyManager implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDamage(EntityDamageEvent event) {
-        if (!(event.getEntity() instanceof Player player)) {
+        if (!(event.getEntity() instanceof Player player) || event.getFinalDamage() <= 0) {
             return;
         }
         if (countdowns.containsKey(player.getUniqueId())) {
@@ -258,7 +281,16 @@ public class TeleportSafetyManager implements Listener {
         }
     }
 
+    /** 待機中に別の方法 (コーラスフルーツや他のプラグイン) で移動したらキャンセルする。 */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onTeleport(org.bukkit.event.player.PlayerTeleportEvent event) {
+        if (countdowns.containsKey(event.getPlayer().getUniqueId())) {
+            cancel(event.getPlayer(), "teleport-safety.cancelled-move");
+        }
+    }
+
     public void cancelSilently(UUID uuid) {
+        departures.remove(uuid);
         Countdown countdown = countdowns.remove(uuid);
         if (countdown != null) {
             countdown.completionTask.cancel();

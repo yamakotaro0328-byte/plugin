@@ -10,16 +10,18 @@ import java.util.UUID;
 public interface DailyRewardStorage {
 
     /**
-     * @return 最後に請求した時刻 (エポックミリ秒)。一度も請求していなければ 0。
+     * @return 最後に請求した時刻 (エポックミリ秒)。一度も請求していなければ 0、
+     * 読み込みに失敗した (DB に繋がらない等) なら -1。
      */
     long getLastClaimMillis(UUID uuid);
 
     /**
-     * @return 現在の連続請求日数。一度も請求していなければ 0。
+     * @return 現在の連続請求日数。一度も請求していなければ 0、読み込みに失敗したなら -1。
      */
     int getStreak(UUID uuid);
 
-    void recordClaim(UUID uuid, long claimMillis, int newStreak);
+    /** @return 記録できたら true。 */
+    boolean recordClaim(UUID uuid, long claimMillis, int newStreak);
 
     void close();
 }

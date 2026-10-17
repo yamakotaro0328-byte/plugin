@@ -104,9 +104,9 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
                         player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(finalCost)));
                         return;
                     }
-                    economy.withdrawPlayer(player, finalCost);
-                    player.teleport(finalWarp);
-                    plugin.getTeleportSafetyManager().playTeleportEffects(player);
+                    if (!plugin.getTeleportSafetyManager().chargeAndTeleport(player, economy, finalCost, finalWarp)) {
+                        return;
+                    }
                     player.sendMessage(plugin.msg("warp.success", "name", name, "cost", ChatUtil.formatMoney(finalCost)));
                 }));
         return true;

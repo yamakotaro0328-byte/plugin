@@ -10,7 +10,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 /**
@@ -24,6 +26,7 @@ public class DailyRewardManager implements Listener {
 
     private final EcoTpPlugin plugin;
     private final DailyRewardStorage storage;
+    private final Map<UUID, Integer> streakCache = new ConcurrentHashMap<>();
 
     public DailyRewardManager(EcoTpPlugin plugin, DailyRewardStorage storage) {
         this.plugin = plugin;
@@ -35,6 +38,7 @@ public class DailyRewardManager implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        streakCache.put(player.getUniqueId(), getEffectiveStreak(player.getUniqueId()));
         // 参加直後は他のメッセージに埋もれるので少し待つ。
         Bukkit.getScheduler().runTaskLater(plugin, () -> tryAutoClaim(player), 60L);
     }
@@ -75,6 +79,15 @@ public class DailyRewardManager implements Listener {
         long cooldownMillis = cooldownMillis();
         long streakWindowMillis = (long) (plugin.getConfig().getDouble("daily-reward.streak-window-hours", 48.0) * 3_600_000L);
         long lastClaim = storage.getLastClaimMillis(uuid);
+        int previousStreak = storage.getStreak(uuid);
+        if (lastClaim < 0 || previousStreak < 0) {
+            // 保存先 (MySQL) に繋がらない: 受け取り済みか分からないので払わない
+            // (払うと DB が戻るまで何度でも受け取れてしまう)。
+            if (!auto) {
+                player.sendMessage(plugin.msg("daily.storage-error"));
+            }
+            return false;
+        }
         long elapsed = now - lastClaim;
 
         if (lastClaim > 0 && elapsed < cooldownMillis) {
@@ -88,15 +101,22 @@ public class DailyRewardManager implements Listener {
             return false;
         }
 
-        int previousStreak = storage.getStreak(uuid);
         int newStreak = (lastClaim > 0 && elapsed <= streakWindowMillis) ? previousStreak + 1 : 1;
 
         double normal = amountForStreak(newStreak);
         double special = calendarBonus(newStreak);
         double amount = normal + special;
 
+        // 先に記録する: 記録に失敗したまま払うと、何度でも受け取れてしまう。
+        if (!storage.recordClaim(uuid, now, newStreak)) {
+            if (!auto) {
+                player.sendMessage(plugin.msg("daily.storage-error"));
+            }
+            return false;
+        }
         EconomyResponse response = economy.depositPlayer(player, amount);
         if (!response.transactionSuccess()) {
+            storage.recordClaim(uuid, lastClaim, previousStreak); // 受け取っていないので元に戻す
             // Was previously ignored entirely - the player was told "claimed" and their streak
             // was consumed even when the deposit itself failed (only possible with an external
             // Vault economy; EcoTP's own always succeeds for a non-negative amount).
@@ -105,7 +125,7 @@ public class DailyRewardManager implements Listener {
             player.sendMessage(plugin.msg("general.no-economy"));
             return false;
         }
-        storage.recordClaim(uuid, now, newStreak);
+        streakCache.put(uuid, newStreak);
         player.sendMessage(plugin.msg(auto ? "daily.login-bonus" : "daily.claimed",
                 "amount", ChatUtil.formatMoney(normal), "streak", String.valueOf(newStreak)));
         if (special > 0) {
@@ -185,7 +205,15 @@ public class DailyRewardManager implements Listener {
         if (lastClaim <= 0 || System.currentTimeMillis() - lastClaim > window) {
             return 0;
         }
-        return storage.getStreak(uuid);
+        return Math.max(0, storage.getStreak(uuid));
+    }
+
+    /**
+     * @return プレースホルダー用: 参加時/受け取り時に覚えておいた連続日数。PlaceholderAPI は
+     * 別スレッドから呼ぶことがあり、そこから MySQL に問い合わせると危ないので保存先は見ない。
+     */
+    public int getCachedStreak(UUID uuid) {
+        return streakCache.getOrDefault(uuid, 0);
     }
 
     /** @return メニュー表示用: 今すぐ請求できるか (副作用なし)。 */
@@ -196,7 +224,10 @@ public class DailyRewardManager implements Listener {
     /** @return メニュー表示用: 次に請求できるまでの残り時間 (ミリ秒)。既に請求可能なら 0。 */
     public long getRemainingCooldownMillis(UUID uuid) {
         long lastClaim = storage.getLastClaimMillis(uuid);
-        if (lastClaim <= 0) {
+        if (lastClaim < 0) {
+            return cooldownMillis(); // 読み込み失敗: 受け取れない扱い
+        }
+        if (lastClaim == 0) {
             return 0;
         }
         long elapsed = System.currentTimeMillis() - lastClaim;
@@ -205,7 +236,7 @@ public class DailyRewardManager implements Listener {
 
     /** @return メニュー表示用: 現在の連続請求日数。一度も請求していなければ 0。 */
     public int getStreak(UUID uuid) {
-        return storage.getStreak(uuid);
+        return Math.max(0, storage.getStreak(uuid));
     }
 
     /** @return 表示用にフォーマット済みの残り時間 ("1h 30m" 等)。 */

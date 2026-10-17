@@ -95,13 +95,12 @@ public class VoteRewardManager {
         saveCounts();
         plugin.getVoteGoalManager().addVote();
 
-        if (online != null) {
-            reward(online, amount);
-        } else {
-            // オフラインだと reward() (チャット通知・全体ブロードキャスト) が一切呼ばれないため、
-            // このログが無いと投票が実際に届いたことをコンソールから確認する手段が無かった。
+        if (online == null || !reward(online, amount)) {
+            // オフライン (または今は支払えなかった): 保留して次回ログイン時に付与する。
+            // オフラインだと reward() のチャット通知が無いため、届いたことをコンソールに残す。
             plugin.getLogger().info("Received a vote for " + username + " (" + serviceName
-                    + ") while offline - reward queued and will be paid out on next login.");
+                    + ")" + (online == null ? " while offline" : " but could not pay it now")
+                    + " - reward queued and will be paid out on next login.");
             pendingAmounts.merge(key, amount, Double::sum);
             savePending();
         }
@@ -157,20 +156,24 @@ public class VoteRewardManager {
             displayNames.put(key, player.getName());
         }
         Double amount = pendingAmounts.remove(key);
+        if (amount != null && !reward(player, amount)) {
+            // 支払えなかった: 消さずに保留へ戻す (次回ログイン時にまた試す)。
+            pendingAmounts.merge(key, amount, Double::sum);
+        }
         if (amount != null) {
             savePending();
-            reward(player, amount);
         }
     }
 
-    private void reward(Player player, double amount) {
+    /** @return 実際に支払えたら true。 */
+    private boolean reward(Player player, double amount) {
         Economy economy = plugin.getEconomyHolder().get();
         if (economy == null) {
             // Previously logged to console only - the voting player saw nothing at all and had
             // no way to know their vote had been received but not rewarded.
             plugin.getLogger().warning("Could not reward " + player.getName() + " for voting: no economy available yet.");
             player.sendMessage(plugin.msg("general.no-economy"));
-            return;
+            return false;
         }
         EconomyResponse response = economy.depositPlayer(player, amount);
         if (!response.transactionSuccess()) {
@@ -178,11 +181,12 @@ public class VoteRewardManager {
             // when the deposit itself failed (only possible with an external Vault economy).
             plugin.getLogger().warning("Failed to deposit the vote reward for " + player.getName() + ": " + response.errorMessage);
             player.sendMessage(plugin.msg("general.no-economy"));
-            return;
+            return false;
         }
         player.sendMessage(plugin.msg("vote.thanks", "amount", ChatUtil.formatMoney(amount)));
         Bukkit.broadcastMessage(plugin.getMessages().get("vote.broadcast",
                 "player", player.getName(), "amount", ChatUtil.formatMoney(amount)));
+        return true;
     }
 
     private void load() {
@@ -192,6 +196,15 @@ public class VoteRewardManager {
         // 1回分しか保留されなかった)。読み込み時は1件=基本報酬1回分として引き継ぐ。
         for (String legacy : pending.getStringList("pending")) {
             pendingAmounts.merge(legacy.toLowerCase(), rewardAmount(), Double::sum);
+        }
+        // 今の形式: {name, amount} のリスト。名前を YAML のパスに使うと、Floodgate (統合版) の
+        // ".steve" のような "." 入りの名前で壊れていた。
+        for (Map<?, ?> entry : pending.getMapList("pending-list")) {
+            Object name = entry.get("name");
+            Object amount = entry.get("amount");
+            if (name != null && amount instanceof Number number) {
+                pendingAmounts.merge(name.toString().toLowerCase(), number.doubleValue(), Double::sum);
+            }
         }
         ConfigurationSection amounts = pending.getConfigurationSection("pending-amounts");
         if (amounts != null) {
@@ -203,6 +216,15 @@ public class VoteRewardManager {
         voteCounts.clear();
         displayNames.clear();
         YamlConfiguration counts = YamlIo.load(countsFile);
+        for (Map<?, ?> entry : counts.getMapList("vote-list")) {
+            Object key = entry.get("key");
+            Object count = entry.get("count");
+            if (key != null && count instanceof Number number) {
+                voteCounts.put(key.toString(), number.intValue());
+                Object name = entry.get("name");
+                displayNames.put(key.toString(), name != null ? name.toString() : key.toString());
+            }
+        }
         ConfigurationSection section = counts.getConfigurationSection("votes");
         if (section != null) {
             for (String key : section.getKeys(false)) {
@@ -214,9 +236,11 @@ public class VoteRewardManager {
 
     private void savePending() {
         YamlConfiguration data = new YamlConfiguration();
+        List<Map<String, Object>> list = new ArrayList<>();
         for (Map.Entry<String, Double> entry : pendingAmounts.entrySet()) {
-            data.set("pending-amounts." + entry.getKey(), entry.getValue());
+            list.add(Map.of("name", entry.getKey(), "amount", entry.getValue()));
         }
+        data.set("pending-list", list);
         try {
             YamlIo.save(data, file);
         } catch (IOException e) {
@@ -226,10 +250,13 @@ public class VoteRewardManager {
 
     private void saveCounts() {
         YamlConfiguration data = new YamlConfiguration();
+        List<Map<String, Object>> list = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : voteCounts.entrySet()) {
-            data.set("votes." + entry.getKey() + ".name", displayNames.getOrDefault(entry.getKey(), entry.getKey()));
-            data.set("votes." + entry.getKey() + ".count", entry.getValue());
+            list.add(Map.of("key", entry.getKey(),
+                    "name", displayNames.getOrDefault(entry.getKey(), entry.getKey()),
+                    "count", entry.getValue()));
         }
+        data.set("vote-list", list);
         try {
             YamlIo.save(data, countsFile);
         } catch (IOException e) {

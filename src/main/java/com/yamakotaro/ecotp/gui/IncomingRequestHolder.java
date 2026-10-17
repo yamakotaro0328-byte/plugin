@@ -5,6 +5,7 @@ import com.yamakotaro.ecotp.EcoTpPlugin;
 import com.yamakotaro.ecotp.TpaManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -27,8 +28,12 @@ public class IncomingRequestHolder implements EcoTpMenu {
     public static final int SLOT_BACK = 22;
 
     private final Inventory inventory;
+    private final TpaManager.Type type;
+    private final String requesterName;
 
     public IncomingRequestHolder(EcoTpPlugin plugin, Player viewer, TpaManager.Type type, String requesterName) {
+        this.type = type;
+        this.requesterName = requesterName;
         this.inventory = Bukkit.createInventory(this, SIZE, plugin.getMessages().get("menu.incoming-request-title"));
 
         for (int slot = 0; slot < SIZE; slot++) {
@@ -56,12 +61,20 @@ public class IncomingRequestHolder implements EcoTpMenu {
         ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta meta = stack.getItemMeta();
         if (meta instanceof SkullMeta skullMeta) {
-            skullMeta.setOwningPlayer(Bukkit.getOfflinePlayer(name));
+            OfflinePlayer owner = Bukkit.getOfflinePlayerIfCached(name);
+            if (owner != null) {
+                skullMeta.setOwningPlayer(owner);
+            }
             skullMeta.setDisplayName(ChatUtil.color("&e" + name));
             skullMeta.setLore(lore);
             stack.setItemMeta(skullMeta);
         }
         return stack;
+    }
+
+    /** @return 画面に表示しているリクエストが、今も届いているリクエストと同じなら true。 */
+    public boolean matches(TpaManager.IncomingRequestInfo current) {
+        return current.type() == type && current.requesterName().equalsIgnoreCase(requesterName);
     }
 
     @Override

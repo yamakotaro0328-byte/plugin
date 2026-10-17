@@ -56,7 +56,24 @@ public class TpaManager {
      */
     public void sendRequest(Type type, Player requester, Player target, double cost) {
         UUID targetUuid = target.getUniqueId();
-        cancelSilently(targetUuid);
+        // 以前は cancelSilently(target) で、相手が「自分から送っていた」リクエストまで黙って
+        // 消していた。ここでは相手宛ての古いリクエスト (置き換えられる側には通知) と、
+        // 送る本人の古いリクエストだけを取り消す。
+        Request previous = requests.remove(targetUuid);
+        if (previous != null) {
+            previous.timeoutTask.cancel();
+            Player previousRequester = plugin.getServer().getPlayer(previous.requesterUuid);
+            if (previousRequester != null && !previous.requesterUuid.equals(requester.getUniqueId())) {
+                previousRequester.sendMessage(plugin.msg("tpa.replaced", "player", target.getName()));
+            }
+        }
+        requests.entrySet().removeIf(entry -> {
+            if (entry.getValue().requesterUuid.equals(requester.getUniqueId())) {
+                entry.getValue().timeoutTask.cancel();
+                return true;
+            }
+            return false;
+        });
 
         int timeoutSeconds = plugin.getConfig().getInt("tpa-request-timeout-seconds", 60);
         BukkitTask task = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
@@ -155,9 +172,9 @@ public class TpaManager {
                 return;
             }
 
-            economy.withdrawPlayer(mover, actualCost);
-            mover.teleport(destination);
-            plugin.getTeleportSafetyManager().playTeleportEffects(mover);
+            if (!plugin.getTeleportSafetyManager().chargeAndTeleport(mover, economy, actualCost, destination)) {
+                return;
+            }
             mover.sendMessage(plugin.msg("tpa.accepted-requester", "player", destinationPlayer.getName(), "cost", ChatUtil.formatMoney(actualCost)));
         });
     }

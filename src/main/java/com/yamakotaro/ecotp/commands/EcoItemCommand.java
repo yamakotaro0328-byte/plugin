@@ -57,7 +57,7 @@ public class EcoItemCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage(plugin.msg("pay.invalid-amount"));
             return true;
         }
-        if (amount <= 0) {
+        if (!Double.isFinite(amount) || amount <= 0 || amount > 1_000_000_000_000.0) {
             sender.sendMessage(plugin.msg("pay.amount-too-low"));
             return true;
         }

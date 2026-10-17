@@ -72,6 +72,10 @@ public class VotifierServer {
     private Map<String, String> tokens;
     private ServerSocket serverSocket;
     private volatile boolean running;
+    // 同時接続数の上限と、1接続あたりの全体の制限時間 (少しずつ送ってくる接続でスレッドを
+    // 使い切られるのを防ぐ。投票サイトの通常の送信は1秒もかからない)。
+    private final java.util.concurrent.Semaphore connectionSlots = new java.util.concurrent.Semaphore(16);
+    private final java.util.Timer watchdog = new java.util.Timer("EcoTP-Votifier-Watchdog", true);
 
     public VotifierServer(EcoTpPlugin plugin) {
         this.plugin = plugin;
@@ -127,8 +131,17 @@ public class VotifierServer {
                 + tokensFile.getPath());
     }
 
+    private static void closeQuietly(Socket socket) {
+        try {
+            socket.close();
+        } catch (IOException ignored) {
+            // もう閉じている
+        }
+    }
+
     public void stop() {
         running = false;
+        watchdog.cancel();
         if (serverSocket != null) {
             try {
                 serverSocket.close();
@@ -142,7 +155,25 @@ public class VotifierServer {
         while (running) {
             try {
                 Socket socket = serverSocket.accept();
-                Thread handler = new Thread(() -> handleConnection(socket), "EcoTP-Votifier-Connection");
+                if (!connectionSlots.tryAcquire()) {
+                    closeQuietly(socket);
+                    continue;
+                }
+                java.util.TimerTask kill = new java.util.TimerTask() {
+                    @Override
+                    public void run() {
+                        closeQuietly(socket);
+                    }
+                };
+                watchdog.schedule(kill, 10_000L);
+                Thread handler = new Thread(() -> {
+                    try {
+                        handleConnection(socket);
+                    } finally {
+                        kill.cancel();
+                        connectionSlots.release();
+                    }
+                }, "EcoTP-Votifier-Connection");
                 handler.setDaemon(true);
                 handler.start();
             } catch (IOException e) {

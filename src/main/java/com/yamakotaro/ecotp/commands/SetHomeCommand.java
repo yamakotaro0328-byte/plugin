@@ -75,9 +75,16 @@ public class SetHomeCommand implements CommandExecutor, TabCompleter {
                 player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(currentCost)));
                 return;
             }
-            economy.withdrawPlayer(player, currentCost);
+            if (!economy.withdrawPlayer(player, currentCost).transactionSuccess()) {
+                player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(currentCost)));
+                return;
+            }
             // 承諾した瞬間の位置をホームにする (コマンド入力後に移動している可能性があるため)。
-            plugin.getHomeManager().setHome(uuid, name, player.getLocation());
+            if (!plugin.getHomeManager().setHome(uuid, name, player.getLocation())) {
+                economy.depositPlayer(player, currentCost); // 保存できなかったので返金
+                player.sendMessage(plugin.msg("sethome.save-failed"));
+                return;
+            }
             player.sendMessage(plugin.msg("sethome.success", "name", name, "cost", ChatUtil.formatMoney(currentCost)));
         });
         return true;

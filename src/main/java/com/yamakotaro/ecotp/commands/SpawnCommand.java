@@ -71,9 +71,9 @@ public class SpawnCommand implements CommandExecutor {
                         player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(finalCost)));
                         return;
                     }
-                    economy.withdrawPlayer(player, finalCost);
-                    player.teleport(finalSpawn);
-                    plugin.getTeleportSafetyManager().playTeleportEffects(player);
+                    if (!plugin.getTeleportSafetyManager().chargeAndTeleport(player, economy, finalCost, finalSpawn)) {
+                        return;
+                    }
                     player.sendMessage(plugin.msg("spawn.success", "cost", ChatUtil.formatMoney(finalCost)));
                 }));
         return true;

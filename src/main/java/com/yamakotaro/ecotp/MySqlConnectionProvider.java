@@ -42,6 +42,8 @@ public class MySqlConnectionProvider {
         try {
             connection = DriverManager.getConnection(url, username, password);
         } catch (SQLException e) {
+            // 死んだ古い接続を使い続けないようにする (使うと全クエリが失敗し続ける)。
+            connection = null;
             plugin.getLogger().log(Level.SEVERE, "Failed to connect to MySQL. Check the storage.mysql settings in config.yml.", e);
         }
     }

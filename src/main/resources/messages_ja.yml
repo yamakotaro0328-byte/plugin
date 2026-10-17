@@ -18,6 +18,7 @@ general:
   no-economy: "&c現在、経済システムが利用できません。しばらくしてから再度お試しください。"
 
 confirm:
+  replaced: "&e前の確認はこの新しい確認に置き換わりました。古い[承諾する]ボタンを押すと、こちらが承諾されます。"
   accept-button: "[承諾する]"
   accept-hover: "クリックして承諾する (同じコマンドの再実行や /accept, /ok でも承諾できます)"
   cancel-button: "[キャンセル]"
@@ -29,6 +30,7 @@ confirm:
   timed-out: "&c確認がタイムアウトしました。"
 
 teleport-safety:
+  blocked: "&cテレポートが止められました(保護エリアなど)。料金は返金されました。"
   countdown: "&e{description} まで &f{seconds}秒 &e...動いたりダメージを受けるとキャンセルされます"
   cancelled-move: "&c移動したためキャンセルされました。"
   cancelled-damage: "&cダメージを受けたためキャンセルされました。"
@@ -45,6 +47,7 @@ home:
   success: "&aホーム「{name}」へテレポートしました。({cost} 支払いました)"
 
 sethome:
+  save-failed: "&c今はホームを保存できませんでした(データベースの問題)。料金は返金されました。"
   description: "現在地をホーム「{name}」に設定します"
   success: "&aホーム「{name}」を設定しました。({cost} 支払いました)"
   invalid-name: "&cホーム名は英数字・日本語のみ、16文字以内で指定してください。"
@@ -67,6 +70,7 @@ setspawn:
   success: "&aスポーン地点を現在地に設定しました。"
 
 tpa:
+  replaced: "&e{player}さんへのテレポートリクエストは、別の人のリクエストに置き換えられました。"
   usage: "&c使い方: /tpa <プレイヤー名>"
   description: "{player} にテレポートリクエストを送ります"
   travel-description: "{player} へワープします"
@@ -213,6 +217,7 @@ teleport-effects:
   arrived-subtitle: "&7到着しました！"
 
 daily:
+  storage-error: "&c今は報酬のデータに接続できません。少し待ってからもう一度お試しください。"
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
   claimed: "&aデイリーボーナスを受け取りました: &f{amount}&a！(連続{streak}日目)"
   login-bonus: "&6[ログインボーナス] &f{amount}&aを受け取りました！(連続{streak}日目)"
@@ -242,6 +247,7 @@ menu-item:
 
 menu:
   title: "EcoTPメニュー"
+  request-changed: "&eそのリクエストはもう有効ではありません(別のリクエストが届いています)。もう一度確認してください。"
   category:
     teleport: "&b&l✈ テレポート"
     money: "&e&l💰 お金"
