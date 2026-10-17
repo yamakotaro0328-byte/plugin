@@ -80,6 +80,28 @@ features:
 # ecotp.afk.kickexempt 権限を持つ人は対象外)。tablist-tag はタブリストの名前の前に
 # messages.yml の afk.tag を付ける - TAB等のタブリストプラグインで名前を管理している場合は
 # false にし、そちらで %ecotp_afk% を使ってください。
+# First-join welcome: greets players joining for the first time and announces it.
+# gift is extra money on top of starting-balance (works with any Vault economy; 0 = none).
+# (日本語) 初参加の歓迎: 初めて入った人に歓迎メッセージを送り、全体に通知する。
+# giftはstarting-balanceとは別に渡すお祝い金(どのVault経済でも可、0で無し)。
+welcome:
+  enabled: true
+  broadcast: true
+  gift: 0.0
+
+# Auto announcements: broadcast one message every interval-seconds, in order
+# (or random). Use "\n" for multiple lines, & for colors. Applied on /ecotp reload.
+# (日本語) 自動お知らせ: interval-seconds ごとに1つずつ順番に(randomなら
+# ランダムに)全体へ流す。"\n"で改行、&で色。/ecotp reload で反映。
+announcements:
+  enabled: false
+  interval-seconds: 300
+  random: false
+  messages:
+    - "&e/menu &fでホーム・ワープ・送金などをまとめて操作できます。"
+    - "&f毎日ログインするとログインボーナス！連続7日目・14日目・30日目は特別ボーナス。"
+    - "&f投票で報酬がもらえます！&e/menu &fの投票から投票サイトを開けます。"
+
 afk:
   auto-seconds: 300
   kick-seconds: 0

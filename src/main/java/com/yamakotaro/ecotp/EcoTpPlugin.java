@@ -225,6 +225,8 @@ public class EcoTpPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EconomyJoinListener(this), this);
         getServer().getPluginManager().registerEvents(new VoteRewardJoinListener(this), this);
         getServer().getPluginManager().registerEvents(dailyRewardManager, this);
+        getServer().getPluginManager().registerEvents(new WelcomeListener(this), this);
+        new AnnouncementManager(this);
         getServer().getPluginManager().registerEvents(combatTracker, this);
         getServer().getPluginManager().registerEvents(teleportSafetyManager, this);
         getServer().getPluginManager().registerEvents(chatInputManager, this);

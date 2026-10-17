@@ -184,6 +184,14 @@ vote:
   sites-header: "&b&l投票サイト &7(クリックで開きます):"
   site-hover: "&7クリックして &f{url} &7を開く"
 
+welcome:
+  broadcast: "&d&l[歓迎] &e{player} &dさんが初めて参加しました！({number}人目) よろしくお願いします！"
+  message: "&aようこそ、{player}さん！&e/menu &aでホーム・ワープ・送金などをまとめて操作できます。"
+  gift: "&aお祝い金 &f{amount} &aを受け取りました！"
+
+announce:
+  prefix: "&6[お知らせ] &r"
+
 daily:
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
   claimed: "&aデイリーボーナスを受け取りました: &f{amount}&a！(連続{streak}日目)"

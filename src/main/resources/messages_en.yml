@@ -184,6 +184,14 @@ vote:
   sites-header: "&b&lVoting sites &7(click to open):"
   site-hover: "&7Click to open &f{url}"
 
+welcome:
+  broadcast: "&d&l[Welcome] &e{player} &djoined for the first time! (player #{number}) Say hi!"
+  message: "&aWelcome, {player}! Use &e/menu &ato get around — homes, warps, payments and more."
+  gift: "&aWelcome gift: &f{amount}&a!"
+
+announce:
+  prefix: "&6[Info] &r"
+
 daily:
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
   claimed: "&aDaily reward claimed: &f{amount}&a! (streak: {streak} day(s))"
