@@ -187,6 +187,10 @@ vote:
 daily:
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
   claimed: "&aDaily reward claimed: &f{amount}&a! (streak: {streak} day(s))"
+  login-bonus: "&6[Login Bonus] &aYou received &f{amount}&a! (streak: {streak} day(s))"
+  calendar-bonus: "&6&l[Login Bonus] &eDay {streak} special bonus: &f{bonus}&e!"
+  calendar-next: "&7Next special bonus: day {day} ({days} more day(s))"
+  calendar-broadcast: "&6[Login Bonus] &e{player} &6logged in {streak} days in a row and got a special bonus of &e{bonus}&6!"
 
 ecoitem:
   usage: "&cUsage: /ecoitem give <player> <amount> [quantity]"

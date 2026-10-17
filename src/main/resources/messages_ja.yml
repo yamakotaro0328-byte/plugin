@@ -187,6 +187,10 @@ vote:
 daily:
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
   claimed: "&aデイリーボーナスを受け取りました: &f{amount}&a！(連続{streak}日目)"
+  login-bonus: "&6[ログインボーナス] &f{amount}&aを受け取りました！(連続{streak}日目)"
+  calendar-bonus: "&6&l[ログインボーナス] &e連続{streak}日目の特別ボーナス: &f{bonus}&e！"
+  calendar-next: "&7次の特別ボーナス: 連続{day}日目(あと{days}日)"
+  calendar-broadcast: "&6[ログインボーナス] &e{player} &6さんが連続{streak}日ログインを達成し、特別ボーナス &e{bonus} &6を受け取りました！"
 
 ecoitem:
   usage: "&c使い方: /ecoitem give <プレイヤー名> <金額> [個数]"
