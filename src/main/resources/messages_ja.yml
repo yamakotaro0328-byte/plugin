@@ -206,6 +206,12 @@ boss-rewards:
     warden: "ウォーデン"
     elder_guardian: "エルダーガーディアン"
 
+teleport-effects:
+  countdown-title: "&b&l{seconds}"
+  countdown-subtitle: "&7{description}"
+  arrived-title: "&b&l✦ テレポート完了 ✦"
+  arrived-subtitle: "&7到着しました！"
+
 daily:
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
   claimed: "&aデイリーボーナスを受け取りました: &f{amount}&a！(連続{streak}日目)"

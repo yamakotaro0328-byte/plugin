@@ -206,6 +206,12 @@ boss-rewards:
     warden: "Warden"
     elder_guardian: "Elder Guardian"
 
+teleport-effects:
+  countdown-title: "&b&l{seconds}"
+  countdown-subtitle: "&7{description}"
+  arrived-title: "&b&l✦ Teleported ✦"
+  arrived-subtitle: "&7Welcome!"
+
 daily:
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
   claimed: "&aDaily reward claimed: &f{amount}&a! (streak: {streak} day(s))"

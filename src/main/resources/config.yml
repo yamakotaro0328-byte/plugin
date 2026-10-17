@@ -355,6 +355,11 @@ teleport-safety:
   # Play a sound/particle effect when a teleport completes successfully.
   # (日本語) テレポート成功時に効果音とパーティクルを再生する
   play-effects: true
+  # Extra flair: a particle spiral, rising sound and title countdown while waiting, plus
+  # a burst at departure and a light ring on arrival. Needs play-effects.
+  # (日本語) 豪華な演出: 待機中の渦巻くパーティクル・音程が上がる効果音・タイトルの
+  # カウントダウンと、出発地点の爆発・到着地点の光のリング。play-effectsが必要。
+  fancy-effects: true
 
 # Maximum number of homes each player may set.
 # (日本語) プレイヤーごとに設定できるホームの上限数

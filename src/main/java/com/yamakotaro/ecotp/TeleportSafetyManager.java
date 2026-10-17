@@ -40,10 +40,13 @@ public class TeleportSafetyManager implements Listener {
     private final EcoTpPlugin plugin;
     private final CombatTracker combatTracker;
     private final Map<UUID, Countdown> countdowns = new HashMap<>();
+    private final Map<UUID, Location> departures = new HashMap<>();
+    private final TeleportEffects effects;
 
     public TeleportSafetyManager(EcoTpPlugin plugin, CombatTracker combatTracker) {
         this.plugin = plugin;
         this.combatTracker = combatTracker;
+        this.effects = new TeleportEffects(plugin);
     }
 
     private static final class Countdown {
@@ -53,6 +56,7 @@ public class TeleportSafetyManager implements Listener {
         final BossBar bossBar;
         final String description;
         final int totalTicks;
+        BukkitTask effectsTask;
         int remainingTicks;
 
         private Countdown(Location startLocation, BukkitTask completionTask, BukkitTask monitorTask,
@@ -124,7 +128,9 @@ public class TeleportSafetyManager implements Listener {
         }
 
         int seconds = Math.max(0, plugin.getConfig().getInt("teleport-safety.countdown-seconds", 5));
+        departures.remove(player.getUniqueId());
         if (seconds == 0) {
+            departures.put(player.getUniqueId(), player.getLocation());
             onComplete.run();
             return true;
         }
@@ -147,6 +153,9 @@ public class TeleportSafetyManager implements Listener {
             // 直接参照せず countdowns マップ経由で両方のタスクを止める。
             Countdown finished = countdowns.remove(uuid);
             if (finished != null) {
+                stopEffects(finished);
+                // 実際に teleport されたら playTeleportEffects で出発地点の演出を出す。
+                departures.put(uuid, player.getLocation());
                 finished.monitorTask.cancel();
                 if (finished.bossBar != null) {
                     finished.bossBar.removeAll();
@@ -179,7 +188,9 @@ public class TeleportSafetyManager implements Listener {
             }
         }, 20L, 20L);
 
-        countdowns.put(uuid, new Countdown(player.getLocation(), completionTask, monitorTask, bossBar, description, totalTicks));
+        Countdown countdown = new Countdown(player.getLocation(), completionTask, monitorTask, bossBar, description, totalTicks);
+        countdown.effectsTask = effects.startCountdown(player, description, totalTicks);
+        countdowns.put(uuid, countdown);
         return true;
     }
 
@@ -192,12 +203,17 @@ public class TeleportSafetyManager implements Listener {
      * config.yml の teleport-safety.play-effects で無効化できる。
      */
     public void playTeleportEffects(Player player) {
-        if (!plugin.getConfig().getBoolean("teleport-safety.play-effects", true)) {
-            return;
+        Location from = departures.remove(player.getUniqueId());
+        if (from != null && (from.getWorld() != player.getWorld() || from.distanceSquared(player.getLocation()) > 4)) {
+            effects.departure(from);
         }
-        Location location = player.getLocation();
-        player.getWorld().playSound(location, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-        player.getWorld().spawnParticle(Particle.PORTAL, location, 32, 0.5, 1.0, 0.5, 0.1);
+        effects.arrival(player);
+    }
+
+    private static void stopEffects(Countdown countdown) {
+        if (countdown.effectsTask != null) {
+            countdown.effectsTask.cancel();
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -233,9 +249,11 @@ public class TeleportSafetyManager implements Listener {
         if (countdown != null) {
             countdown.completionTask.cancel();
             countdown.monitorTask.cancel();
+            stopEffects(countdown);
             if (countdown.bossBar != null) {
                 countdown.bossBar.removeAll();
             }
+            effects.cancelled(player);
             player.sendMessage(plugin.msg(messageKey));
         }
     }
@@ -245,6 +263,7 @@ public class TeleportSafetyManager implements Listener {
         if (countdown != null) {
             countdown.completionTask.cancel();
             countdown.monitorTask.cancel();
+            stopEffects(countdown);
             if (countdown.bossBar != null) {
                 countdown.bossBar.removeAll();
             }
