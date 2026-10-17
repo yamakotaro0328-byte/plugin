@@ -242,6 +242,35 @@ menu-item:
 
 menu:
   title: "EcoTPメニュー"
+  category:
+    teleport: "&b&l✈ テレポート"
+    money: "&e&l💰 お金"
+    rewards: "&a&l🎁 報酬"
+    other: "&d&l⚙ その他"
+  vote-goal: "&b&lサーバー目標"
+  boss: "&c&lボス討伐賞金"
+  server-info: "&eサーバー情報"
+  settings: "&f個人設定"
+  help: "&6ヘルプ"
+  calendar-title: "ログインボーナス (連続{streak}日)"
+  calendar-claim: "&6&l今日のボーナスを受け取る！"
+  calendar-wait: "&7次のボーナスまで待機中"
+  calendar-info: "&eログイン記録"
+  calendar-day: "&f{day}日目"
+  calendar-day-special: "&e&l★ {day}日目"
+  calendar-day-done: "&a✔ {day}日目"
+  calendar-day-today: "&6&l▶ {day}日目 (今日)"
+  calendar-day-next: "&e{day}日目 (次)"
+  settings-title: "個人設定"
+  toggle-on: "&aオン"
+  toggle-off: "&cオフ"
+  setting-romaji: "&fローマ字→日本語変換"
+  setting-afk: "&f放置(AFK)状態"
+  vote-title: "投票"
+  vote-stats: "&b&lあなたの投票"
+  vote-no-sites: "&c投票サイトがまだ登録されていません"
+  vote-site: "&b&l▶ {name}"
+  vote-milestones: "&d&l累計ボーナス"
   home: "&aホームへワープ"
   sethome: "&bホームを設定"
   spawn: "&aスポーンへワープ"
@@ -279,10 +308,89 @@ menu:
   chat-input-cancelled: "&eキャンセルしました。"
   chat-input-timeout: "&c入力がタイムアウトしました。"
   lore:
+    category-teleport:
+      - "&7ホーム・スポーン・ワープ・tpa"
+    category-money:
+      - "&7所持金・送金・寄付・ランキング"
+    category-rewards:
+      - "&7ログインボーナス・投票・目標・ボス"
+    category-other:
+      - "&7設定・サーバー情報・ヘルプ"
+    vote-goal:
+      - "&7みんなの投票の合計で目標達成！"
+      - "{bar}"
+      - "&7進み具合: &f{progress}/{target} &7(あと{remaining}回)"
+      - "&7達成でオンラインの全員に &f{reward}"
+    boss-header:
+      - "&7とどめを刺した人に賞金！"
+    boss-entry: "&8・&f{mob}&7: &e{reward}"
+    server-info:
+      - "&7オンライン: &f{online}/{max}人"
+      - "&7Ping: &f{ping}ms"
+      - "&7TPS: &f{tps}"
+      - "&7今は: {time}"
+    time-day: "&e☀ 昼"
+    time-night: "&9☾ 夜"
+    settings:
+      - "&7ローマ字変換や放置状態を切り替えます。"
+    help:
+      - "&e/menu &7このメニュー"
+      - "&e/home /sethome /homes &7ホーム"
+      - "&e/spawn /warp &7スポーン・ワープ"
+      - "&e/tpa /tphere &7プレイヤーへ移動・呼び出し"
+      - "&e/pay /donate &7送金・寄付"
+      - "&e/daily /votetop /votegoal &7報酬"
+      - "&e/msg /reply /afk /roma &7チャット"
+    vote-menu:
+      - "&7投票すると &f{amount} &7がもらえます。"
+      - "&7あなたの累計: &f{votes}回"
+      - "&eクリックで投票メニュー"
+    daily-calendar:
+      - "&7毎日ログインでボーナス！"
+      - "&7連続: &f{streak}日"
+      - "{status}"
+      - "&eクリックでカレンダーを開く"
+    calendar-claim:
+      - "&7クリックして受け取る"
+    calendar-wait:
+      - "&7あと &f{time}"
+    calendar-info:
+      - "&7現在の連続ログイン: &f{streak}日"
+      - "&72日以上空くと1日目に戻ります。"
+    calendar-next: "&7次の特別ボーナス: &e{day}日目 &7(あと{days}日, &f+{bonus}&7)"
+    calendar-day:
+      - "&7報酬: &f{amount}"
+    calendar-special: "&e★ 特別ボーナス: &f+{bonus}"
+    calendar-done: "&a受け取り済み"
+    calendar-today: "&6&lクリックで受け取る！"
+    calendar-tomorrow: "&7あと {time} で受け取れます"
+    setting-romaji:
+      - "&7ローマ字で打ったチャットを日本語に変換します。"
+      - "&7現在: {state}"
+      - "&eクリックで切り替え"
+    setting-afk:
+      - "&7放置中であることを周りに知らせます。"
+      - "&7現在: {state}"
+      - "&eクリックで切り替え"
+    vote-stats:
+      - "&7累計投票数: &f{votes}回"
+      - "&71回の報酬: &f{amount}"
+    vote-site:
+      - "&7{url}"
+      - "&eクリックでリンクを表示"
+    milestone-done: "&a✔ {count}回 &7(+{bonus})"
+    milestone-todo: "&7・{count}回 &8(+{bonus})"
+    milestone-none: "&7設定されていません"
+    vote-top:
+      - "&7投票数: &f{votes}回"
+    home-entry-extra:
+      - "&8{world} ({x}, {y}, {z})"
+      - "&8Shift+右クリックで削除"
     profile:
       - "&7所持金: &f{balance}"
       - "&7ホーム数: &f{used}/{max}"
-      - "&7デイリー連続日数: &f{streak}日"
+      - "&7連続ログイン: &f{streak}日"
+      - "&7累計投票: &f{votes}回"
     select-player-head:
       - "&7クリックして選択"
     home:

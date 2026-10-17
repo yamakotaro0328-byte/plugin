@@ -242,6 +242,35 @@ menu-item:
 
 menu:
   title: "EcoTP Menu"
+  category:
+    teleport: "&b&l✈ Teleport"
+    money: "&e&l💰 Money"
+    rewards: "&a&l🎁 Rewards"
+    other: "&d&l⚙ Other"
+  vote-goal: "&b&lServer Goal"
+  boss: "&c&lBoss Bounties"
+  server-info: "&eServer Info"
+  settings: "&fSettings"
+  help: "&6Help"
+  calendar-title: "Login Bonus (streak {streak})"
+  calendar-claim: "&6&lClaim today's bonus!"
+  calendar-wait: "&7Waiting for the next bonus"
+  calendar-info: "&eLogin Record"
+  calendar-day: "&fDay {day}"
+  calendar-day-special: "&e&l★ Day {day}"
+  calendar-day-done: "&a✔ Day {day}"
+  calendar-day-today: "&6&l▶ Day {day} (today)"
+  calendar-day-next: "&eDay {day} (next)"
+  settings-title: "Settings"
+  toggle-on: "&aON"
+  toggle-off: "&cOFF"
+  setting-romaji: "&fRomaji → Japanese"
+  setting-afk: "&fAFK status"
+  vote-title: "Vote"
+  vote-stats: "&b&lYour Votes"
+  vote-no-sites: "&cNo voting sites set up yet"
+  vote-site: "&b&l▶ {name}"
+  vote-milestones: "&d&lMilestone Bonuses"
   home: "&aTeleport home"
   sethome: "&bSet home"
   spawn: "&aTeleport to spawn"
@@ -279,10 +308,89 @@ menu:
   chat-input-cancelled: "&eCancelled."
   chat-input-timeout: "&cInput timed out."
   lore:
+    category-teleport:
+      - "&7Homes, spawn, warps, tpa"
+    category-money:
+      - "&7Balance, pay, donate, leaderboard"
+    category-rewards:
+      - "&7Login bonus, voting, goals, bosses"
+    category-other:
+      - "&7Settings, server info, help"
+    vote-goal:
+      - "&7Everyone's votes count toward the goal!"
+      - "{bar}"
+      - "&7Progress: &f{progress}/{target} &7({remaining} to go)"
+      - "&7Reward for everyone online: &f{reward}"
+    boss-header:
+      - "&7Bounty for the killing blow!"
+    boss-entry: "&8- &f{mob}&7: &e{reward}"
+    server-info:
+      - "&7Online: &f{online}/{max}"
+      - "&7Ping: &f{ping}ms"
+      - "&7TPS: &f{tps}"
+      - "&7Now: {time}"
+    time-day: "&e☀ Day"
+    time-night: "&9☾ Night"
+    settings:
+      - "&7Toggle romaji conversion and AFK."
+    help:
+      - "&e/menu &7this menu"
+      - "&e/home /sethome /homes &7homes"
+      - "&e/spawn /warp &7spawn & warps"
+      - "&e/tpa /tphere &7go to / summon players"
+      - "&e/pay /donate &7send money"
+      - "&e/daily /votetop /votegoal &7rewards"
+      - "&e/msg /reply /afk /roma &7chat"
+    vote-menu:
+      - "&7Vote to get &f{amount}&7."
+      - "&7Your total: &f{votes}"
+      - "&eClick to open the vote menu"
+    daily-calendar:
+      - "&7Log in every day for a bonus!"
+      - "&7Streak: &f{streak} day(s)"
+      - "{status}"
+      - "&eClick to open the calendar"
+    calendar-claim:
+      - "&7Click to claim"
+    calendar-wait:
+      - "&7In &f{time}"
+    calendar-info:
+      - "&7Current streak: &f{streak} day(s)"
+      - "&7Miss more than a day and it resets to day 1."
+    calendar-next: "&7Next special bonus: &eday {day} &7(in {days} day(s), &f+{bonus}&7)"
+    calendar-day:
+      - "&7Reward: &f{amount}"
+    calendar-special: "&e★ Special bonus: &f+{bonus}"
+    calendar-done: "&aClaimed"
+    calendar-today: "&6&lClick to claim!"
+    calendar-tomorrow: "&7Available in {time}"
+    setting-romaji:
+      - "&7Converts your romaji chat into Japanese."
+      - "&7Now: {state}"
+      - "&eClick to toggle"
+    setting-afk:
+      - "&7Let others know you're away."
+      - "&7Now: {state}"
+      - "&eClick to toggle"
+    vote-stats:
+      - "&7Total votes: &f{votes}"
+      - "&7Reward per vote: &f{amount}"
+    vote-site:
+      - "&7{url}"
+      - "&eClick to get the link"
+    milestone-done: "&a✔ {count} votes &7(+{bonus})"
+    milestone-todo: "&7- {count} votes &8(+{bonus})"
+    milestone-none: "&7None configured"
+    vote-top:
+      - "&7Votes: &f{votes}"
+    home-entry-extra:
+      - "&8{world} ({x}, {y}, {z})"
+      - "&8Shift+right-click to delete"
     profile:
       - "&7Balance: &f{balance}"
       - "&7Homes: &f{used}/{max}"
-      - "&7Daily streak: &f{streak} day(s)"
+      - "&7Login streak: &f{streak} day(s)"
+      - "&7Total votes: &f{votes}"
     select-player-head:
       - "&7Click to select"
     home:

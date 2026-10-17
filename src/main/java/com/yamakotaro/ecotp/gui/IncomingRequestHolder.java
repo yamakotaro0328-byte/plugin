@@ -18,7 +18,7 @@ import java.util.List;
  * メインメニューの「保留中のリクエスト」通知アイテムから開く、承諾/拒否用のGUI。
  * 実際の処理は /tpaccept, /tpdeny をそのまま実行するだけ (TpaManager 参照)。
  */
-public class IncomingRequestHolder implements InventoryHolder {
+public class IncomingRequestHolder implements EcoTpMenu {
 
     private static final int SIZE = 27;
     public static final int SLOT_ACCEPT = 11;

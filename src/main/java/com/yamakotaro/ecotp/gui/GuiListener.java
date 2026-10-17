@@ -14,6 +14,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.InventoryHolder;
@@ -33,9 +34,7 @@ public class GuiListener implements Listener {
     @EventHandler
     public void onDrag(InventoryDragEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
-        if (holder instanceof MainMenuHolder || holder instanceof PlayerSelectHolder
-                || holder instanceof HomeSelectHolder || holder instanceof WarpSelectHolder || holder instanceof BaltopHolder
-                || holder instanceof AmountSelectHolder || holder instanceof IncomingRequestHolder) {
+        if (holder instanceof EcoTpMenu) {
             // これらのGUIは表示専用: ドラッグでアイテムを置かせない
             // (空いたスロットにアイテムをドロップされて紛失するのを防ぐ)。
             event.setCancelled(true);
@@ -46,6 +45,74 @@ public class GuiListener implements Listener {
     public void onClick(InventoryClickEvent event) {
         InventoryHolder holder = event.getInventory().getHolder();
         if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+        if (holder instanceof EcoTpMenu && event.getClickedInventory() == event.getInventory()) {
+            ItemStack current = event.getCurrentItem();
+            if (current != null && !current.getType().name().endsWith("STAINED_GLASS_PANE")) {
+                MenuFx.click(player);
+            }
+        }
+
+        if (holder instanceof LoginCalendarHolder calendar) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) {
+                return;
+            }
+            int slot = event.getSlot();
+            if (slot == LoginCalendarHolder.SLOT_BACK) {
+                backToMainMenu(player);
+            } else if (slot == LoginCalendarHolder.SLOT_CLAIM || (slot == calendar.getClaimDaySlot() && slot >= 0)) {
+                if (plugin.getDailyRewardManager().isClaimable(player.getUniqueId())) {
+                    player.performCommand("daily");
+                    player.openInventory(new LoginCalendarHolder(plugin, player).getInventory());
+                }
+            }
+            return;
+        }
+
+        if (holder instanceof VoteMenuHolder voteMenu) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) {
+                return;
+            }
+            int slot = event.getSlot();
+            if (slot == VoteMenuHolder.SLOT_BACK) {
+                backToMainMenu(player);
+            } else if (slot == VoteMenuHolder.SLOT_CLOSE) {
+                player.closeInventory();
+            } else {
+                VoteRewardManager.VoteSite site = voteMenu.siteAt(slot);
+                if (site != null) {
+                    player.closeInventory();
+                    sendSiteLink(player, site);
+                }
+            }
+            return;
+        }
+
+        if (holder instanceof SettingsHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) {
+                return;
+            }
+            int slot = event.getSlot();
+            if (slot == SettingsHolder.SLOT_BACK) {
+                backToMainMenu(player);
+                return;
+            }
+            ItemStack current = event.getCurrentItem();
+            if (current == null || current.getType().name().endsWith("STAINED_GLASS_PANE")) {
+                return; // 枠、または無効な設定のスロット
+            }
+            if (slot == SettingsHolder.SLOT_ROMAJI) {
+                player.performCommand("roma");
+            } else if (slot == SettingsHolder.SLOT_AFK) {
+                player.performCommand("afk");
+            } else {
+                return;
+            }
+            player.openInventory(new SettingsHolder(plugin, player).getInventory());
             return;
         }
 
@@ -106,6 +173,16 @@ public class GuiListener implements Listener {
             }
             String homeName = homeHolder.nameAt(slot);
             if (homeName == null) {
+                return;
+            }
+            if (event.getClick() == ClickType.SHIFT_RIGHT) {
+                // Shift+右クリック: そのホームを削除して一覧を開き直す。
+                player.performCommand("delhome " + homeName);
+                if (plugin.getHomeManager().getHomeNames(player.getUniqueId()).isEmpty()) {
+                    backToMainMenu(player);
+                } else {
+                    player.openInventory(new HomeSelectHolder(plugin, player, homeHolder.getPage()).getInventory());
+                }
                 return;
             }
             player.closeInventory();
@@ -232,9 +309,10 @@ public class GuiListener implements Listener {
             case MainMenuHolder.SLOT_PAY -> openPlayerSelectAndClose(player, PlayerSelectHolder.Purpose.PAY);
             case MainMenuHolder.SLOT_BALTOP -> openBaltop(player, 0);
             case MainMenuHolder.SLOT_WARP -> openWarps(player);
-            case MainMenuHolder.SLOT_DAILY -> runAndClose(player, "daily");
+            case MainMenuHolder.SLOT_DAILY -> player.openInventory(new LoginCalendarHolder(plugin, player).getInventory());
             case MainMenuHolder.SLOT_DONATE -> openPlayerSelectAndClose(player, PlayerSelectHolder.Purpose.DONATE);
-            case MainMenuHolder.SLOT_VOTE -> openVoteSites(player);
+            case MainMenuHolder.SLOT_VOTE, MainMenuHolder.SLOT_VOTE_GOAL -> openVoteMenu(player);
+            case MainMenuHolder.SLOT_SETTINGS -> player.openInventory(new SettingsHolder(plugin, player).getInventory());
             case MainMenuHolder.SLOT_CLOSE -> player.closeInventory();
             default -> {
                 // 枠 (ガラス板) や無効化された機能のスロットをクリックしただけ: 何もしない
@@ -274,22 +352,21 @@ public class GuiListener implements Listener {
         player.openInventory(new HomeSelectHolder(plugin, player, 0).getInventory());
     }
 
-    /** 投票サイトへのリンクをクリック可能なチャットメッセージとして送る。未設定なら何もしない
-     * (情報表示だけのタイルのまま)。 */
-    private void openVoteSites(Player player) {
-        List<VoteRewardManager.VoteSite> sites = plugin.getVoteRewardManager().getSites();
-        if (sites.isEmpty()) {
+    private void openVoteMenu(Player player) {
+        if (!plugin.getVoteRewardManager().isEnabled()) {
             return;
         }
-        player.closeInventory();
+        player.openInventory(new VoteMenuHolder(plugin, player).getInventory());
+    }
+
+    /** 投票サイトへのリンクをクリック可能なチャットメッセージとして送る。 */
+    private void sendSiteLink(Player player, VoteRewardManager.VoteSite site) {
         player.sendMessage(plugin.msg("vote.sites-header"));
-        for (VoteRewardManager.VoteSite site : sites) {
-            TextComponent line = new TextComponent(ChatUtil.color("&b▶ " + site.name()));
-            line.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, site.url()));
-            line.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                    new ComponentBuilder(plugin.getMessages().get("vote.site-hover", "url", site.url())).create()));
-            player.spigot().sendMessage(line);
-        }
+        TextComponent line = new TextComponent(ChatUtil.color("&b▶ " + site.name()));
+        line.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, site.url()));
+        line.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                new ComponentBuilder(plugin.getMessages().get("vote.site-hover", "url", site.url())).create()));
+        player.spigot().sendMessage(line);
     }
 
     private void openBaltop(Player player, int page) {

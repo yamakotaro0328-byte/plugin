@@ -19,7 +19,7 @@ import java.util.List;
  * Bukkit.getPlayerExact に渡せるようにしている。
  * 45人を超えてオンラインの場合はページ送りで全員に到達できる (Paginator 参照)。
  */
-public class PlayerSelectHolder implements InventoryHolder {
+public class PlayerSelectHolder implements EcoTpMenu {
 
     public enum Purpose {
         TPA, TPHERE, PAY, DONATE

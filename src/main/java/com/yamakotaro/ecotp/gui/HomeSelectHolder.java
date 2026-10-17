@@ -18,7 +18,7 @@ import java.util.List;
  * ホームが1つ以下しか無い場合はこのGUIを経由せず直接 /home を実行する
  * (GuiListener 参照)。45件を超えるホームはページ送りで到達できる (Paginator 参照)。
  */
-public class HomeSelectHolder implements InventoryHolder {
+public class HomeSelectHolder implements EcoTpMenu {
 
     public static final int CONTENT_SIZE = 45;
     private static final int SIZE = 54;
@@ -74,8 +74,17 @@ public class HomeSelectHolder implements InventoryHolder {
         double fee = plugin.getTeleportSafetyManager().isSameDimension(viewer.getLocation(), home)
                 ? CostUtil.distanceCost(viewer.getLocation(), home, minFee, blocksPerYen)
                 : minFee;
-        List<String> lore = plugin.getMessages().getList("menu.lore.home-entry-fee", "fee", ChatUtil.formatMoney(fee));
-        return MenuItems.item(Material.RED_BED, displayName, lore);
+        List<String> lore = new java.util.ArrayList<>(
+                plugin.getMessages().getList("menu.lore.home-entry-fee", "fee", ChatUtil.formatMoney(fee)));
+        lore.addAll(plugin.getMessages().getList("menu.lore.home-entry-extra",
+                "world", home.getWorld() == null ? "?" : home.getWorld().getName(),
+                "x", String.valueOf(home.getBlockX()), "y", String.valueOf(home.getBlockY()), "z", String.valueOf(home.getBlockZ())));
+        Material icon = home.getWorld() == null ? Material.RED_BED : switch (home.getWorld().getEnvironment()) {
+            case NETHER -> Material.CRIMSON_NYLIUM;
+            case THE_END -> Material.END_STONE;
+            default -> Material.RED_BED;
+        };
+        return MenuItems.item(icon, displayName, lore);
     }
 
     /** @return このスロットに対応するホーム名 (現在のページ内)。範囲外なら null。 */

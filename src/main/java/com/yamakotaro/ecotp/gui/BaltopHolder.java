@@ -20,7 +20,7 @@ import java.util.List;
  * 表示専用: クリックしても何も起きない (戻るボタン以外)。45件を超える場合はページ送りできる
  * (Paginator 参照。順位は常にページをまたいだ通し番号)。
  */
-public class BaltopHolder implements InventoryHolder {
+public class BaltopHolder implements EcoTpMenu {
 
     public static final int CONTENT_SIZE = 45;
     private static final int SIZE = 54;

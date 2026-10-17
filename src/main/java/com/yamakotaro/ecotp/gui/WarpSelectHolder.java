@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * メインメニューの「ワープ」から開くワープ地点の選択GUI。クリックで /warp <名前> を実行する。
  */
-public class WarpSelectHolder implements InventoryHolder {
+public class WarpSelectHolder implements EcoTpMenu {
 
     public static final int CONTENT_SIZE = 45;
     private static final int SIZE = 54;

@@ -13,7 +13,7 @@ import org.bukkit.inventory.InventoryHolder;
  * よくある金額はここでワンクリックで送れる。それ以外の金額は「カスタム金額」から
  * 従来通りチャットに入力する。
  */
-public class AmountSelectHolder implements InventoryHolder {
+public class AmountSelectHolder implements EcoTpMenu {
 
     private static final int SIZE = 27;
     public static final int SLOT_CUSTOM = 22;

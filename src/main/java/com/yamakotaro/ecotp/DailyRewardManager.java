@@ -91,10 +91,7 @@ public class DailyRewardManager implements Listener {
         int previousStreak = storage.getStreak(uuid);
         int newStreak = (lastClaim > 0 && elapsed <= streakWindowMillis) ? previousStreak + 1 : 1;
 
-        double base = plugin.getConfig().getDouble("daily-reward.base-amount", 100.0);
-        double perDay = plugin.getConfig().getDouble("daily-reward.streak-bonus-per-day", 20.0);
-        int maxBonusDays = plugin.getConfig().getInt("daily-reward.max-streak-bonus-days", 30);
-        double normal = base + Math.min(newStreak - 1, maxBonusDays) * perDay;
+        double normal = amountForStreak(newStreak);
         double special = calendarBonus(newStreak);
         double amount = normal + special;
 
@@ -130,11 +127,11 @@ public class DailyRewardManager implements Listener {
      * config.yml の daily-reward.calendar で、連続日数がちょうどその日に達した時の特別ボーナス。
      * calendar-repeat が true なら、最大の日数を1周として繰り返す (30日周期なら31日目は1日目扱い)。
      */
-    private double calendarBonus(int streak) {
+    public double calendarBonus(int streak) {
         return plugin.getConfig().getDouble("daily-reward.calendar." + calendarDay(streak), 0.0);
     }
 
-    private int calendarDay(int streak) {
+    public int calendarDay(int streak) {
         int cycle = calendarCycle();
         if (cycle > 0 && streak > cycle && plugin.getConfig().getBoolean("daily-reward.calendar-repeat", true)) {
             return (streak - 1) % cycle + 1;
@@ -142,7 +139,7 @@ public class DailyRewardManager implements Listener {
         return streak;
     }
 
-    private int calendarCycle() {
+    public int calendarCycle() {
         ConfigurationSection section = plugin.getConfig().getConfigurationSection("daily-reward.calendar");
         int max = 0;
         if (section != null) {
@@ -171,6 +168,24 @@ public class DailyRewardManager implements Listener {
             }
         }
         return 0;
+    }
+
+    /** @return その連続日数の日に受け取れる通常の報酬 (特別ボーナスは含まない)。 */
+    public double amountForStreak(int streak) {
+        double base = plugin.getConfig().getDouble("daily-reward.base-amount", 100.0);
+        double perDay = plugin.getConfig().getDouble("daily-reward.streak-bonus-per-day", 20.0);
+        int maxBonusDays = plugin.getConfig().getInt("daily-reward.max-streak-bonus-days", 30);
+        return base + Math.min(Math.max(0, streak - 1), maxBonusDays) * perDay;
+    }
+
+    /** @return 連続が途切れていなければ現在の連続日数、途切れていれば (次は1日目からなので) 0。 */
+    public int getEffectiveStreak(UUID uuid) {
+        long lastClaim = storage.getLastClaimMillis(uuid);
+        long window = (long) (plugin.getConfig().getDouble("daily-reward.streak-window-hours", 48.0) * 3_600_000L);
+        if (lastClaim <= 0 || System.currentTimeMillis() - lastClaim > window) {
+            return 0;
+        }
+        return storage.getStreak(uuid);
     }
 
     /** @return メニュー表示用: 今すぐ請求できるか (副作用なし)。 */

@@ -84,6 +84,13 @@ features:
 # gift is extra money on top of starting-balance (works with any Vault economy; 0 = none).
 # (日本語) 初参加の歓迎: 初めて入った人に歓迎メッセージを送り、全体に通知する。
 # giftはstarting-balanceとは別に渡すお祝い金(どのVault経済でも可、0で無し)。
+# GUI animations: icons appear left to right when a menu opens and the frame cycles
+# through rainbow colors. Set to false to show menus instantly with a plain frame.
+# (日本語) GUIの演出: 開いた時にアイコンが左から順に現れ、枠が虹色に流れる。
+# falseにすると演出なしで一度に表示する。
+gui:
+  animations: true
+
 welcome:
   enabled: true
   broadcast: true
