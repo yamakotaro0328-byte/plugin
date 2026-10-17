@@ -27,6 +27,7 @@ import com.yamakotaro.ecotp.commands.TpaCancelCommand;
 import com.yamakotaro.ecotp.commands.TpaCommand;
 import com.yamakotaro.ecotp.commands.TpaDenyCommand;
 import com.yamakotaro.ecotp.commands.TphereCommand;
+import com.yamakotaro.ecotp.commands.VoteGoalCommand;
 import com.yamakotaro.ecotp.commands.VoteTopCommand;
 import com.yamakotaro.ecotp.commands.WarpCommand;
 import com.yamakotaro.ecotp.gui.GuiListener;
@@ -37,6 +38,7 @@ import com.yamakotaro.ecotp.listeners.EconomyJoinListener;
 import com.yamakotaro.ecotp.listeners.MenuItemListener;
 import com.yamakotaro.ecotp.listeners.PlayerCleanupListener;
 import com.yamakotaro.ecotp.listeners.RomajiConversionListener;
+import com.yamakotaro.ecotp.listeners.BossRewardListener;
 import com.yamakotaro.ecotp.listeners.VoteRewardJoinListener;
 import com.yamakotaro.ecotp.web.WebDashboard;
 import org.bukkit.event.EventHandler;
@@ -76,6 +78,7 @@ public class EcoTpPlugin extends JavaPlugin {
     private ChatInputManager chatInputManager;
     private DonationManager donationManager;
     private VoteRewardManager voteRewardManager;
+    private VoteGoalManager voteGoalManager;
     private VotifierServer votifierServer;
     private DailyRewardStorage dailyRewardStorage;
     private DailyRewardManager dailyRewardManager;
@@ -146,6 +149,7 @@ public class EcoTpPlugin extends JavaPlugin {
         this.chatInputManager = new ChatInputManager(this);
         this.donationManager = new DonationManager(this);
         this.voteRewardManager = new VoteRewardManager(this);
+        this.voteGoalManager = new VoteGoalManager(this);
         this.votifierServer = new VotifierServer(this);
         this.dailyRewardStorage = useMysql
                 ? new MySqlDailyRewardStorage(this, mySqlConnectionProvider)
@@ -219,6 +223,7 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("delwarp").setExecutor(delWarpCommand);
         getCommand("delwarp").setTabCompleter(delWarpCommand);
         getCommand("votetop").setExecutor(new VoteTopCommand(this));
+        getCommand("votegoal").setExecutor(new VoteGoalCommand(this));
         getCommand("afk").setExecutor(new AfkCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
@@ -226,6 +231,7 @@ public class EcoTpPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new VoteRewardJoinListener(this), this);
         getServer().getPluginManager().registerEvents(dailyRewardManager, this);
         getServer().getPluginManager().registerEvents(new WelcomeListener(this), this);
+        getServer().getPluginManager().registerEvents(new BossRewardListener(this), this);
         new AnnouncementManager(this);
         getServer().getPluginManager().registerEvents(combatTracker, this);
         getServer().getPluginManager().registerEvents(teleportSafetyManager, this);
@@ -366,6 +372,10 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public DonationManager getDonationManager() {
         return donationManager;
+    }
+
+    public VoteGoalManager getVoteGoalManager() {
+        return voteGoalManager;
     }
 
     public VoteRewardManager getVoteRewardManager() {

@@ -192,6 +192,20 @@ welcome:
 announce:
   prefix: "&6[Info] &r"
 
+vote-goal:
+  progress: "&b&l[Server Goal] &bVotes: &e{progress}/{target} &b— {remaining} more and everyone online gets a reward!"
+  reached: "&6&l[Server Goal] &e{target} votes reached! &6Everyone online receives &e{reward}&6. Thanks for voting!"
+  received: "&aServer goal reward: &f{reward}&a!"
+  status: "&bServer vote goal: &e{progress}/{target} &7({remaining} to go — reward for everyone online: {reward})"
+
+boss-rewards:
+  broadcast: "&c&l[Boss] &e{player} &cdefeated the &e{mob} &cand earned a bounty of &e{reward}&c!"
+  names:
+    ender_dragon: "Ender Dragon"
+    wither: "Wither"
+    warden: "Warden"
+    elder_guardian: "Elder Guardian"
+
 daily:
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
   claimed: "&aDaily reward claimed: &f{amount}&a! (streak: {streak} day(s))"

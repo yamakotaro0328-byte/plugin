@@ -102,6 +102,30 @@ announcements:
     - "&f毎日ログインするとログインボーナス！連続7日目・14日目・30日目は特別ボーナス。"
     - "&f投票で報酬がもらえます！&e/menu &fの投票から投票サイトを開けます。"
 
+# Server vote goal: when everyone's votes add up to target, every online player gets
+# reward and the count starts over. Progress is announced every announce-every votes
+# (0 = only when reached). /votegoal shows progress.
+# (日本語) サーバー目標: みんなの投票数の合計がtargetに達すると、その時オンラインの
+# 全員にrewardを配り、カウントは0からやり直し。announce-every回ごとに進み具合を
+# 全体に通知(0で達成時のみ)。/votegoalで進み具合を確認できる。
+vote-goal:
+  enabled: true
+  target: 50
+  reward: 1000.0
+  announce-every: 10
+
+# Boss bounties: money for the player who lands the killing blow, announced
+# server-wide. Use entity type names; add or remove freely.
+# (日本語) ボスの討伐賞金: とどめを刺したプレイヤーに賞金を払い、全体に通知する。
+# Mobの種類名(エンティティタイプ)で指定し、自由に追加・削除できる。
+boss-rewards:
+  enabled: true
+  mobs:
+    ENDER_DRAGON: 20000.0
+    WITHER: 10000.0
+    WARDEN: 5000.0
+    ELDER_GUARDIAN: 2000.0
+
 afk:
   auto-seconds: 300
   kick-seconds: 0

@@ -140,6 +140,9 @@ commands:
   votetop:
     description: Show the vote leaderboard
     usage: /votetop
+  votegoal:
+    description: Show progress toward the server vote goal
+    usage: /votegoal
   afk:
     description: Toggle your AFK status
     usage: /afk

@@ -93,6 +93,7 @@ public class VoteRewardManager {
         Player online = Bukkit.getPlayerExact(username);
         displayNames.put(key, online != null ? online.getName() : username);
         saveCounts();
+        plugin.getVoteGoalManager().addVote();
 
         if (online != null) {
             reward(online, amount);

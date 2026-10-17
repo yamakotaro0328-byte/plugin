@@ -192,6 +192,20 @@ welcome:
 announce:
   prefix: "&6[お知らせ] &r"
 
+vote-goal:
+  progress: "&b&l[サーバー目標] &b投票数 &e{progress}/{target} &b— あと{remaining}回でオンラインの全員に報酬！"
+  reached: "&6&l[サーバー目標] &e{target}回の投票を達成！&6オンラインの全員に &e{reward} &6をプレゼント！投票ありがとうございます！"
+  received: "&aサーバー目標の報酬 &f{reward} &aを受け取りました！"
+  status: "&bサーバー目標(投票): &e{progress}/{target} &7(あと{remaining}回 — 達成でオンラインの全員に{reward})"
+
+boss-rewards:
+  broadcast: "&c&l[ボス討伐] &e{player} &cさんが &e{mob} &cを倒し、賞金 &e{reward} &cを獲得しました！"
+  names:
+    ender_dragon: "エンダードラゴン"
+    wither: "ウィザー"
+    warden: "ウォーデン"
+    elder_guardian: "エルダーガーディアン"
+
 daily:
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
   claimed: "&aデイリーボーナスを受け取りました: &f{amount}&a！(連続{streak}日目)"
