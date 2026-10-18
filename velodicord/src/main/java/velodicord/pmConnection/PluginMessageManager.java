@@ -68,6 +68,17 @@ public abstract class PluginMessageManager {
                 case "SEND", "READ" ->
                         Velodicord.getVelodicord().getProxy().sendMessage(MiniMessage.miniMessage().deserialize(msg.split("&", 3)[2]));
 
+                // 死亡・実績など、発言元サーバーにはバニラの表示が既に出ているものは他サーバーにだけ送る(二重表示防止)。
+                case "SENDOTHERS" -> {
+                    String[] parts = msg.split("&", 4);
+                    if (parts.length < 4) return;
+                    Component component = MiniMessage.miniMessage().deserialize(parts[3]);
+                    Velodicord.getVelodicord().getProxy().getAllServers().forEach(server -> {
+                        if (server.getServerInfo().getName().equals(parts[2])) return;
+                        server.getPlayersConnected().forEach(player -> player.sendMessage(component));
+                    });
+                }
+
                 case "NOTICE" -> getNoticeChannel().sendMessage(msg.split("&", 3)[2]).queue();
 
                 case "CHAT" -> {

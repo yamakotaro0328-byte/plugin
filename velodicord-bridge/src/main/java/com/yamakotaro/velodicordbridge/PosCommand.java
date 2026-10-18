@@ -35,7 +35,8 @@ public class PosCommand implements CommandExecutor, TabCompleter {
             server.sendMessage("POS&%s&%s&%s&(%d, %d, %d)".formatted(serverName, player.getName(), dimension, x, y, z));
             player.sendMessage("現在地をDiscordに共有しました");
         } else {
-            String name = args[0];
+            // "&"はVelodicordとの通信の区切り文字なので、名前に含まれるとメッセージが壊れる。全角に置き換える。
+            String name = String.join(" ", args).replace("&", "＆");
             server.sendMessage("NPOS&%s&%s&%s&(%d, %d, %d)&%s".formatted(serverName, player.getName(), dimension, x, y, z, name));
             player.sendMessage("現在地を「%s」としてDiscordに共有しました".formatted(name));
         }

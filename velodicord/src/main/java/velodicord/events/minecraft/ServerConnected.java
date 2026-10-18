@@ -37,6 +37,7 @@ public class ServerConnected {
                             .build()).queue();
                 },
                 () -> {
+                    Discordbot.updatePresence();
                     Velodicord.getVelodicord().getProxy().sendMessage(text()
                             .append(text("[%s]".formatted(playerName), AQUA))
                             .append(text(" が ", YELLOW))
@@ -52,6 +53,7 @@ public class ServerConnected {
         );
 
         new Thread(() -> {
+            if (Velodicord.getVelodicord().getProxy().getAllPlayers().isEmpty()) return;
             java.util.List<TabListEntry> tabListEntries = new java.util.ArrayList<>(Velodicord.getVelodicord().getProxy().getAllPlayers().stream().map(player -> TabListEntry.builder()
                     .profile(player.getGameProfile())
                     .displayName(Component.text()

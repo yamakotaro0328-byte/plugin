@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.Webhook;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
@@ -140,6 +141,7 @@ public class Discordbot {
                                         .addOption(OptionType.STRING, "name", "実行するコマンドのサーバー名", true, true)
                                         .addOption(OptionType.STRING, "command", "実行するコマンド", true, true)
                         ),
+                Commands.slash("online", "オンラインのプレイヤー一覧(サーバー別)"),
                 Commands.slash("link", "Discordアカウントとマインクラフトアカウントを連携"),
                 Commands.slash("unlink", "連携を解除"),
                 Commands.slash("linkpanel", "アカウント連携用のボタン付きパネルをこのチャンネルに設置"),
@@ -153,7 +155,7 @@ public class Discordbot {
                         )
         ).queue();
 
-        LogForumChannel = Optional.ofNullable(jda.getForumChannelById(Config.getConfig().get("LogChannelID")));
+        LogForumChannel = Optional.ofNullable(jda.getForumChannelById(snowflake("LogChannelID")));
 
         LogForumChannel.ifPresent(forum -> {
             forum.getThreadChannels().stream().filter(thread -> "velocity".equals(thread.getName())).findFirst().ifPresentOrElse(
@@ -165,15 +167,16 @@ public class Discordbot {
             (log = new Thread(new Log(true))).start();
         });
 
-        MainChannel = Optional.ofNullable(jda.getTextChannelById(Config.getConfig().get("MainChannelID"))).orElseThrow();
-        NoticeChannel = Optional.ofNullable(jda.getTextChannelById(Config.getConfig().get("NoticeChannelID"))).orElse(MainChannel);
-        PosChannel = Optional.ofNullable(jda.getTextChannelById(Config.getConfig().get("PosChannelID"))).orElse(MainChannel);
-        CommandChannel = Optional.ofNullable(jda.getTextChannelById(Config.getConfig().get("CommandChannelID"))).orElse(MainChannel).getId();
+        MainChannel = Optional.ofNullable(jda.getTextChannelById(snowflake("MainChannelID")))
+                .orElseThrow(() -> new IllegalStateException("config.jsonのMainChannelIDが見つかりません。botが参加しているサーバーのテキストチャンネルIDを設定してください"));
+        NoticeChannel = Optional.ofNullable(jda.getTextChannelById(snowflake("NoticeChannelID"))).orElse(MainChannel);
+        PosChannel = Optional.ofNullable(jda.getTextChannelById(snowflake("PosChannelID"))).orElse(MainChannel);
+        CommandChannel = Optional.ofNullable(jda.getTextChannelById(snowflake("CommandChannelID"))).orElse(MainChannel).getId();
 
-        CommandRole = Optional.ofNullable(jda.getRoleById(Config.getConfig().get("CommandRoleID"))).orElseThrow();
+        CommandRole = Optional.ofNullable(jda.getRoleById(snowflake("CommandRoleID")))
+                .orElseThrow(() -> new IllegalStateException("config.jsonのCommandRoleIDが見つかりません。管理者ロールのIDを数字で設定してください"));
 
-        String linkedRoleId = Config.getConfig().getOrDefault("LinkedRoleID", "");
-        LinkedRole = linkedRoleId.matches("\\d+") ? jda.getRoleById(linkedRoleId) : null;
+        LinkedRole = jda.getRoleById(snowflake("LinkedRoleID"));
 
         String webhookname = "Velodicord";
         MainChannel.retrieveWebhooks().complete().forEach(webhook -> {
@@ -183,5 +186,20 @@ public class Discordbot {
         if (webhook == null) {
             webhook = MainChannel.createWebhook(webhookname).complete();
         }
+
+        updatePresence();
+    }
+
+    /** config.jsonのID欄を返す。未設定や"aaaaaa"のような数字でない値は"0"(存在しないID)として扱う。 */
+    private static String snowflake(String key) {
+        String value = Config.getConfig().getOrDefault(key, "");
+        return value != null && value.matches("\\d+") ? value : "0";
+    }
+
+    /** botのステータスに現在のプレイ人数を表示する。参加・退出時に呼ばれる。 */
+    public static void updatePresence() {
+        if (jda == null) return;
+        int count = Velodicord.getVelodicord().getProxy().getPlayerCount();
+        jda.getPresence().setActivity(Activity.playing(count == 0 ? "誰もいません" : "%d人がプレイ中".formatted(count)));
     }
 }

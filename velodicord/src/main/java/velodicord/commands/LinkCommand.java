@@ -3,7 +3,11 @@ package velodicord.commands;
 import com.velocitypowered.api.command.RawCommand;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import velodicord.link.LinkManager;
 
 import java.awt.*;
@@ -25,7 +29,10 @@ public class LinkCommand implements RawCommand {
         }
 
         String code = LinkManager.issueCode(player.getUniqueId(), player.getUsername());
-        player.sendMessage(Component.text("連携コード: %s".formatted(code)).color(TextColor.color(Color.CYAN.getRGB())));
+        player.sendMessage(Component.text("連携コード: ").color(TextColor.color(Color.CYAN.getRGB()))
+                .append(Component.text(code, NamedTextColor.WHITE, TextDecoration.BOLD, TextDecoration.UNDERLINED)
+                        .clickEvent(ClickEvent.copyToClipboard(code))
+                        .hoverEvent(HoverEvent.showText(Component.text("クリックでコピー")))));
         player.sendMessage(Component.text("Discordで /link を実行し、表示されたコードを入力してください(5分間有効)").color(TextColor.color(Color.CYAN.getRGB())));
     }
 }

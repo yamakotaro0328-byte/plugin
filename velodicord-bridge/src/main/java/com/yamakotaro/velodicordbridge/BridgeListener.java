@@ -11,6 +11,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 
 /** 死亡・実績達成をNOTICE(Discord向けプレーンテキスト)とSEND(マイクラの他サーバーへのチャット中継)で
  * Velodicordに送る。参加/退出はVelocityが直接検知して処理するため、ここでは扱わない。
@@ -37,7 +38,16 @@ public class BridgeListener implements Listener {
         String place = "%s:(%d, %d, %d)".formatted(location.getWorld().getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
 
         server.sendMessage("NOTICE&☠️ **%s** が %s で死亡しました\n%s".formatted(playerName, place, message));
-        server.sendMessage("SEND&<red><dark_green>[%s]</dark_green> <aqua>%s</aqua> が死亡しました".formatted(serverName, playerName));
+        String cause = message.isBlank() ? "<aqua>%s</aqua> が死亡しました".formatted(playerName) : MiniMessage.miniMessage().escapeTags(message);
+        server.sendMessage("SENDOTHERS&%s&<red><dark_green>[%s]</dark_green> ☠ %s".formatted(serverName, serverName, cause));
+    }
+
+    @EventHandler
+    public void onFirstJoin(PlayerJoinEvent event) {
+        if (event.getPlayer().hasPlayedBefore()) return;
+        String playerName = event.getPlayer().getName();
+        server.sendMessage("NOTICE&🎉 **%s** が %s に初めて参加しました!".formatted(playerName, serverName));
+        server.sendMessage("SEND&<gold><dark_green>[%s]</dark_green> <aqua>%s</aqua> が初めて参加しました! ようこそ!".formatted(serverName, playerName));
     }
 
     @EventHandler
@@ -57,7 +67,7 @@ public class BridgeListener implements Listener {
 
         server.sendMessage("NOTICE&🏆 **%s** が%s [%s] を%sしました\n%s".formatted(playerName, frameName, title, completionWord, description));
         String safeTitle = MiniMessage.miniMessage().escapeTags(title);
-        server.sendMessage("SEND&<yellow><dark_green>[%s]</dark_green> <aqua>%s</aqua> が%s <%s>[%s]</%s> を%sしました".formatted(serverName, playerName, frameName, color, safeTitle, color, completionWord));
+        server.sendMessage("SENDOTHERS&%s&<yellow><dark_green>[%s]</dark_green> <aqua>%s</aqua> が%s <%s>[%s]</%s> を%sしました".formatted(serverName, serverName, playerName, frameName, color, safeTitle, color, completionWord));
     }
 
     /** MONITOR優先度、つまり他の全プラグイン(ミュート、GUI入力待ち、国/タウンチャットなど)が

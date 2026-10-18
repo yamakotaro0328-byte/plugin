@@ -11,16 +11,28 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.awt.*;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * Discordの/server commandからVelocityのコマンドを実行するときの実行者。コンソール扱い(全権限)なので、
+ * SlashCommandInteraction側でコマンドロール持ちだけに制限している。
+ * 出力は最後の出力から少し待ってまとめ、Discordの文字数制限に収まるよう分割して送る。
+ */
 public class DiscordCommandSource implements ConsoleCommandSource {
 
+    private static final int CHUNK = 1900;
+    private static final ScheduledExecutorService FLUSHER = Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "velodicord-command-output");
+        thread.setDaemon(true);
+        return thread;
+    });
+
     private final SlashCommandInteractionEvent event;
-
-    private StringBuilder output = new StringBuilder("```\n");
-
-    private long lastOutputMillis = 0L;
+    private final StringBuilder output = new StringBuilder();
+    private ScheduledFuture<?> pendingFlush;
 
     public DiscordCommandSource(SlashCommandInteractionEvent event) {
         this.event = event;
@@ -37,31 +49,24 @@ public class DiscordCommandSource implements ConsoleCommandSource {
     }
 
     @Override
-    public void sendMessage(@NonNull Identity identity, @NonNull Component message) {
-        long currentOutputMillis = System.currentTimeMillis();
-        if (this.output.length() > 1500) {
-            this.output.append("```");
-            this.event.getChannel().sendMessage(this.output.toString()).queue();
-            this.output = new StringBuilder("```\n");
-        } else {
-            this.output.append(PlainTextComponentSerializer.plainText().serialize(message)).append("\n");
-        }
-
-        if (currentOutputMillis - this.lastOutputMillis > 50L) {
-            (new Thread(() -> (new Timer()).schedule(new TimerTask() {
-                public void run() {
-                    DiscordCommandSource.this.output.append("```");
-                    DiscordCommandSource.this.event.getChannel().sendMessage(DiscordCommandSource.this.output.toString()).queue();
-                    DiscordCommandSource.this.output = new StringBuilder("```\n");
-                }
-            }, 51L))).start();
-        }
-
-        this.lastOutputMillis = currentOutputMillis;
+    public synchronized void sendMessage(@NonNull Identity identity, @NonNull Component message) {
+        if (event == null) return;
+        output.append(PlainTextComponentSerializer.plainText().serialize(message)).append('\n');
+        if (pendingFlush != null) pendingFlush.cancel(false);
+        pendingFlush = FLUSHER.schedule(this::flush, 300, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void sendMessage(@NonNull Identity identity, @NonNull Component message, @NonNull MessageType type) {
         sendMessage(identity, message);
+    }
+
+    private synchronized void flush() {
+        String text = output.toString().replace("```", "`​``");
+        output.setLength(0);
+        for (int start = 0; start < text.length(); start += CHUNK) {
+            String chunk = text.substring(start, Math.min(text.length(), start + CHUNK));
+            event.getChannel().sendMessage("```\n" + chunk + "\n```").queue();
+        }
     }
 }

@@ -8,6 +8,7 @@ import velodicord.Discordbot;
 import velodicord.Velodicord;
 
 import java.awt.*;
+import java.util.concurrent.TimeUnit;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.AQUA;
@@ -16,6 +17,14 @@ import static net.kyori.adventure.text.format.NamedTextColor.YELLOW;
 public class Disconnect {
     @Subscribe(order = PostOrder.FIRST)
     public void onDisconnect(DisconnectEvent event) {
+        Velodicord.getVelodicord().getProxy().getScheduler()
+                .buildTask(Velodicord.getVelodicord(), Discordbot::updatePresence)
+                .delay(1, TimeUnit.SECONDS)
+                .schedule();
+
+        // BAN・ホワイトリスト・ログイン中のキャンセルなど、一度もサーバーに入れなかった人の切断は「退出」として通知しない。
+        if (event.getLoginStatus() != DisconnectEvent.LoginStatus.SUCCESSFUL_LOGIN) return;
+
         String playerName = event.getPlayer().getUsername();
         Velodicord.getVelodicord().getProxy().sendMessage(text()
                 .append(text("[%s]".formatted(playerName), AQUA))

@@ -28,13 +28,23 @@ public class MessageReceived extends ListenerAdapter {
             String message = event.getMessage().getContentDisplay();
             String japanese = Japanizer.japanize(message);
 
+            String displayName = event.getMember() != null ? event.getMember().getEffectiveName() : event.getAuthor().getName();
             TextComponent.Builder line = text()
                     .append(text("[discord]", DARK_GREEN))
-                    .append(text("<%s> ".formatted(event.getAuthor().getName())))
-                    .append(MiniMessage.miniMessage().deserialize(ChatFormat.toMiniMessage(message)));
+                    .append(text("<%s> ".formatted(displayName))
+                            .hoverEvent(HoverEvent.showText(text("@" + event.getAuthor().getName()))));
+            Message referenced = event.getMessage().getReferencedMessage();
+            if (referenced != null) {
+                String target = referenced.getMember() != null ? referenced.getMember().getEffectiveName() : referenced.getAuthor().getName();
+                line.append(text("(→%s) ".formatted(target), GRAY)
+                        .hoverEvent(HoverEvent.showText(text(abbreviate(referenced.getContentDisplay())))));
+            }
+            line.append(MiniMessage.miniMessage().deserialize(ChatFormat.toMiniMessage(message)));
             if (!japanese.isEmpty() && !message.contains("https://") && !message.contains("http://") && !message.contains("```")) {
                 line.append(text("(%s)".formatted(japanese), GOLD));
             }
+            event.getMessage().getStickers().forEach(sticker -> line.append(text(" [スタンプ: %s]".formatted(sticker.getName()), BLUE)));
+            if (message.isBlank() && event.getMessage().getAttachments().isEmpty() && event.getMessage().getStickers().isEmpty()) return;
             for (Message.Attachment attachment : event.getMessage().getAttachments()) {
                 line.append(text(" [添付: %s]".formatted(attachment.getFileName()), BLUE)
                         .decorate(TextDecoration.UNDERLINED)
@@ -45,5 +55,9 @@ public class MessageReceived extends ListenerAdapter {
         } else if (Velodicord.getPMManager() instanceof DiscordPluginMessageManager manager && event.getChannel().getId().equals(manager.getPMChannel().getId())) {
             PluginMessageManager.receive(event.getMessage().getContentDisplay());
         }
+    }
+
+    private static String abbreviate(String text) {
+        return text.length() <= 100 ? text : text.substring(0, 99) + "…";
     }
 }

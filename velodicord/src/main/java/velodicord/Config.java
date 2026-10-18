@@ -91,6 +91,32 @@ public class Config {
         }
     }
 
+    /** Discordの管理コマンドで変更された設定を、その場で全部書き出す(以前はプロキシ停止時にしか保存されず、クラッシュで消えていた)。 */
+    public static synchronized void saveAll() {
+        write(configjson, config, "config");
+        write(dicjson, dic, "dic");
+        write(detectbotjson, detectbot, "detectbot");
+        write(disadmincommandjson, disadmincommand, "disadmincommand");
+        write(mentionablejson, Discordbot.getMentionable(), "mentionable");
+        saveLink();
+    }
+
+    private static void write(Path path, Object value, String label) {
+        if (path == null || value == null) return;
+        Path temp = path.resolveSibling(path.getFileName() + ".tmp");
+        try (Writer writer = Files.newBufferedWriter(temp, StandardCharsets.UTF_8)) {
+            gson.toJson(value, writer);
+        } catch (IOException e) {
+            Velodicord.getVelodicord().getLogger().error("Velodicordの{}を保存できませんでした: {}", label, ExceptionUtils.getStackTrace(e));
+            return;
+        }
+        try {
+            Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            Velodicord.getVelodicord().getLogger().error("Velodicordの{}を保存できませんでした: {}", label, ExceptionUtils.getStackTrace(e));
+        }
+    }
+
     public static void init() {
         if (Files.notExists(dataDirectory)) {
             try {

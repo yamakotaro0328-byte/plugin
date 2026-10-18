@@ -23,19 +23,33 @@ import static velodicord.Config.*;
 import static velodicord.Discordbot.*;
 
 public class SlashCommandInteraction extends ListenerAdapter {
+
+    /** 設定(disadmincommand.json)に関係なく、常にコマンドロールが必要なコマンド。
+     * 特にserver commandはプロキシのコンソール権限でコマンドを実行するので、誰でも使えると乗っ取られる。 */
+    private static final Set<String> ALWAYS_ADMIN = Set.of(
+            "dic add", "dic del", "ch set", "ch del_log", "commandrole set",
+            "detectbot add", "detectbot del", "mentionable set", "server command",
+            "admincommand add", "admincommand del", "linkpanel");
+
+    /** 個人用のコマンドなので、コマンドチャンネル以外でも使える。 */
+    private static final Set<String> ANY_CHANNEL = Set.of("link", "unlink", "online", "linkpanel");
+
+    private static final int EMBED_DESCRIPTION_LIMIT = 4000;
+
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        boolean channelExempt = "linkpanel".equals(event.getName());
+        String path = event.getFullCommandName();
 
-        if (!channelExempt && !getCommandChannel().equals(event.getChannelId())) {
+        if (!ANY_CHANNEL.contains(event.getName()) && !getCommandChannel().equals(event.getChannelId())) {
             event.replyEmbeds(new EmbedBuilder()
                     .setColor(Color.red)
-                    .setTitle("不明なチャンネルです")
+                    .setTitle("このコマンドはコマンドチャンネルでのみ使えます")
                     .build()
             ).setEphemeral(true).queue();
             return;
-        } else if (!Objects.requireNonNull(event.getMember()).getRoles().contains(getCommandRole()) &&
-                (channelExempt || getDisadmincommand().stream().anyMatch(event.getCommandString().substring(1)::startsWith))) {
+        }
+        boolean needsAdmin = ALWAYS_ADMIN.contains(path) || getDisadmincommand().stream().anyMatch(path::startsWith);
+        if (needsAdmin && (event.getMember() == null || !event.getMember().getRoles().contains(getCommandRole()))) {
             event.replyEmbeds(new EmbedBuilder()
                     .setColor(Color.red)
                     .setTitle("このコマンドを実行するのに必要な権限がありません")
@@ -44,6 +58,29 @@ public class SlashCommandInteraction extends ListenerAdapter {
             return;
         }
 
+        try {
+            handle(event);
+            if (needsAdmin) Config.saveAll();
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            String reason = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            if (event.isAcknowledged()) {
+                event.getHook().sendMessage("エラー: " + reason).setEphemeral(true).queue();
+            } else {
+                event.replyEmbeds(new EmbedBuilder()
+                        .setColor(Color.red)
+                        .setTitle("実行できませんでした")
+                        .setDescription("チャンネルの種類が違うなど、入力内容を確認してください\n" + reason)
+                        .build()
+                ).setEphemeral(true).queue();
+            }
+        }
+    }
+
+    private static String fit(CharSequence text) {
+        return text.length() <= EMBED_DESCRIPTION_LIMIT ? text.toString() : text.subSequence(0, EMBED_DESCRIPTION_LIMIT) + "\n…(省略)";
+    }
+
+    private void handle(SlashCommandInteractionEvent event) {
         switch (event.getName()) {
             case "dic" -> {
                 switch (Objects.requireNonNull(event.getSubcommandName())) {
@@ -52,7 +89,7 @@ public class SlashCommandInteraction extends ListenerAdapter {
                         getDic().keySet().forEach(word -> builder.append("・ ").append(word).append(" -> ").append(getDic().get(word)).append("\n"));
                         event.replyEmbeds(new EmbedBuilder()
                                 .setTitle("辞書に登録されている単語一覧")
-                                .setDescription(builder.toString())
+                                .setDescription(fit(builder))
                                 .setColor(Color.blue)
                                 .build()
                         ).setEphemeral(true).queue();
@@ -158,14 +195,13 @@ public class SlashCommandInteraction extends ListenerAdapter {
                                     getConfig().put("PMChannelID", getMainChannel().getId());
                                 }
 
+                                // 以前はギルド全体から"Velodicord"のwebhookを探していたため、古いメインチャンネルの
+                                // webhookを拾ってしまい、チャットが旧チャンネルに投稿され続けていた。新しいチャンネルの中だけを探す。
                                 String webhookname = "Velodicord";
-                                getMainChannel().getGuild().retrieveWebhooks().complete().forEach(webhook -> {
-                                    if (webhookname.equals(webhook.getName())) Discordbot.setWebhook(webhook);
-                                });
-
-                                if (getWebhook() == null) {
-                                    setWebhook(getMainChannel().createWebhook(webhookname).complete());
-                                }
+                                setWebhook(getMainChannel().retrieveWebhooks().complete().stream()
+                                        .filter(webhook -> webhookname.equals(webhook.getName()))
+                                        .findFirst()
+                                        .orElseGet(() -> getMainChannel().createWebhook(webhookname).complete()));
 
                                 event.replyEmbeds(new EmbedBuilder()
                                         .setTitle("メインチャンネルを%s(%s)に設定しました".formatted(getMainChannel().getName(), getMainChannel().getId()))
@@ -229,7 +265,8 @@ public class SlashCommandInteraction extends ListenerAdapter {
                     }
 
                     case "del_log" -> {
-                        getLog().interrupt();
+                        if (getLog() != null) getLog().interrupt();
+                        setLogForumChannel(Optional.empty());
                         getConfig().put("LogChannelID", "000000");
                         event.replyEmbeds(new EmbedBuilder()
                                 .setTitle("ログチャンネルを削除しました")
@@ -265,10 +302,13 @@ public class SlashCommandInteraction extends ListenerAdapter {
                 switch (Objects.requireNonNull(event.getSubcommandName())) {
                     case "show" -> {
                         StringBuilder bots = new StringBuilder();
-                        getDetectbot().forEach(id -> bots.append("・ ").append(Objects.requireNonNull(getJda().getUserById(id)).getName()).append("(").append(id).append(")\n"));
+                        getDetectbot().forEach(id -> {
+                            User user = getJda().getUserById(id);
+                            bots.append("・ ").append(user == null ? "(不明なユーザー)" : user.getName()).append("(").append(id).append(")\n");
+                        });
                         event.replyEmbeds(new EmbedBuilder()
                                 .setTitle("登録されている発言を無視しないbot一覧")
-                                .setDescription(bots)
+                                .setDescription(fit(bots))
                                 .setColor(Color.blue)
                                 .build()
                         ).setEphemeral(true).queue();
@@ -303,7 +343,7 @@ public class SlashCommandInteraction extends ListenerAdapter {
                         getMentionable().forEach(mention -> builder.append("・ ").append(mention).append("\n"));
                         event.replyEmbeds(new EmbedBuilder()
                                 .setTitle("登録されているメンション可能ロール")
-                                .setDescription(builder.toString())
+                                .setDescription(fit(builder))
                                 .setColor(Color.blue)
                                 .build()
                         ).setEphemeral(true).queue();
@@ -316,7 +356,7 @@ public class SlashCommandInteraction extends ListenerAdapter {
                         getMentionable().forEach(mention -> builder.append("・ ").append(mention).append("\n"));
                         event.replyEmbeds(new EmbedBuilder()
                                 .setTitle("メンション可能ロールを設定しました")
-                                .setDescription(builder.toString())
+                                .setDescription(fit(builder))
                                 .setColor(Color.blue)
                                 .build()
                         ).queue();
@@ -335,19 +375,45 @@ public class SlashCommandInteraction extends ListenerAdapter {
                     ).queue();
 
                     case "command" -> {
-                        if (!"velocity".equals(event.getOptions().get(0).getAsString())) return;
+                        if (!"velocity".equals(event.getOptions().get(0).getAsString())) {
+                            event.replyEmbeds(new EmbedBuilder()
+                                    .setColor(Color.red)
+                                    .setTitle("現在はvelocity(プロキシ)へのコマンドのみ対応しています")
+                                    .build()
+                            ).setEphemeral(true).queue();
+                            return;
+                        }
 
                         String command = event.getOptions().get(1).getAsString();
 
-                        if (!(Boolean) Velodicord.getVelodicord().getProxy().getCommandManager().executeAsync(new DiscordCommandSource(event), command).join()) {
-                            event.replyEmbeds(new EmbedBuilder()
-                                    .setColor(Color.red)
-                                    .setTitle("このコマンドは存在しません")
-                                    .build()
-                            ).setEphemeral(true).queue();
-                        }
+                        // DiscordCommandSourceが既に「実行しています...」と返信済みなので、結果はその返信を書き換えて伝える
+                        // (以前はここで2回目のreplyをしてIllegalStateExceptionになっていた)。
+                        boolean found = Velodicord.getVelodicord().getProxy().getCommandManager().executeAsync(new DiscordCommandSource(event), command).join();
+                        event.getHook().editOriginalEmbeds(new EmbedBuilder()
+                                .setColor(found ? Color.green : Color.red)
+                                .setTitle(found ? "実行しました" : "このコマンドは存在しません")
+                                .setDescription("`" + command.replace("`", "") + "`")
+                                .build()
+                        ).queue();
                     }
                 }
+            }
+
+            case "online" -> {
+                StringBuilder builder = new StringBuilder();
+                int total = 0;
+                for (var server : Velodicord.getVelodicord().getProxy().getAllServers()) {
+                    var players = server.getPlayersConnected().stream().map(player -> player.getUsername()).sorted(String.CASE_INSENSITIVE_ORDER).toList();
+                    total += players.size();
+                    builder.append("**").append(server.getServerInfo().getName()).append("** (").append(players.size()).append("人)\n");
+                    builder.append(players.isEmpty() ? "-" : String.join(", ", players).replace("_", "\\_")).append("\n\n");
+                }
+                event.replyEmbeds(new EmbedBuilder()
+                        .setTitle("オンラインのプレイヤー: %d人".formatted(total))
+                        .setDescription(fit(builder))
+                        .setColor(Color.green)
+                        .build()
+                ).setEphemeral(true).queue();
             }
 
             case "link" -> event.replyModal(ModalInteraction.buildLinkModal()).queue();
@@ -392,7 +458,7 @@ public class SlashCommandInteraction extends ListenerAdapter {
                         getDisadmincommand().forEach(command -> builder.append("・ ").append(command).append("\n"));
                         event.replyEmbeds(new EmbedBuilder()
                                 .setTitle("登録されている管理者コマンドコマンド一覧")
-                                .setDescription(builder.toString())
+                                .setDescription(fit(builder))
                                 .setColor(Color.blue)
                                 .build()
                         ).setEphemeral(true).queue();
