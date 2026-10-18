@@ -13,6 +13,7 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -69,6 +70,26 @@ public class Config {
     @Getter
     @Setter
     private static Path linkjson;
+
+    /** link.jsonを即座に書き出す。一時ファイルに書いてから置き換えるので、書き込み中にクラッシュしても既存の内容は壊れない。 */
+    public static synchronized void saveLink() {
+        Path temp = linkjson.resolveSibling(linkjson.getFileName() + ".tmp");
+        try (Writer writer = Files.newBufferedWriter(temp, StandardCharsets.UTF_8)) {
+            gson.toJson(link, writer);
+        } catch (IOException e) {
+            Velodicord.getVelodicord().getLogger().error("Velodicordのlinkを保存できませんでした: {}", ExceptionUtils.getStackTrace(e));
+            return;
+        }
+        try {
+            Files.move(temp, linkjson, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException e) {
+            try {
+                Files.move(temp, linkjson, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e2) {
+                Velodicord.getVelodicord().getLogger().error("Velodicordのlinkを保存できませんでした: {}", ExceptionUtils.getStackTrace(e2));
+            }
+        }
+    }
 
     public static void init() {
         if (Files.notExists(dataDirectory)) {
@@ -158,8 +179,9 @@ public class Config {
             Velodicord.getVelodicord().getLogger().error("Velodicordのmentionableリストが見つかりませんでした: {}", ExceptionUtils.getStackTrace(e));
         }
         try (Reader reader = new BufferedReader(new InputStreamReader(new FileInputStream(String.valueOf(linkjson)), StandardCharsets.UTF_8))) {
-            link = gson.fromJson(reader, new TypeToken<LinkedHashMap<String, String>>() {
+            LinkedHashMap<String, String> loaded = gson.fromJson(reader, new TypeToken<LinkedHashMap<String, String>>() {
             }.getType());
+            link = loaded == null ? new LinkedHashMap<>() : loaded;
         } catch (IOException e) {
             Velodicord.getVelodicord().getLogger().error("Velodicordのlinkリストが見つかりませんでした: {}", ExceptionUtils.getStackTrace(e));
         }

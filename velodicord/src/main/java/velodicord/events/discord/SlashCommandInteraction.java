@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.utils.messages.MessageCreateData;
 import org.jetbrains.annotations.NotNull;
 import velodicord.*;
+import velodicord.link.LinkManager;
 import velodicord.pmConnection.DiscordPluginMessageManager;
 
 import java.awt.*;
@@ -366,7 +367,7 @@ public class SlashCommandInteraction extends ListenerAdapter {
             }
 
             case "unlink" -> {
-                if (getLink().remove(event.getUser().getId()) != null) {
+                if (LinkManager.unlinkDiscord(event.getUser().getId())) {
                     if (getLinkedRole() != null && event.getMember() != null) {
                         event.getGuild().removeRoleFromMember(event.getMember(), getLinkedRole()).queue();
                     }

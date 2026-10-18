@@ -6,3 +6,7 @@ server-name: "survival"
 # 必ず同じ値にしてください。このサーバーはポート番号(server.propertiesのserver-port)
 # + この値のポートでWebSocketサーバーを待ち受けます。
 port-increment: 1
+
+# Velodicord(プロキシ)側のconfig.jsonの"WebSocketSecret"と同じ、推測されにくい文字列を
+# 設定してください。一致しない接続は拒否されます(空だと誰でも接続できてしまいます)。
+secret: ""

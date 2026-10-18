@@ -10,6 +10,7 @@ Fabdicordと違い、独自のDiscord botは持ちません。**Discord botは1�
 2. `plugins/VelodicordBridge/config.yml`を編集
    - `server-name`: velocity.tomlに登録してあるこのサーバーの名前と完全に一致させる
    - `port-increment`: Velodicord側`config.json`の`WebSocketPortIncrement`と同じ値にする
+   - `secret`: Velodicord側`config.json`の`WebSocketSecret`と同じ、推測されにくい文字列にする(一致しない接続は拒否されます)
 3. Velodicord側の`config.json`で`PMType`を`2`(WebSocket)に設定する
    - **`PMType: 1`(Discord経由)はFabdicordの独自botが前提の方式なので、このプラグインでは使えません**
 4. 両方を再起動すれば、Velodicordが自動でこのプラグインに接続します
@@ -19,6 +20,7 @@ Fabdicordと違い、独自のDiscord botは持ちません。**Discord botは1�
 - プレイヤー死亡通知(Discordの通知チャンネルへ + 他サーバーへのチャット中継)
 - 実績/進捗達成通知(同上)
 - `/pos [名前]` : 現在地をDiscordに共有
+- チャット中継の判定: 他プラグイン(ミュート、GUI入力待ち、TownyChat/Landsの国・タウンチャットなど)がキャンセルしなかった発言だけをVelodicordに報告するので、そういった発言はDiscord/他サーバーに漏れません
 
 ## Fabdicordから意図的に省いた機能
 

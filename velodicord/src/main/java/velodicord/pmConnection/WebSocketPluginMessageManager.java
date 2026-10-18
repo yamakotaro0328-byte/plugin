@@ -15,6 +15,11 @@ public class WebSocketPluginMessageManager extends PluginMessageManager {
         Velodicord.getVelodicord().getProxy().getAllServers().forEach(server -> clients.put(server.getServerInfo().getName(), new WebSocketClient(server.getServerInfo().getAddress(), server.getServerInfo().getName())));
     }
 
+    public boolean isBridgeConnected(String serverName) {
+        WebSocketClient client = clients.get(serverName);
+        return client != null && client.isConnected();
+    }
+
     public void closeAll() {
         clients.forEach((name, client) -> client.close());
     }

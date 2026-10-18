@@ -12,11 +12,17 @@ public class VelodicordBridgePlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        getConfig().options().copyDefaults(true);
+        saveConfig();
         serverName = getConfig().getString("server-name", "survival");
         int portIncrement = getConfig().getInt("port-increment", 1);
         int port = getServer().getPort() + portIncrement;
 
-        server = new BridgeServer(new InetSocketAddress("0.0.0.0", port), serverName, getLogger());
+        String secret = getConfig().getString("secret", "");
+        if (secret.isEmpty()) {
+            getLogger().warning("config.ymlのsecretが空です。同じネットワークの誰でもこのブリッジに接続できてしまうので、Velodicordのconfig.jsonのWebSocketSecretと同じ値を設定してください");
+        }
+        server = new BridgeServer(new InetSocketAddress("0.0.0.0", port), serverName, secret, getLogger());
         server.start();
 
         getServer().getPluginManager().registerEvents(new BridgeListener(server, serverName), this);

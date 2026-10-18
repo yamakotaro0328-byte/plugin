@@ -64,10 +64,11 @@ public abstract class PluginMessageManager {
                     );
                 }
 
+                // 本文に"&"が含まれていても途中で切れないよう、本文部分は上限付きで分割し直す。
                 case "SEND", "READ" ->
-                        Velodicord.getVelodicord().getProxy().sendMessage(MiniMessage.miniMessage().deserialize(data[2]));
+                        Velodicord.getVelodicord().getProxy().sendMessage(MiniMessage.miniMessage().deserialize(msg.split("&", 3)[2]));
 
-                case "NOTICE" -> getNoticeChannel().sendMessage(data[2]).queue();
+                case "NOTICE" -> getNoticeChannel().sendMessage(msg.split("&", 3)[2]).queue();
 
                 case "CHAT" -> {
                     // data[4]以降にプレイヤーの発言自体が来る可能性があるので、"&"の数に関わらず

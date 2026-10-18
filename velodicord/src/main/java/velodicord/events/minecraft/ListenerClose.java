@@ -42,11 +42,7 @@ public class ListenerClose {
         } catch (IOException e) {
             Velodicord.getVelodicord().getLogger().error("Velodicordのmentionableを保存できませんでした: {}", ExceptionUtils.getStackTrace(e));
         }
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(String.valueOf(Config.getLinkjson())), StandardCharsets.UTF_8))) {
-            getGson().toJson(getLink(), writer);
-        } catch (IOException e) {
-            Velodicord.getVelodicord().getLogger().error("Velodicordのlinkを保存できませんでした: {}", ExceptionUtils.getStackTrace(e));
-        }
+        Config.saveLink();
         Discordbot.getNoticeChannel().sendMessage("\uD83D\uDED1velocityサーバーが停止しました").complete();
         Discordbot.getJda().shutdown();
     }

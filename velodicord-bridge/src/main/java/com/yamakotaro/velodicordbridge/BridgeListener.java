@@ -3,6 +3,7 @@ package com.yamakotaro.velodicordbridge;
 import io.papermc.paper.advancement.AdvancementDisplay;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.event.EventHandler;
@@ -55,7 +56,8 @@ public class BridgeListener implements Listener {
         String color = isChallenge ? "dark_purple" : "green";
 
         server.sendMessage("NOTICE&🏆 **%s** が%s [%s] を%sしました\n%s".formatted(playerName, frameName, title, completionWord, description));
-        server.sendMessage("SEND&<yellow><dark_green>[%s]</dark_green> <aqua>%s</aqua> が%s <%s>[%s]</%s> を%sしました".formatted(serverName, playerName, frameName, color, title, color, completionWord));
+        String safeTitle = MiniMessage.miniMessage().escapeTags(title);
+        server.sendMessage("SEND&<yellow><dark_green>[%s]</dark_green> <aqua>%s</aqua> が%s <%s>[%s]</%s> を%sしました".formatted(serverName, playerName, frameName, color, safeTitle, color, completionWord));
     }
 
     /** MONITOR優先度、つまり他の全プラグイン(ミュート、GUI入力待ち、国/タウンチャットなど)が

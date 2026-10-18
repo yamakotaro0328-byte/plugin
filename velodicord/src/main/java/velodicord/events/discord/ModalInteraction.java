@@ -16,7 +16,6 @@ import velodicord.Velodicord;
 import velodicord.link.LinkManager;
 
 import java.awt.*;
-import java.util.Optional;
 
 /** /linkモーダル(SlashCommandInteractionのcase "link"、LinkPanelButtonのボタンから開かれる)の送信を受け取り、
  * マイクラ側で発行されたコードと照合してアカウント連携を完了させる。連携が完了したら
@@ -41,43 +40,39 @@ public class ModalInteraction extends ListenerAdapter {
             return;
         }
 
-        if (LinkManager.isDiscordLinked(event.getUser().getId())) {
-            event.replyEmbeds(new EmbedBuilder()
-                    .setColor(Color.orange)
-                    .setTitle("既に連携済みです")
-                    .setDescription("連携し直す場合は先に /unlink を実行してください")
-                    .build()
-            ).setEphemeral(true).queue();
-            return;
-        }
-
         var value = event.getValue("code");
         String code = value == null ? "" : value.getAsString().trim();
-        Optional<LinkManager.PendingLink> result = LinkManager.complete(code, event.getUser().getId());
+        LinkManager.Completion completion = LinkManager.complete(code, event.getUser().getId());
 
-        if (result.isPresent()) {
-            LinkManager.PendingLink link = result.get();
-            Member member = event.getMember();
-            if (Discordbot.getLinkedRole() != null && member != null) {
-                event.getGuild().addRoleToMember(member, Discordbot.getLinkedRole()).queue();
+        switch (completion.result()) {
+            case SUCCESS -> {
+                LinkManager.PendingLink link = completion.link();
+                Member member = event.getMember();
+                if (Discordbot.getLinkedRole() != null && member != null) {
+                    event.getGuild().addRoleToMember(member, Discordbot.getLinkedRole()).queue();
+                }
+                reply(event, Color.green, "連携が完了しました", "%sとして連携しました".formatted(link.name()));
+                Velodicord.getVelodicord().getProxy().getPlayer(link.uuid()).ifPresent(player -> player.sendMessage(
+                        Component.text("Discordアカウント(%s)との連携が完了しました".formatted(event.getUser().getName()), NamedTextColor.GREEN)
+                ));
             }
-            event.replyEmbeds(new EmbedBuilder()
-                    .setColor(Color.green)
-                    .setTitle("連携が完了しました")
-                    .setDescription("%sとして連携しました".formatted(link.name()))
-                    .build()
-            ).setEphemeral(true).queue();
-
-            Velodicord.getVelodicord().getProxy().getPlayer(link.uuid()).ifPresent(player -> player.sendMessage(
-                    Component.text("Discordアカウント(%s)との連携が完了しました".formatted(event.getUser().getName()), NamedTextColor.GREEN)
-            ));
-        } else {
-            event.replyEmbeds(new EmbedBuilder()
-                    .setColor(Color.red)
-                    .setTitle("コードが無効です")
-                    .setDescription("コードが間違っているか、期限切れです。マイクラで /link を再実行してください")
-                    .build()
-            ).setEphemeral(true).queue();
+            case DISCORD_ALREADY_LINKED ->
+                    reply(event, Color.orange, "既に連携済みです", "連携し直す場合は先に /unlink を実行してください");
+            case MINECRAFT_ALREADY_LINKED ->
+                    reply(event, Color.orange, "そのマイクラアカウントは既に連携済みです", "別のDiscordアカウントと連携されています");
+            case LOCKED_OUT ->
+                    reply(event, Color.red, "試行回数が多すぎます", "しばらく(最大10分)待ってから、もう一度お試しください");
+            case INVALID_CODE ->
+                    reply(event, Color.red, "コードが無効です", "コードが間違っているか、期限切れです。マイクラで /link を再実行してください");
         }
+    }
+
+    private static void reply(ModalInteractionEvent event, Color color, String title, String description) {
+        event.replyEmbeds(new EmbedBuilder()
+                .setColor(color)
+                .setTitle(title)
+                .setDescription(description)
+                .build()
+        ).setEphemeral(true).queue();
     }
 }

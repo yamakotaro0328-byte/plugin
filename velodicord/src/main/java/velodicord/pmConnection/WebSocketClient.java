@@ -18,6 +18,9 @@ import static velodicord.Discordbot.*;
 
 public class WebSocketClient {
 
+    /** velodicord-bridgeのconfig.ymlのsecretと照合されるヘッダー。再接続時もrecreate()でそのまま引き継がれる。 */
+    public static final String SECRET_HEADER = "X-Velodicord-Secret";
+
     private volatile WebSocket ws;
 
     private final String uri;
@@ -44,7 +47,10 @@ public class WebSocketClient {
             connecting = true;
             while (shouldReconnect) {
                 try {
-                    ws = factory.createSocket(uri)
+                    WebSocket socket = factory.createSocket(uri);
+                    String secret = getConfig().getOrDefault("WebSocketSecret", "");
+                    if (!secret.isEmpty()) socket.addHeader(SECRET_HEADER, secret);
+                    ws = socket
                             .addListener(new WebSocketAdapter() {
 
                                 @Override
@@ -126,6 +132,11 @@ public class WebSocketClient {
             }
             connecting = false;
         }, "websocket-reconnect").start();
+    }
+
+    public boolean isConnected() {
+        WebSocket socket = ws;
+        return socket != null && socket.isOpen();
     }
 
     public void close() {

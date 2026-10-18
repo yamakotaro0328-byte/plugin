@@ -19,7 +19,7 @@ public class LinkCommand implements RawCommand {
         }
 
         if (LinkManager.isMinecraftLinked(player.getUniqueId())) {
-            player.sendMessage(Component.text("このアカウントは既にDiscordと連携済みです。連携し直す場合はDiscordで /unlink を実行してください")
+            player.sendMessage(Component.text("このアカウントは既にDiscordと連携済みです。連携し直す場合は /unlink を実行してください")
                     .color(TextColor.color(Color.RED.getRGB())));
             return;
         }
