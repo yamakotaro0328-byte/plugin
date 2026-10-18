@@ -1,16 +1,19 @@
 package com.yamakotaro.velodicordbridge;
 
 import io.papermc.paper.advancement.AdvancementDisplay;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 
 /** 死亡・実績達成をNOTICE(Discord向けプレーンテキスト)とSEND(マイクラの他サーバーへのチャット中継)で
- * Velodicordに送る。参加/退出はVelocityが直接検知して処理するため、ここでは扱わない。 */
+ * Velodicordに送る。参加/退出はVelocityが直接検知して処理するため、ここでは扱わない。
+ * 通常のチャットはCHATで報告する(onChat参照)。 */
 public class BridgeListener implements Listener {
 
     private final BridgeServer server;
@@ -53,5 +56,18 @@ public class BridgeListener implements Listener {
 
         server.sendMessage("NOTICE&🏆 **%s** が%s [%s] を%sしました\n%s".formatted(playerName, frameName, title, completionWord, description));
         server.sendMessage("SEND&<yellow><dark_green>[%s]</dark_green> <aqua>%s</aqua> が%s <%s>[%s]</%s> を%sしました".formatted(serverName, playerName, frameName, color, title, color, completionWord));
+    }
+
+    /** MONITOR優先度、つまり他の全プラグイン(ミュート、GUI入力待ち、国/タウンチャットなど)が
+     * キャンセル判定を終えた後に実行される。その時点でまだキャンセルされていない発言だけが
+     * 本当の公開チャットなので、それだけをVelodicordに「中継していい」と報告する。
+     * こうすることで、どんなチャット横取り系プラグインが入っていても個別対応なしで
+     * Discord/他サーバーへの中継から自動的に除外される。 */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onChat(AsyncChatEvent event) {
+        if (event.isCancelled()) return;
+
+        String message = plain(event.message());
+        server.sendMessage("CHAT&%s&%s&%s".formatted(serverName, event.getPlayer().getName(), message));
     }
 }
