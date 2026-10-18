@@ -50,7 +50,18 @@ public abstract class PluginMessageManager {
                     });
                 }
 
-                case "RESOK" -> Arrays.stream(data[3].split(",")).forEach(playerName -> {
+                // velodicord-bridgeが起動後初めて繋がったときに送ってくる。プロキシ再起動による繋ぎ直しでは来ない。
+                case "STARTED" -> {
+                    Velodicord.getVelodicord().getProxy().sendMessage(text()
+                            .append(text("✅ "))
+                            .append(text("[%s]".formatted(data[2]), DARK_GREEN))
+                            .append(text(" が起動しました", YELLOW))
+                    );
+                    getNoticeChannel().sendMessage("✅ **%s** が起動しました".formatted(data[2])).queue();
+                }
+
+                // bot一覧が空だと"&"で終わり、split後にdata[3]が無くて例外になっていた。
+                case "RESOK" -> Arrays.stream(data.length > 3 ? data[3].split(",") : new String[0]).forEach(playerName -> {
                     if (playerName.isEmpty()) return;
                     GameProfile gameProfile = GameProfile.forOfflinePlayer("%s%s".formatted(data[2], playerName));
                     Velodicord.getBots().put(gameProfile.getId(), new Velodicord.BotInfo(playerName, data[2], gameProfile));

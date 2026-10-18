@@ -5,6 +5,8 @@ import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketException;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import velodicord.Discordbot;
 import velodicord.Velodicord;
@@ -27,7 +29,18 @@ public class WebSocketClient {
 
     private final WebSocketFactory factory;
 
-    private boolean shouldReconnect = true;
+    private volatile boolean shouldReconnect = true;
+
+    private volatile boolean stoppedCleanly = false;
+
+    private volatile boolean lostAnnounced = false;
+
+    /** このプロキシ起動中に一度でもvelodicord-bridgeと繋がったか。繋がったことのあるサーバーの起動・停止はブリッジ経由で通知する。 */
+    private volatile boolean everConnected = false;
+
+    public boolean hasEverConnected() {
+        return everConnected;
+    }
 
     private volatile boolean connecting = false;
 
@@ -56,6 +69,20 @@ public class WebSocketClient {
                                 @Override
                                 public void onConnected(WebSocket ws, java.util.Map<String, java.util.List<String>> headers) {
                                     Velodicord.getVelodicord().getLogger().info("WebSocket connection established.");
+                                    everConnected = true;
+                                    // 切断を通知した後に繋がり直した場合、サーバーが再起動していればSTARTEDが届く。
+                                    // 少し待ってもSTARTEDが来なければ、回線が一時的に切れていただけなので「再接続」を通知する。
+                                    if (lostAnnounced) {
+                                        Velodicord.getVelodicord().getProxy().getScheduler()
+                                                .buildTask(Velodicord.getVelodicord(), () -> {
+                                                    if (lostAnnounced) {
+                                                        lostAnnounced = false;
+                                                        announceReconnected();
+                                                    }
+                                                })
+                                                .delay(3, java.util.concurrent.TimeUnit.SECONDS)
+                                                .schedule();
+                                    }
 
                                     try {
                                         ws.sendText("OK&%s&%s&%s&%s&%s".formatted(getNoticeChannel().getId(), getLogForumChannel().map(ForumChannel::getId).orElse(""), getCommandChannel(), Discordbot.getCommandRole().getId(), Files.readString(getDisadmincommandjson())));
@@ -66,6 +93,8 @@ public class WebSocketClient {
 
                                 @Override
                                 public void onTextMessage(WebSocket ws, String message) {
+                                    if (message.startsWith("FIN&")) stoppedCleanly = true;
+                                    if (message.startsWith("STARTED&")) lostAnnounced = false;
                                     PluginMessageManager.receive("VELOCITY&%s".formatted(message));
                                 }
 
@@ -74,6 +103,9 @@ public class WebSocketClient {
                                                            com.neovisionaries.ws.client.WebSocketFrame serverCloseFrame,
                                                            com.neovisionaries.ws.client.WebSocketFrame clientCloseFrame,
                                                            boolean closedByServer) {
+                                    // 停止通知(FIN)なしに切れた = クラッシュ・強制終了・ネットワーク断。プロキシ自身の停止中(shouldReconnect=false)は除く。
+                                    if (shouldReconnect && !stoppedCleanly) announceLost();
+                                    stoppedCleanly = false;
                                     if (shouldReconnect) {
                                         Velodicord.getVelodicord().getLogger().info("WebSocket connection closed. try to reconnect...");
                                         reconnect(ws);
@@ -132,6 +164,31 @@ public class WebSocketClient {
             }
             connecting = false;
         }, "websocket-reconnect").start();
+    }
+
+    private void announceReconnected() {
+        Velodicord.getVelodicord().getProxy().sendMessage(Component.text()
+                .append(Component.text("🔄 "))
+                .append(Component.text("[%s]".formatted(serverName), NamedTextColor.DARK_GREEN))
+                .append(Component.text(" と再接続しました", NamedTextColor.YELLOW)));
+        try {
+            getNoticeChannel().sendMessage("🔄 **%s** と再接続しました".formatted(serverName)).queue();
+        } catch (RuntimeException e) {
+            Velodicord.getVelodicord().getLogger().warn("[{}] の再接続をDiscordに通知できませんでした: {}", serverName, e.toString());
+        }
+    }
+
+    private void announceLost() {
+        lostAnnounced = true;
+        Velodicord.getVelodicord().getProxy().sendMessage(Component.text()
+                .append(Component.text("⚠ "))
+                .append(Component.text("[%s]".formatted(serverName), NamedTextColor.DARK_GREEN))
+                .append(Component.text(" との接続が切れました(停止通知なし)", NamedTextColor.RED)));
+        try {
+            getNoticeChannel().sendMessage("⚠️ **%s** との接続が停止通知なしに切れました(クラッシュ・強制終了・回線断の可能性)".formatted(serverName)).queue();
+        } catch (RuntimeException e) {
+            Velodicord.getVelodicord().getLogger().warn("[{}] の切断をDiscordに通知できませんでした: {}", serverName, e.toString());
+        }
     }
 
     public boolean isConnected() {

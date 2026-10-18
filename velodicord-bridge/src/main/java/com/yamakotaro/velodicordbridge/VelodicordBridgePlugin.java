@@ -41,7 +41,11 @@ public class VelodicordBridgePlugin extends JavaPlugin {
             server.sendMessage("FIN&%s".formatted(serverName));
         }
         try {
-            server.stop();
+            // タイムアウト0で止めると、直前に送った停止通知が届く前に接続が切れることがあった。
+            // 送信待ちのデータを流してから閉じるよう、少し待つ。
+            server.stop(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         } catch (Exception e) {
             getLogger().warning("WebSocketサーバーの停止に失敗しました: " + e.getMessage());
         }

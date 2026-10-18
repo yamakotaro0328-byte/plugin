@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import velodicord.*;
 import velodicord.link.LinkManager;
 import velodicord.pmConnection.DiscordPluginMessageManager;
+import velodicord.pmConnection.WebSocketPluginMessageManager;
 
 import java.awt.*;
 import java.util.*;
@@ -366,13 +367,33 @@ public class SlashCommandInteraction extends ListenerAdapter {
 
             case "server" -> {
                 switch (Objects.requireNonNull(event.getSubcommandName())) {
-                    case "info" -> event.replyEmbeds(new EmbedBuilder()
-                            .setTitle("velocity info")
-                            .setDescription("```\n\n( %d )人のプレイヤーがオンライン\n\n使用メモリ:\n%d MB / %d MB\n```".formatted(Velodicord.getVelodicord().getProxy().getPlayerCount(), (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024, Runtime.getRuntime().totalMemory() / 1024 / 1024)
-                            )
-                            .setColor(Color.green)
-                            .build()
-                    ).queue();
+                    case "info" -> {
+                        StringBuilder servers = new StringBuilder();
+                        for (var server : Velodicord.getVelodicord().getProxy().getAllServers()) {
+                            String name = server.getServerInfo().getName();
+                            Boolean pinged = ServerMonitor.pingState(name);
+                            String status;
+                            if (Velodicord.getPMManager() instanceof WebSocketPluginMessageManager manager && manager.isBridgeConnected(name)) {
+                                status = "🟢";
+                            } else if (pinged != null) {
+                                status = pinged ? "🟢" : "🔴";
+                            } else {
+                                status = Velodicord.getPMManager() instanceof WebSocketPluginMessageManager ? "🔴" : "⚪";
+                            }
+                            servers.append(status).append(" **").append(name).append("** : ")
+                                    .append(server.getPlayersConnected().size()).append("人\n");
+                        }
+                        event.replyEmbeds(new EmbedBuilder()
+                                .setTitle("velocity info")
+                                .setDescription("```\n( %d )人のプレイヤーがオンライン\n\n使用メモリ:\n%d MB / %d MB\n```\n%s\n🟢=起動中 🔴=停止中/未接続 ⚪=確認中".formatted(
+                                        Velodicord.getVelodicord().getProxy().getPlayerCount(),
+                                        (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024,
+                                        Runtime.getRuntime().totalMemory() / 1024 / 1024,
+                                        fit(servers)))
+                                .setColor(Color.green)
+                                .build()
+                        ).queue();
+                    }
 
                     case "command" -> {
                         if (!"velocity".equals(event.getOptions().get(0).getAsString())) {

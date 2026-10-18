@@ -20,6 +20,11 @@ public class WebSocketPluginMessageManager extends PluginMessageManager {
         return client != null && client.isConnected();
     }
 
+    public boolean hasBridgeEverConnected(String serverName) {
+        WebSocketClient client = clients.get(serverName);
+        return client != null && client.hasEverConnected();
+    }
+
     public void closeAll() {
         clients.forEach((name, client) -> client.close());
     }

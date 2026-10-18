@@ -94,6 +94,10 @@ public class Velodicord {
 
         PMManager = Config.getConfig().get("PMType").equals("1") ? new DiscordPluginMessageManager() : new WebSocketPluginMessageManager();
 
+        if (!"false".equalsIgnoreCase(Config.getConfig().getOrDefault("ServerMonitor", "true"))) {
+            new ServerMonitor().start();
+        }
+
         CommandManager commandManager = proxy.getCommandManager();
 
         String[] serverNames = proxy.getAllServers().stream().map(server -> server.getServerInfo().getName()).toArray(String[]::new);

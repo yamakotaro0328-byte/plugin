@@ -11,6 +11,7 @@ import org.java_websocket.server.WebSocketServer;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 /** Velocity側のVelodicordが接続してくるのを待ち受けるWebSocketサーバー。
@@ -28,6 +29,7 @@ public class BridgeServer extends WebSocketServer {
     private final byte[] secret;
     private volatile WebSocket connection;
     private volatile long lastDisconnectedWarn;
+    private final AtomicBoolean startAnnounced = new AtomicBoolean(false);
 
     public BridgeServer(InetSocketAddress address, String serverName, String secret, Logger logger) {
         super(address);
@@ -60,7 +62,13 @@ public class BridgeServer extends WebSocketServer {
         if (conn != connection) return;
         String[] data = message.split("&", -1);
         if (data.length > 0 && data[0].equals("OK")) {
-            conn.send("RESOK&%s&".formatted(serverName));
+            // 末尾を","にしておくと、古いVelodicordでも空のbot一覧として正しく読める("&"で終わると読み取りで落ちていた)。
+            conn.send("RESOK&%s&,".formatted(serverName));
+            // このプラグインが起動してから最初にVelodicordと繋がったときだけ「起動しました」を通知してもらう。
+            // プロキシだけ再起動して繋ぎ直した場合などは、サーバー自体は起動していないので通知しない。
+            if (startAnnounced.compareAndSet(false, true)) {
+                conn.send("STARTED&%s".formatted(serverName));
+            }
         }
     }
 

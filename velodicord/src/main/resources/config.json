@@ -21,6 +21,8 @@
   "WebSocketPortIncrement": "1",
   "_wscomment_": "velodicord-bridgeのconfig.ymlのsecretと同じ文字列(PMTypeが2のとき推奨。空だと認証なし)",
   "WebSocketSecret": "",
+  "_smcomment_": "velodicord-bridgeが入っていないサーバーを30秒ごとにpingして起動・停止を通知するか(true/false)",
+  "ServerMonitor": "true",
   "_lrcomment_": "アカウント連携(/link)が完了した人に付与するロールID(オプション、空なら付与しない)",
   "LinkedRoleID": "000000"
 }
