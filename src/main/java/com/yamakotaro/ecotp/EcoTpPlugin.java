@@ -374,6 +374,10 @@ public class EcoTpPlugin extends JavaPlugin {
         return donationManager;
     }
 
+    public VotifierServer getVotifierServer() {
+        return votifierServer;
+    }
+
     public VoteGoalManager getVoteGoalManager() {
         return voteGoalManager;
     }

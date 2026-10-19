@@ -18,6 +18,7 @@ import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.KeyFactory;
@@ -32,6 +33,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 /**
@@ -63,6 +65,8 @@ public class VotifierServer {
     private static final int V1_BLOCK_SIZE = 256;
     // NuVotifier本家のLengthFieldBasedFrameDecoderと同じ上限 (1024バイト)。
     private static final int V2_MAX_MESSAGE_LENGTH = 1024;
+    /** /ecotp votetest が送る投票のサービス名。これは数えず、報酬も出さない (real を付けた時を除く)。 */
+    static final String TEST_SERVICE_NAME = "EcoTP-Test";
 
     private final EcoTpPlugin plugin;
     private final File rsaFolder;
@@ -72,6 +76,11 @@ public class VotifierServer {
     private Map<String, String> tokens;
     private ServerSocket serverSocket;
     private volatile boolean running;
+    // 通信スレッドから config を読まないよう、start() 時点の値を覚えておく。
+    private volatile int readTimeoutMillis = 15_000;
+    private volatile boolean logConnections = true;
+    private volatile String connectHost = "127.0.0.1";
+    private volatile int port = 8192;
     // 同時接続数の上限と、1接続あたりの全体の制限時間 (少しずつ送ってくる接続でスレッドを
     // 使い切られるのを防ぐ。投票サイトの通常の送信は1秒もかからない)。
     private final java.util.concurrent.Semaphore connectionSlots = new java.util.concurrent.Semaphore(16);
@@ -109,7 +118,17 @@ public class VotifierServer {
             return;
         }
         String host = plugin.getConfig().getString("votifier.host", "0.0.0.0");
-        int port = plugin.getConfig().getInt("votifier.port", 8192);
+        this.port = plugin.getConfig().getInt("votifier.port", 8192);
+        this.readTimeoutMillis = Math.max(1, plugin.getConfig().getInt("votifier.read-timeout-seconds", 15)) * 1000;
+        this.logConnections = plugin.getConfig().getBoolean("votifier.log-connections", true);
+        this.connectHost = host.equals("0.0.0.0") || host.equals("::") ? "127.0.0.1" : host;
+        String legacyToken = plugin.getConfig().getString("votifier.token");
+        if (legacyToken != null && !legacyToken.isBlank()) {
+            // 値は出さない。config.yml の votifier.token はどこからも使われていない。
+            plugin.getLogger().warning("config.yml has votifier.token, but it is NOT used. The only protocol v2 token "
+                    + "is tokens.default in " + tokensFile.getPath() + " - register THAT value with your voting sites "
+                    + "and delete votifier.token from config.yml to avoid confusion.");
+        }
         try {
             serverSocket = new ServerSocket();
             serverSocket.bind(new InetSocketAddress(host, port));
@@ -125,10 +144,10 @@ public class VotifierServer {
         acceptThread.setDaemon(true);
         acceptThread.start();
         plugin.getLogger().info("Built-in Votifier-compatible listener started on " + host + ":" + port
-                + " - protocol v1 (RSA key) voting sites: give them the contents of "
-                + new File(rsaFolder, "public.key").getPath()
-                + " - protocol v2 (token) voting sites: give them the tokens.default value from "
-                + tokensFile.getPath());
+                + " (read timeout " + (readTimeoutMillis / 1000) + "s)");
+        plugin.getLogger().info("[Votifier] protocol v1 key: " + new File(rsaFolder, "public.key").getPath()
+                + " | protocol v2 token: " + tokensFile.getPath() + " -> tokens.default"
+                + (tokens.size() > 1 ? " (per-site tokens also loaded: " + String.join(", ", tokens.keySet()) + ")" : ""));
     }
 
     private static void closeQuietly(Socket socket) {
@@ -156,19 +175,23 @@ public class VotifierServer {
             try {
                 Socket socket = serverSocket.accept();
                 if (!connectionSlots.tryAcquire()) {
+                    logConnection(socket, "-", Outcome.REJECTED_BUSY, null);
                     closeQuietly(socket);
                     continue;
                 }
+                AtomicBoolean killed = new AtomicBoolean();
                 java.util.TimerTask kill = new java.util.TimerTask() {
                     @Override
                     public void run() {
+                        killed.set(true);
                         closeQuietly(socket);
                     }
                 };
-                watchdog.schedule(kill, 10_000L);
+                // 1接続あたりの全体の制限時間 (少しずつ送ってくる接続でスレッドを使い切られないように)。
+                watchdog.schedule(kill, readTimeoutMillis() + 5_000L);
                 Thread handler = new Thread(() -> {
                     try {
-                        handleConnection(socket);
+                        handleConnection(socket, killed);
                     } finally {
                         kill.cancel();
                         connectionSlots.release();
@@ -184,9 +207,45 @@ public class VotifierServer {
         }
     }
 
-    private void handleConnection(Socket socket) {
+    private int readTimeoutMillis() {
+        return readTimeoutMillis;
+    }
+
+    /** 1接続の結果。接続ごとに1行ログに出す (以前は失敗のほとんどが FINE で見えなかった)。 */
+    enum Outcome {
+        SUCCESS(Level.INFO, "accepted"),
+        CLOSED_BEFORE_DATA(Level.INFO, "closed before sending any data"),
+        INCOMPLETE(Level.INFO, "closed in the middle of the message"),
+        TIMEOUT(Level.WARNING, "timed out waiting for data (votifier.read-timeout-seconds)"),
+        V1_DECRYPT_FAILED(Level.WARNING, "v1 decrypt failed - the site likely has the wrong public.key"),
+        V1_NOT_A_VOTE(Level.WARNING, "v1 message decrypted but did not start with \"VOTE\""),
+        V2_BAD_CHALLENGE(Level.WARNING, "v2 challenge mismatch (stale or replayed request)"),
+        V2_BAD_SIGNATURE(Level.WARNING, "v2 signature mismatch - the site likely has the wrong token"),
+        MALFORMED(Level.WARNING, "malformed message"),
+        REJECTED_BUSY(Level.WARNING, "rejected: too many simultaneous connections");
+
+        final Level level;
+        final String text;
+
+        Outcome(Level level, String text) {
+            this.level = level;
+            this.text = text;
+        }
+    }
+
+    private void logConnection(Socket socket, String protocol, Outcome outcome, String detail) {
+        if (!logConnections) {
+            return;
+        }
+        String from = socket.getInetAddress() == null ? "?" : socket.getInetAddress().getHostAddress();
+        plugin.getLogger().log(outcome.level, "[Votifier] connection from " + from + " protocol=" + protocol
+                + " result=" + outcome.name() + " (" + outcome.text + ")" + (detail == null ? "" : " " + detail));
+    }
+
+    private void handleConnection(Socket socket, AtomicBoolean killed) {
+        String protocol = "?";
         try (Socket s = socket) {
-            s.setSoTimeout(5000);
+            s.setSoTimeout(readTimeoutMillis());
             OutputStream out = s.getOutputStream();
             String challenge = randomToken(130);
             out.write(("VOTIFIER 2 " + challenge + "\n").getBytes(StandardCharsets.UTF_8));
@@ -195,66 +254,75 @@ public class VotifierServer {
             InputStream in = s.getInputStream();
             byte[] head = readFully(in, 2);
             if (head == null) {
+                logConnection(socket, protocol, Outcome.CLOSED_BEFORE_DATA, null);
                 return;
             }
             if (head[0] == PROTOCOL_2_MAGIC[0] && head[1] == PROTOCOL_2_MAGIC[1]) {
-                handleProtocol2(in, out, challenge);
+                protocol = "v2";
+                handleProtocol2(socket, in, out, challenge);
             } else {
+                protocol = "v1";
                 byte[] rest = readFully(in, V1_BLOCK_SIZE - 2);
                 if (rest == null) {
+                    logConnection(socket, protocol, Outcome.INCOMPLETE, null);
                     return;
                 }
                 byte[] block = new byte[V1_BLOCK_SIZE];
                 System.arraycopy(head, 0, block, 0, 2);
                 System.arraycopy(rest, 0, block, 2, rest.length);
-                handleProtocol1(block);
+                handleProtocol1(socket, block);
             }
+        } catch (SocketTimeoutException e) {
+            logConnection(socket, protocol, Outcome.TIMEOUT, null);
         } catch (IOException e) {
-            // The connection dropped before sending a full message - expected occasionally on a
-            // public port (scanners, health checks); nothing actionable here.
-            plugin.getLogger().log(Level.FINE, "Ignoring an incomplete Votifier connection", e);
+            // 制限時間で watchdog が閉じた場合もここに来る。
+            logConnection(socket, protocol, killed.get() ? Outcome.TIMEOUT : Outcome.INCOMPLETE,
+                    killed.get() ? null : "(" + e.getClass().getSimpleName() + ")");
         }
     }
 
-    private void handleProtocol1(byte[] block) {
+    private void handleProtocol1(Socket socket, byte[] block) {
         byte[] decrypted;
         try {
             Cipher cipher = Cipher.getInstance("RSA");
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
             decrypted = cipher.doFinal(block);
         } catch (Exception e) {
-            // A well-formed 256-byte block that fails to decrypt with THIS keypair almost always
-            // means the voting site was given the wrong public.key - a real misconfiguration, not
-            // scanner noise, so this needs to be visible by default rather than buried at FINE.
-            plugin.getLogger().log(Level.WARNING, "Received a protocol v1 vote that failed to decrypt - the voting "
-                    + "site is likely using the wrong public key (should be the contents of "
-                    + new File(rsaFolder, "public.key").getPath() + ")", e);
+            logConnection(socket, "v1", Outcome.V1_DECRYPT_FAILED,
+                    "expected key: " + new File(rsaFolder, "public.key").getPath());
             return;
         }
 
         String message = new String(decrypted, StandardCharsets.UTF_8);
         String[] parts = message.split("\n");
         if (parts.length < 3 || !parts[0].equals("VOTE")) {
-            plugin.getLogger().log(Level.FINE, "Ignoring a decrypted Votifier message that wasn't a vote: " + message);
+            // 中身は投票ではないので、先頭の数文字だけ出す (全文は出さない)。
+            String preview = message.length() > 16 ? message.substring(0, 16) + "..." : message;
+            logConnection(socket, "v1", Outcome.V1_NOT_A_VOTE, "starts with: \"" + preview.replace("\n", "\\n") + "\"");
             return;
         }
         String serviceName = parts[1];
         String username = parts[2];
-        Bukkit.getScheduler().runTask(plugin, () -> plugin.getVoteRewardManager().handleVote(username, serviceName));
+        String address = parts.length > 3 ? parts[3] : "";
+        String timestamp = parts.length > 4 ? parts[4] : "";
+        accept(socket, "v1", serviceName, username, address, timestamp);
     }
 
-    private void handleProtocol2(InputStream in, OutputStream out, String challenge) throws IOException {
+    private void handleProtocol2(Socket socket, InputStream in, OutputStream out, String challenge) throws IOException {
         byte[] lengthBytes = readFully(in, 2);
         if (lengthBytes == null) {
+            logConnection(socket, "v2", Outcome.INCOMPLETE, null);
             return;
         }
         int length = ((lengthBytes[0] & 0xFF) << 8) | (lengthBytes[1] & 0xFF);
         if (length <= 0 || length > V2_MAX_MESSAGE_LENGTH) {
+            logConnection(socket, "v2", Outcome.MALFORMED, "(length " + length + ")");
             writeProtocol2Error(out, "Message too large");
             return;
         }
         byte[] body = readFully(in, length);
         if (body == null) {
+            logConnection(socket, "v2", Outcome.INCOMPLETE, null);
             return;
         }
         String message = new String(body, StandardCharsets.UTF_8);
@@ -266,36 +334,169 @@ public class VotifierServer {
             JsonObject votePayload = JsonParser.parseString(payload).getAsJsonObject();
             String voteChallenge = votePayload.get("challenge").getAsString();
             if (!challenge.equals(voteChallenge)) {
-                plugin.getLogger().warning("Received a protocol v2 vote with an invalid challenge "
-                        + "(the voting site's request may be stale, or this could be a replay attempt).");
+                logConnection(socket, "v2", Outcome.V2_BAD_CHALLENGE, null);
                 writeProtocol2Error(out, "Invalid challenge");
                 return;
             }
             String serviceName = votePayload.get("serviceName").getAsString();
             String username = votePayload.get("username").getAsString();
+            String address = votePayload.has("address") ? votePayload.get("address").getAsString() : "";
+            String timestamp = votePayload.has("timestamp") ? votePayload.get("timestamp").getAsString() : "";
 
-            String token = tokens.get(serviceName);
-            if (token == null) {
-                token = tokens.get("default");
-            }
+            String tokenKey = tokens.containsKey(serviceName) ? serviceName : "default";
+            String token = tokens.get(tokenKey);
             if (token == null || !signatureValid(token, payload, signature)) {
-                plugin.getLogger().warning("Received a protocol v2 vote that failed signature verification - the "
-                        + "voting site is likely using the wrong token (should match one of the entries in "
-                        + tokensFile.getPath() + ")");
+                logConnection(socket, "v2", Outcome.V2_BAD_SIGNATURE, "service=" + serviceName
+                        + " checked against " + tokensFile.getName() + " tokens." + tokenKey);
                 writeProtocol2Error(out, "Invalid signature");
                 return;
             }
 
-            Bukkit.getScheduler().runTask(plugin, () -> plugin.getVoteRewardManager().handleVote(username, serviceName));
+            accept(socket, "v2", serviceName, username, address, timestamp);
 
             JsonObject ok = new JsonObject();
             ok.addProperty("status", "ok");
             out.write((ok + "\r\n").getBytes(StandardCharsets.UTF_8));
             out.flush();
-        } catch (JsonSyntaxException | IllegalStateException | NullPointerException e) {
-            plugin.getLogger().log(Level.WARNING, "Received a malformed protocol v2 vote message", e);
+        } catch (JsonSyntaxException | IllegalStateException | NullPointerException | UnsupportedOperationException e) {
+            logConnection(socket, "v2", Outcome.MALFORMED, "(" + e.getClass().getSimpleName() + ")");
             writeProtocol2Error(out, "Malformed message");
         }
+    }
+
+    /** 正しい投票を受け付けた: ログを出し、メインスレッドでイベントを発火してから報酬処理へ回す。 */
+    private void accept(Socket socket, String protocol, String serviceName, String username,
+                        String address, String timestamp) {
+        boolean test = TEST_SERVICE_NAME.equals(serviceName);
+        boolean rewardsOn = plugin.getVoteRewardManager().isEnabled();
+        logConnection(socket, protocol, Outcome.SUCCESS, "service=" + serviceName + " user=" + username
+                + (test ? " (EcoTP test vote: not counted or rewarded)"
+                        : rewardsOn ? "" : " (vote-reward.enabled is false: no money paid)"));
+        if (test) {
+            return;
+        }
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            Bukkit.getPluginManager().callEvent(new EcoTpVoteEvent(serviceName, username, address, timestamp, protocol));
+            plugin.getVoteRewardManager().handleVote(username, serviceName);
+        });
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    /** /ecotp votetest で送る内容。 */
+    public enum TestMode {
+        V1, V2, V1_BADKEY, V2_BADTOKEN, EMPTY, SLOW;
+
+        public static TestMode parse(String text) {
+            return switch (text.toLowerCase()) {
+                case "v1" -> V1;
+                case "v2" -> V2;
+                case "v1-badkey" -> V1_BADKEY;
+                case "v2-badtoken" -> V2_BADTOKEN;
+                case "empty" -> EMPTY;
+                case "slow" -> SLOW;
+                default -> null;
+            };
+        }
+    }
+
+    /**
+     * 自分自身の受け口 (ループバック) に、投票サイトと同じ形のパケットを実際に送る。
+     * 通信は別スレッドで行い、結果の説明文を report にメインスレッドで渡す。
+     * real が false なら、受け口側はサービス名 EcoTP-Test を見て数えず報酬も出さない。
+     */
+    public void sendTestVote(String username, TestMode mode, boolean real, java.util.function.Consumer<String> report) {
+        Thread thread = new Thread(() -> {
+            String result;
+            try (Socket socket = new Socket()) {
+                socket.connect(new InetSocketAddress(connectHost, port), 3000);
+                socket.setSoTimeout(readTimeoutMillis + 10_000);
+                InputStream in = socket.getInputStream();
+                OutputStream out = socket.getOutputStream();
+                String greeting = readLine(in);
+                String[] parts = greeting == null ? new String[0] : greeting.trim().split(" ");
+                String challenge = parts.length >= 3 ? parts[2] : "";
+                String service = real ? TEST_SERVICE_NAME + "-Real" : TEST_SERVICE_NAME;
+                switch (mode) {
+                    case EMPTY -> result = "connected and closed without sending anything";
+                    case SLOW -> {
+                        Thread.sleep(readTimeoutMillis + 2_000L);
+                        try {
+                            writeV2(out, service, username, challenge, tokens.get("default"));
+                            result = "waited " + (readTimeoutMillis / 1000 + 2) + "s, then sent a v2 vote; reply: " + readLine(in);
+                        } catch (IOException e) {
+                            result = "waited " + (readTimeoutMillis / 1000 + 2) + "s; the server had already closed the connection";
+                        }
+                    }
+                    case V1, V1_BADKEY -> {
+                        PublicKey key = mode == TestMode.V1 ? loadPublicKey() : newKeyPair().getPublic();
+                        String message = "VOTE\n" + service + "\n" + username + "\n127.0.0.1\n"
+                                + (System.currentTimeMillis() / 1000L) + "\n";
+                        Cipher cipher = Cipher.getInstance("RSA");
+                        cipher.init(Cipher.ENCRYPT_MODE, key);
+                        out.write(cipher.doFinal(message.getBytes(StandardCharsets.UTF_8)));
+                        out.flush();
+                        result = "sent a 256-byte v1 block" + (mode == TestMode.V1_BADKEY ? " encrypted with a WRONG key" : "");
+                    }
+                    case V2, V2_BADTOKEN -> {
+                        String token = mode == TestMode.V2 ? tokens.get("default") : "wrong-" + randomToken(64);
+                        writeV2(out, service, username, challenge, token);
+                        result = "sent a v2 vote" + (mode == TestMode.V2_BADTOKEN ? " signed with a WRONG token" : "")
+                                + "; reply: " + readLine(in);
+                    }
+                    default -> result = "unknown mode";
+                }
+            } catch (Exception e) {
+                result = "error: " + e.getClass().getSimpleName() + (e.getMessage() == null ? "" : " " + e.getMessage());
+            }
+            String finalResult = result;
+            Bukkit.getScheduler().runTask(plugin, () -> report.accept(finalResult));
+        }, "EcoTP-Votifier-Test");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void writeV2(OutputStream out, String service, String username, String challenge, String token) throws Exception {
+        JsonObject payload = new JsonObject();
+        payload.addProperty("serviceName", service);
+        payload.addProperty("username", username);
+        payload.addProperty("address", "127.0.0.1");
+        payload.addProperty("timestamp", System.currentTimeMillis());
+        payload.addProperty("challenge", challenge);
+        String payloadText = payload.toString();
+        JsonObject envelope = new JsonObject();
+        envelope.addProperty("payload", payloadText);
+        envelope.addProperty("signature", Base64.getEncoder().encodeToString(hmacSha256(token, payloadText)));
+        byte[] body = envelope.toString().getBytes(StandardCharsets.UTF_8);
+        out.write(PROTOCOL_2_MAGIC);
+        out.write((body.length >> 8) & 0xFF);
+        out.write(body.length & 0xFF);
+        out.write(body);
+        out.flush();
+    }
+
+    private PublicKey loadPublicKey() throws Exception {
+        byte[] bytes = Base64.getDecoder().decode(readBase64(new File(rsaFolder, "public.key")));
+        return KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(bytes));
+    }
+
+    private static KeyPair newKeyPair() throws Exception {
+        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
+        return generator.generateKeyPair();
+    }
+
+    private static String readLine(InputStream in) throws IOException {
+        StringBuilder line = new StringBuilder();
+        int b;
+        while ((b = in.read()) >= 0 && b != '\n' && line.length() < 512) {
+            if (b != '\r') {
+                line.append((char) b);
+            }
+        }
+        return b < 0 && line.isEmpty() ? null : line.toString();
     }
 
     private void writeProtocol2Error(OutputStream out, String reason) throws IOException {

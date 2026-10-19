@@ -294,6 +294,21 @@ votifier:
   # (日本語) Votifierの標準ポート。既にNuVotifier等が8192を使っている場合は変更し、
   # 投票サイト側にもそのポート番号を伝えること。
   port: 8192
+  # The protocol v2 token is ONLY tokens.default in plugins/EcoTP/votifier-tokens.yml
+  # (there is no token setting in this file; a leftover votifier.token here is ignored
+  # and a warning is logged). To issue a new token, delete votifier-tokens.yml and restart.
+  # (日本語) v2のトークンは plugins/EcoTP/votifier-tokens.yml の tokens.default だけです
+  # (このファイルにトークンの設定はありません。votifier.token が残っていても使われず、
+  # 起動時に警告が出ます)。トークンを作り直すには votifier-tokens.yml を消して再起動。
+  #
+  # Seconds to wait for a voting site to send its data before giving up.
+  # (日本語) 投票サイトがデータを送ってくるまで待つ秒数。
+  read-timeout-seconds: 15
+  # Log one line per connection (source IP, v1/v2, result) so failed votes are visible.
+  # (日本語) 接続ごとに1行ログを出す(接続元IP・v1/v2・結果)。投票が届かない時の調査用。
+  log-connections: true
+  # Test from the console: /ecotp votetest <name> [v1|v2|v1-badkey|v2-badtoken|empty|slow] [real]
+  # (日本語) 動作確認: /ecotp votetest <名前> [v1|v2|v1-badkey|v2-badtoken|empty|slow] [real]
 
 # Starting balance for new players (used only when economy.enabled: true and
 # no matching Essentials data was found — see essentials-import below).

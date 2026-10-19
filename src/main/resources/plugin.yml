@@ -103,7 +103,7 @@ commands:
     aliases: [ecomenu]
   ecotp:
     description: Reload config.yml and messages.yml (admin)
-    usage: /ecotp reload
+    usage: /ecotp reload | /ecotp votetest <name> [v1|v2|v1-badkey|v2-badtoken|empty|slow] [real]
   donate:
     description: Donate money to another player (broadcasts a thank-you message)
     usage: /donate <player> <amount>

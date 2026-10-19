@@ -167,7 +167,10 @@ baltop:
   unsupported-external-economy: "&c外部の経済プラグインを使用しているため、ランキングは利用できません。"
 
 ecotp:
-  usage: "&c使い方: /ecotp reload"
+  votetest-not-running: "&c内蔵のVotifier受け口が動いていません(無効化・NuVotifier導入済み・ポートを開けなかった のいずれか)。"
+  votetest-sending: "&e{player} の {mode} テスト投票を、このサーバー自身のVotifierポートへ送っています..."
+  votetest-result: "&aテスト完了: &f{result} &7(コンソールの [Votifier] の行で結果を確認してください)"
+  usage: "&c使い方: /ecotp reload | /ecotp votetest <名前> [v1|v2|v1-badkey|v2-badtoken|empty|slow] [real]"
   reloaded: "&aconfig.yml と messages.yml を再読み込みしました。(storage.type と economy.enabled の変更を反映するには再起動が必要です)"
 
 donate:

@@ -167,7 +167,10 @@ baltop:
   unsupported-external-economy: "&cThe leaderboard isn't available while using an external economy plugin."
 
 ecotp:
-  usage: "&cUsage: /ecotp reload"
+  votetest-not-running: "&cThe built-in Votifier listener is not running (disabled, NuVotifier installed, or the port failed to open)."
+  votetest-sending: "&eSending a {mode} test vote for {player} to this server's own Votifier port..."
+  votetest-result: "&aTest finished: &f{result} &7(see the [Votifier] line in the console)"
+  usage: "&cUsage: /ecotp reload | /ecotp votetest <name> [v1|v2|v1-badkey|v2-badtoken|empty|slow] [real]"
   reloaded: "&aReloaded config.yml and messages.yml. (storage.type and economy.enabled need a full restart to take effect)"
 
 donate:
