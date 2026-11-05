@@ -79,6 +79,9 @@ public class EcoTpPlugin extends JavaPlugin {
     private DonationManager donationManager;
     private VoteRewardManager voteRewardManager;
     private VoteGoalManager voteGoalManager;
+    private TeleportStyleManager teleportStyleManager;
+    private TeleportDiscount teleportDiscount;
+    private WarpUnlockManager warpUnlockManager;
     private VotifierServer votifierServer;
     private DailyRewardStorage dailyRewardStorage;
     private DailyRewardManager dailyRewardManager;
@@ -150,6 +153,9 @@ public class EcoTpPlugin extends JavaPlugin {
         this.donationManager = new DonationManager(this);
         this.voteRewardManager = new VoteRewardManager(this);
         this.voteGoalManager = new VoteGoalManager(this);
+        this.teleportStyleManager = new TeleportStyleManager(this);
+        this.teleportDiscount = new TeleportDiscount(this);
+        this.warpUnlockManager = new WarpUnlockManager(this);
         this.votifierServer = new VotifierServer(this);
         this.dailyRewardStorage = useMysql
                 ? new MySqlDailyRewardStorage(this, mySqlConnectionProvider)
@@ -224,6 +230,7 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("delwarp").setTabCompleter(delWarpCommand);
         getCommand("votetop").setExecutor(new VoteTopCommand(this));
         getCommand("votegoal").setExecutor(new VoteGoalCommand(this));
+        getCommand("tpeffect").setExecutor(new com.yamakotaro.ecotp.commands.TpEffectCommand(this));
         getCommand("afk").setExecutor(new AfkCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
@@ -376,6 +383,18 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public VotifierServer getVotifierServer() {
         return votifierServer;
+    }
+
+    public TeleportStyleManager getTeleportStyleManager() {
+        return teleportStyleManager;
+    }
+
+    public TeleportDiscount getTeleportDiscount() {
+        return teleportDiscount;
+    }
+
+    public WarpUnlockManager getWarpUnlockManager() {
+        return warpUnlockManager;
     }
 
     public VoteGoalManager getVoteGoalManager() {

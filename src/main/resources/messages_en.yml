@@ -219,6 +219,23 @@ teleport-effects:
   arrived-title: "&b&l✦ Teleported ✦"
   arrived-subtitle: "&7Welcome!"
 
+teleport-styles:
+  names:
+    default: "&fClassic (Ender)"
+    flame: "&6Flame"
+    cherry: "&dCherry Blossom"
+    lightning: "&eLightning"
+    heart: "&cHearts"
+    soul: "&bSoul"
+    snow: "&fSnow"
+  selected: "&aTeleport effect set to {style}&a."
+  bought: "&aBought the {style} &ateleport effect for &f{price}&a! It's now active."
+
+warp-unlock:
+  description: "Unlock the warp \"{name}\""
+  insufficient-funds: "&cYou need to unlock the warp \"{name}\" first, which costs &f{price}&c."
+  unlocked: "&a&lUnlocked the warp \"{name}\"! &7({price})"
+
 daily:
   storage-error: "&cCouldn't reach the reward database right now. Please try again in a moment."
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
@@ -250,6 +267,8 @@ menu-item:
 
 menu:
   title: "EcoTP Menu"
+  style-title: "Teleport Effects"
+  setting-style: "&dTeleport effect"
   request-changed: "&eThat request is no longer the one waiting for you. Check the new one and try again."
   category:
     teleport: "&b&l✈ Teleport"
@@ -317,6 +336,25 @@ menu:
   chat-input-cancelled: "&eCancelled."
   chat-input-timeout: "&cInput timed out."
   lore:
+    style-selected:
+      - "&a✔ In use"
+    style-owned:
+      - "&7Owned"
+      - "&eClick to use"
+    style-buy:
+      - "&7Price: &f{price}"
+      - "&eClick to buy"
+    style-confirm:
+      - "&7Price: &f{price}"
+      - "&6&lClick again to buy!"
+    setting-style:
+      - "&7Current effect: {style}"
+      - "&eClick to change or buy"
+    warp-locked:
+      - "&c🔒 Locked"
+      - "&7Unlock price (one time): &f{price}"
+      - "&eClick to unlock"
+    profile-discount: "&7Teleport discount: &a{discount}%"
     category-teleport:
       - "&7Homes, spawn, warps, tpa"
     category-money:

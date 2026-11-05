@@ -35,6 +35,7 @@ final class TeleportEffects {
             return null;
         }
         showCountdownTitle(player, description, totalTicks / 20);
+        TeleportStyle style = style(player);
         return Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
             int elapsed;
 
@@ -53,10 +54,10 @@ final class TeleportEffects {
                 for (int strand = 0; strand < 2; strand++) {
                     double a = angle + strand * Math.PI;
                     Location point = base.clone().add(Math.cos(a) * 0.8, height, Math.sin(a) * 0.8);
-                    world.spawnParticle(Particle.ENCHANT, point, 3, 0.02, 0.02, 0.02, 0.0);
-                    world.spawnParticle(Particle.PORTAL, point, 2, 0.05, 0.05, 0.05, 0.05);
+                    world.spawnParticle(style.spiral, point, style.density, 0.02, 0.02, 0.02, 0.0);
+                    world.spawnParticle(style.sparkle, point, 1, 0.05, 0.05, 0.05, 0.02);
                     if (progress > 0.6) {
-                        world.spawnParticle(Particle.END_ROD, point, 1, 0.0, 0.0, 0.0, 0.0);
+                        world.spawnParticle(style.ring, point, 1, 0.0, 0.0, 0.0, 0.0);
                     }
                 }
                 if (elapsed % 20 == 0) {
@@ -87,14 +88,20 @@ final class TeleportEffects {
         player.resetTitle();
     }
 
+    private TeleportStyle style(Player player) {
+        return plugin.getTeleportStyleManager().getSelected(player.getUniqueId());
+    }
+
     /** 出発地点の演出。周りの人にも見える/聞こえる。 */
-    void departure(Location from) {
+    void departure(Player player, Location from) {
         if (!enabled() || from.getWorld() == null) {
             return;
         }
         World world = from.getWorld();
         Location center = from.clone().add(0, 1, 0);
-        world.spawnParticle(Particle.REVERSE_PORTAL, center, 80, 0.3, 0.8, 0.3, 0.2);
+        TeleportStyle style = style(player);
+        world.spawnParticle(style == TeleportStyle.DEFAULT ? Particle.REVERSE_PORTAL : style.spiral,
+                center, style == TeleportStyle.DEFAULT ? 80 : 40, 0.3, 0.8, 0.3, 0.1);
         world.spawnParticle(Particle.TOTEM_OF_UNDYING, center, 30, 0.3, 0.5, 0.3, 0.3);
         world.playSound(center, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 0.8f);
     }
@@ -112,7 +119,14 @@ final class TeleportEffects {
         if (!fancy()) {
             return;
         }
-        player.playSound(center, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1.0f, 1.0f);
+        TeleportStyle style = style(player);
+        player.playSound(center, style.sound, style == TeleportStyle.LIGHTNING ? 0.5f : 1.0f, 1.0f);
+        if (style == TeleportStyle.LIGHTNING) {
+            world.strikeLightningEffect(base); // 見た目と音だけで、ダメージも火事も起きない
+        }
+        if (style != TeleportStyle.DEFAULT) {
+            world.spawnParticle(style.spiral, center, 30, 0.4, 0.6, 0.4, 0.05);
+        }
         player.playSound(center, Sound.ENTITY_PLAYER_LEVELUP, 0.4f, 1.6f);
         world.spawnParticle(Particle.FIREWORK, center, 40, 0.2, 0.4, 0.2, 0.15);
         world.spawnParticle(Particle.TOTEM_OF_UNDYING, center, 30, 0.3, 0.5, 0.3, 0.3);
@@ -132,7 +146,7 @@ final class TeleportEffects {
                 int points = 12 + step * 4;
                 for (int i = 0; i < points; i++) {
                     double a = 2 * Math.PI * i / points;
-                    world.spawnParticle(Particle.END_ROD, base.clone().add(Math.cos(a) * radius, 0.1, Math.sin(a) * radius),
+                    world.spawnParticle(style.ring, base.clone().add(Math.cos(a) * radius, 0.1, Math.sin(a) * radius),
                             1, 0, 0, 0, 0);
                 }
             }

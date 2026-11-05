@@ -193,9 +193,14 @@ public class MainMenuHolder implements EcoTpMenu {
         int max = plugin.getConfig().getInt("homes.max-per-player", 3);
         int streak = plugin.getDailyRewardManager().getEffectiveStreak(uuid);
         int votes = plugin.getVoteRewardManager().getVoteCount(viewer.getName());
-        List<String> lore = plugin.getMessages().getList("menu.lore.profile",
+        List<String> lore = new ArrayList<>(plugin.getMessages().getList("menu.lore.profile",
                 "balance", balance, "used", String.valueOf(used), "max", String.valueOf(max),
-                "streak", String.valueOf(streak), "votes", String.valueOf(votes));
+                "streak", String.valueOf(streak), "votes", String.valueOf(votes)));
+        double discount = plugin.getTeleportDiscount().percent(viewer);
+        if (discount > 0) {
+            lore.add(plugin.getMessages().get("menu.lore.profile-discount",
+                    "discount", String.valueOf(Math.round(discount * 10) / 10.0)));
+        }
 
         ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta meta = stack.getItemMeta();

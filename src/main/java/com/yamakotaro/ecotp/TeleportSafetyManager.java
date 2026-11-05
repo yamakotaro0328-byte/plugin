@@ -228,7 +228,7 @@ public class TeleportSafetyManager implements Listener {
     public void playTeleportEffects(Player player) {
         Location from = departures.remove(player.getUniqueId());
         if (from != null && (from.getWorld() != player.getWorld() || from.distanceSquared(player.getLocation()) > 4)) {
-            effects.departure(from);
+            effects.departure(player, from);
         }
         effects.arrival(player);
     }

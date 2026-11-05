@@ -91,6 +91,22 @@ public class GuiListener implements Listener {
             return;
         }
 
+        if (holder instanceof TeleportStyleHolder styleHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) {
+                return;
+            }
+            if (event.getSlot() == TeleportStyleHolder.SLOT_BACK) {
+                player.openInventory(new SettingsHolder(plugin, player).getInventory());
+                return;
+            }
+            com.yamakotaro.ecotp.TeleportStyle style = styleHolder.styleAt(event.getSlot());
+            if (style != null) {
+                styleHolder.click(style);
+            }
+            return;
+        }
+
         if (holder instanceof SettingsHolder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getInventory()) {
@@ -104,6 +120,10 @@ public class GuiListener implements Listener {
             ItemStack current = event.getCurrentItem();
             if (current == null || current.getType().name().endsWith("STAINED_GLASS_PANE")) {
                 return; // 枠、または無効な設定のスロット
+            }
+            if (slot == SettingsHolder.SLOT_STYLE) {
+                player.performCommand("tpeffect");
+                return;
             }
             if (slot == SettingsHolder.SLOT_ROMAJI) {
                 player.performCommand("roma");

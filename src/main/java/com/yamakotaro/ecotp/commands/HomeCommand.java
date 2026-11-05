@@ -60,9 +60,9 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
 
         double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
         double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 10.0);
-        double cost = plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), home)
+        double cost = plugin.getTeleportDiscount().apply(player, plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), home)
                 ? CostUtil.distanceCost(player.getLocation(), home, minFee, blocksPerYen)
-                : minFee;
+                : minFee);
 
         Economy economy = plugin.getEconomyHolder().get();
         if (economy == null) {
@@ -95,7 +95,7 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(plugin.msg("teleport-safety.wrong-dimension"));
                     return;
                 }
-                double finalCost = CostUtil.distanceCost(player.getLocation(), finalHome, minFee, blocksPerYen);
+                double finalCost = plugin.getTeleportDiscount().apply(player, CostUtil.distanceCost(player.getLocation(), finalHome, minFee, blocksPerYen));
                 if (!economy.has(player, finalCost)) {
                     player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(finalCost)));
                     return;

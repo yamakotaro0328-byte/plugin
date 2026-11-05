@@ -66,12 +66,16 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(plugin.msg("warp.world-missing"));
             return true;
         }
+        if (!plugin.getWarpUnlockManager().isUnlocked(player, name, warp)) {
+            requestUnlock(player, name, warp, actionKey);
+            return true;
+        }
 
         double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
         double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 10.0);
-        double cost = plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), warp)
+        double cost = plugin.getTeleportDiscount().apply(player, plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), warp)
                 ? CostUtil.distanceCost(player.getLocation(), warp, minFee, blocksPerYen)
-                : minFee;
+                : minFee);
 
         Economy economy = plugin.getEconomyHolder().get();
         if (economy == null) {
@@ -99,7 +103,7 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
                         player.sendMessage(plugin.msg("teleport-safety.wrong-dimension"));
                         return;
                     }
-                    double finalCost = CostUtil.distanceCost(player.getLocation(), finalWarp, minFee, blocksPerYen);
+                    double finalCost = plugin.getTeleportDiscount().apply(player, CostUtil.distanceCost(player.getLocation(), finalWarp, minFee, blocksPerYen));
                     if (!economy.has(player, finalCost)) {
                         player.sendMessage(plugin.msg("general.insufficient-funds", "cost", ChatUtil.formatMoney(finalCost)));
                         return;
@@ -118,5 +122,34 @@ public class WarpCommand implements CommandExecutor, TabCompleter {
             return TabCompleteUtil.filterPrefix(plugin.getWarpManager().getWarpNames(), args[0]);
         }
         return Collections.emptyList();
+    }
+
+    /** まだ解放していない遠くのワープ: 解放料金の確認を出し、承諾されたら解放してそのまま移動の手続きへ。 */
+    private void requestUnlock(Player player, String name, Location warp, String actionKey) {
+        double price = plugin.getWarpUnlockManager().price(name, warp);
+        Economy economy = plugin.getEconomyHolder().get();
+        if (economy == null) {
+            player.sendMessage(plugin.msg("general.no-economy"));
+            return;
+        }
+        if (!economy.has(player, price)) {
+            player.sendMessage(plugin.msg("warp-unlock.insufficient-funds", "name", name, "price", ChatUtil.formatMoney(price)));
+            return;
+        }
+        String description = plugin.getMessages().get("warp-unlock.description", "name", name);
+        // 同じ actionKey を使うので、もう一度 /warp <名前> でも承諾できる。
+        plugin.getConfirmationManager().request(player, actionKey, price, description, () -> {
+            if (!player.isOnline() || plugin.getWarpUnlockManager().isUnlocked(player, name, warp)) {
+                return;
+            }
+            if (!economy.withdrawPlayer(player, price).transactionSuccess()) {
+                player.sendMessage(plugin.msg("warp-unlock.insufficient-funds", "name", name, "price", ChatUtil.formatMoney(price)));
+                return;
+            }
+            plugin.getWarpUnlockManager().unlock(player.getUniqueId(), name);
+            player.sendMessage(plugin.msg("warp-unlock.unlocked", "name", name, "price", ChatUtil.formatMoney(price)));
+            player.playSound(player.getLocation(), org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 1.2f);
+            player.performCommand("warp " + name); // 続けて移動の確認へ
+        });
     }
 }

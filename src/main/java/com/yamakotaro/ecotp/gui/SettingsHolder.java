@@ -19,6 +19,7 @@ public class SettingsHolder implements EcoTpMenu {
     private static final int SIZE = 27;
     public static final int SLOT_ROMAJI = 11;
     public static final int SLOT_AFK = 15;
+    public static final int SLOT_STYLE = 13;
     public static final int SLOT_BACK = 22;
 
     private final Inventory inventory;
@@ -37,6 +38,12 @@ public class SettingsHolder implements EcoTpMenu {
         if (plugin.isFeatureEnabled("afk") && viewer.hasPermission("ecotp.afk")) {
             tiles.put(SLOT_AFK, toggle(messages, "afk", Material.WHITE_BED,
                     plugin.getAfkManager().isAfk(viewer.getUniqueId())));
+        }
+        if (plugin.getTeleportStyleManager().isEnabled() && viewer.hasPermission("ecotp.tpeffect")) {
+            var style = plugin.getTeleportStyleManager().getSelected(viewer.getUniqueId());
+            tiles.put(SLOT_STYLE, MenuItems.item(style.getIcon(), messages.get("menu.setting-style"),
+                    messages.getList("menu.lore.setting-style",
+                            "style", messages.get("teleport-styles.names." + style.key())), true));
         }
         tiles.put(SLOT_BACK, MenuItems.item(Material.ARROW, messages.get("menu.back"), null));
         MenuFx.open(plugin, viewer, this, inventory, tiles, false);

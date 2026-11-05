@@ -58,9 +58,9 @@ public class TpaCommand implements CommandExecutor, TabCompleter {
 
         double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
         double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 10.0);
-        double estimatedCost = plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), target.getLocation())
+        double estimatedCost = plugin.getTeleportDiscount().apply(player, plugin.getTeleportSafetyManager().isSameDimension(player.getLocation(), target.getLocation())
                 ? CostUtil.distanceCost(player.getLocation(), target.getLocation(), minFee, blocksPerYen)
-                : minFee;
+                : minFee);
 
         Economy economy = plugin.getEconomyHolder().get();
         if (economy == null) {

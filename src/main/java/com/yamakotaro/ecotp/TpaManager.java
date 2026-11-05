@@ -132,9 +132,9 @@ public class TpaManager {
         // 概算であり、実際の請求は詠唱完了時点の距離で再計算する (下記 startTeleport 内)。
         double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
         double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 10.0);
-        double estimatedCost = plugin.getTeleportSafetyManager().isSameDimension(mover.getLocation(), destinationPlayer.getLocation())
+        double estimatedCost = plugin.getTeleportDiscount().apply(mover, plugin.getTeleportSafetyManager().isSameDimension(mover.getLocation(), destinationPlayer.getLocation())
                 ? CostUtil.distanceCost(mover.getLocation(), destinationPlayer.getLocation(), minFee, blocksPerYen)
-                : minFee;
+                : minFee);
 
         String description = plugin.getMessages().get("tpa.travel-description", "player", destinationPlayer.getName());
         String moveActionKey = "tpa-move:" + mover.getUniqueId();
@@ -159,7 +159,7 @@ public class TpaManager {
 
             double minFee = plugin.getConfig().getDouble("costs.distance-min-fee", 100.0);
             double blocksPerYen = plugin.getConfig().getDouble("costs.distance-blocks-per-yen", 10.0);
-            double actualCost = CostUtil.distanceCost(mover.getLocation(), destination, minFee, blocksPerYen);
+            double actualCost = plugin.getTeleportDiscount().apply(mover, CostUtil.distanceCost(mover.getLocation(), destination, minFee, blocksPerYen));
 
             Economy economy = plugin.getEconomyHolder().get();
             if (economy == null) {

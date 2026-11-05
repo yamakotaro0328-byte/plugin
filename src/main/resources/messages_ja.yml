@@ -219,6 +219,23 @@ teleport-effects:
   arrived-title: "&b&l✦ テレポート完了 ✦"
   arrived-subtitle: "&7到着しました！"
 
+teleport-styles:
+  names:
+    default: "&fいつもの (エンダー)"
+    flame: "&6炎"
+    cherry: "&d桜"
+    lightning: "&e雷"
+    heart: "&cハート"
+    soul: "&bソウル"
+    snow: "&f雪"
+  selected: "&aテレポート演出を「{style}&a」にしました。"
+  bought: "&aテレポート演出「{style}&a」を &f{price} &aで購入しました！今から使われます。"
+
+warp-unlock:
+  description: "ワープ「{name}」を解放"
+  insufficient-funds: "&cワープ「{name}」を使うには、まず解放料金 &f{price} &cが必要です。"
+  unlocked: "&a&lワープ「{name}」を解放しました！ &7({price})"
+
 daily:
   storage-error: "&c今は報酬のデータに接続できません。少し待ってからもう一度お試しください。"
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
@@ -250,6 +267,8 @@ menu-item:
 
 menu:
   title: "EcoTPメニュー"
+  style-title: "テレポート演出"
+  setting-style: "&dテレポート演出"
   request-changed: "&eそのリクエストはもう有効ではありません(別のリクエストが届いています)。もう一度確認してください。"
   category:
     teleport: "&b&l✈ テレポート"
@@ -317,6 +336,25 @@ menu:
   chat-input-cancelled: "&eキャンセルしました。"
   chat-input-timeout: "&c入力がタイムアウトしました。"
   lore:
+    style-selected:
+      - "&a✔ 使用中"
+    style-owned:
+      - "&7購入済み"
+      - "&eクリックで使う"
+    style-buy:
+      - "&7値段: &f{price}"
+      - "&eクリックで購入"
+    style-confirm:
+      - "&7値段: &f{price}"
+      - "&6&lもう一度クリックで購入！"
+    setting-style:
+      - "&7今の演出: {style}"
+      - "&eクリックで変更・購入"
+    warp-locked:
+      - "&c🔒 未解放"
+      - "&7解放料金(初回のみ): &f{price}"
+      - "&eクリックで解放"
+    profile-discount: "&7テレポート割引: &a{discount}%"
     category-teleport:
       - "&7ホーム・スポーン・ワープ・tpa"
     category-money:

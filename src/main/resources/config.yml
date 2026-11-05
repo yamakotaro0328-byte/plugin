@@ -133,6 +133,43 @@ boss-rewards:
     WARDEN: 5000.0
     ELDER_GUARDIAN: 2000.0
 
+# Teleport effects players can buy with /tpeffect (or Settings in /menu). "default" is
+# free; set a price to 0 to make that effect free for everyone.
+# (日本語) /tpeffect (または/menuの個人設定) で買えるテレポート演出。defaultは無料。
+# 値段を0にするとその演出は全員無料になる。
+teleport-styles:
+  enabled: true
+  prices:
+    flame: 5000.0
+    cherry: 5000.0
+    lightning: 10000.0
+    heart: 3000.0
+    soul: 8000.0
+    snow: 3000.0
+
+# Warp unlocks: warps at least min-distance blocks from their world's spawn must be
+# unlocked once (paid) before use. Price = ceil(distance / 1000) * price-per-1000-blocks.
+# Set a fixed price per warp under prices (0 = always free). ecotp.warp.unlockall skips it.
+# (日本語) ワープの解放: ワールドのスポーンからmin-distanceブロック以上離れたワープは、
+# 初回だけ解放料金を払うと使えるようになる。料金 = ceil(距離÷1000) × price-per-1000-blocks。
+# pricesでワープごとに固定の料金も決められる(0で常に無料)。ecotp.warp.unlockallを持つ人は不要。
+warp-unlock:
+  enabled: true
+  min-distance: 1000.0
+  price-per-1000-blocks: 1000.0
+  prices: {}
+    # farland: 20000.0
+
+# Teleport discount: loyal players pay less for /home, /spawn, /warp, /tpa and /tphere.
+# discount % = min(max-percent, login streak days * per-login-streak-day + total votes * per-vote)
+# (日本語) テレポート料金の割引: 連続ログイン日数と累計投票数が多い人ほど安くなる。
+# 割引率(%) = min(max-percent, 連続ログイン日数 × per-login-streak-day + 累計投票数 × per-vote)
+teleport-discount:
+  enabled: true
+  per-login-streak-day: 1.0
+  per-vote: 0.5
+  max-percent: 30.0
+
 afk:
   auto-seconds: 300
   kick-seconds: 0

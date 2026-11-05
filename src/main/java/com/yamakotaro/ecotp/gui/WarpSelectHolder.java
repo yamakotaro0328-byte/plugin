@@ -69,10 +69,16 @@ public class WarpSelectHolder implements EcoTpMenu {
         if (warp == null) {
             return MenuItems.item(Material.BARRIER, displayName, plugin.getMessages().getList("menu.lore.warp-entry-missing"));
         }
-        double fee = plugin.getTeleportSafetyManager().isSameDimension(viewer.getLocation(), warp)
+        double fee = plugin.getTeleportDiscount().apply(viewer, plugin.getTeleportSafetyManager().isSameDimension(viewer.getLocation(), warp)
                 ? CostUtil.distanceCost(viewer.getLocation(), warp, minFee, blocksPerYen)
-                : minFee;
-        List<String> lore = plugin.getMessages().getList("menu.lore.home-entry-fee", "fee", ChatUtil.formatMoney(fee));
+                : minFee);
+        List<String> lore = new java.util.ArrayList<>(
+                plugin.getMessages().getList("menu.lore.home-entry-fee", "fee", ChatUtil.formatMoney(fee)));
+        if (!plugin.getWarpUnlockManager().isUnlocked(viewer, name, warp)) {
+            lore.addAll(plugin.getMessages().getList("menu.lore.warp-locked",
+                    "price", ChatUtil.formatMoney(plugin.getWarpUnlockManager().price(name, warp))));
+            return MenuItems.item(Material.IRON_BARS, ChatUtil.color("&7🔒 " + name), lore);
+        }
         return MenuItems.item(Material.LODESTONE, displayName, lore);
     }
 

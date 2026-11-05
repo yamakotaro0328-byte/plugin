@@ -143,6 +143,9 @@ commands:
   votegoal:
     description: Show progress toward the server vote goal
     usage: /votegoal
+  tpeffect:
+    description: Choose or buy a teleport effect
+    usage: /tpeffect
   afk:
     description: Toggle your AFK status
     usage: /afk
@@ -173,10 +176,17 @@ permissions:
       ecotp.warp: true
       ecotp.votetop: true
       ecotp.afk: true
+      ecotp.tpeffect: true
       ecotpqa.quickmenu: true
       ecotpqa.weathervote: true
       ecotpqa.adminshop: true
       ecotpqa.playershop: true
+  ecotp.tpeffect:
+    description: Can use /tpeffect
+    default: false
+  ecotp.warp.unlockall:
+    description: Can use every warp without paying its unlock price
+    default: op
   ecotp.home:
     description: Can use /home, /homes
     default: false

@@ -71,9 +71,9 @@ public class HomeSelectHolder implements EcoTpMenu {
         if (home == null) {
             return MenuItems.item(Material.BARRIER, displayName, plugin.getMessages().getList("menu.lore.home-entry-missing"));
         }
-        double fee = plugin.getTeleportSafetyManager().isSameDimension(viewer.getLocation(), home)
+        double fee = plugin.getTeleportDiscount().apply(viewer, plugin.getTeleportSafetyManager().isSameDimension(viewer.getLocation(), home)
                 ? CostUtil.distanceCost(viewer.getLocation(), home, minFee, blocksPerYen)
-                : minFee;
+                : minFee);
         List<String> lore = new java.util.ArrayList<>(
                 plugin.getMessages().getList("menu.lore.home-entry-fee", "fee", ChatUtil.formatMoney(fee)));
         lore.addAll(plugin.getMessages().getList("menu.lore.home-entry-extra",
