@@ -56,6 +56,12 @@ public class TpaManager {
      */
     public void sendRequest(Type type, Player requester, Player target, double cost) {
         UUID targetUuid = target.getUniqueId();
+        TpaModeManager.Mode mode = plugin.getTpaModeManager().getMode(targetUuid);
+        if (mode == TpaModeManager.Mode.DENY) {
+            // 常に拒否: 相手には何も通知しない (しつこいリクエストで邪魔されないように)。
+            requester.sendMessage(plugin.msg("tpamode.target-denies", "player", target.getName()));
+            return;
+        }
         // 以前は cancelSilently(target) で、相手が「自分から送っていた」リクエストまで黙って
         // 消していた。ここでは相手宛ての古いリクエスト (置き換えられる側には通知) と、
         // 送る本人の古いリクエストだけを取り消す。
@@ -92,6 +98,12 @@ public class TpaManager {
         String sentKey = type == Type.TPA ? "tpa.sent" : "tphere.sent";
         String incomingKey = type == Type.TPA ? "tpa.incoming" : "tphere.incoming";
         requester.sendMessage(plugin.msg(sentKey, "player", target.getName()));
+        if (mode == TpaModeManager.Mode.ACCEPT) {
+            // 常に許可: そのまま承諾する。移動する側には、この後いつも通り料金の確認が出る。
+            target.sendMessage(plugin.msg("tpamode.auto-accepted", "player", requester.getName()));
+            acceptRequest(target);
+            return;
+        }
         ChatUtil.sendTpaRequestPrompt(target, plugin.getPrefix(), requester.getName(), cost, incomingKey);
     }
 

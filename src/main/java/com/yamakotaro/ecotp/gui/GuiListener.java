@@ -121,6 +121,13 @@ public class GuiListener implements Listener {
             if (current == null || current.getType().name().endsWith("STAINED_GLASS_PANE")) {
                 return; // 枠、または無効な設定のスロット
             }
+            if (slot == SettingsHolder.SLOT_TPA_MODE) {
+                var modes = plugin.getTpaModeManager();
+                var next = modes.getMode(player.getUniqueId()).next();
+                player.performCommand("tpamode " + next.key());
+                player.openInventory(new SettingsHolder(plugin, player).getInventory());
+                return;
+            }
             if (slot == SettingsHolder.SLOT_STYLE) {
                 player.performCommand("tpeffect");
                 return;

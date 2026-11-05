@@ -82,6 +82,7 @@ public class EcoTpPlugin extends JavaPlugin {
     private TeleportStyleManager teleportStyleManager;
     private TeleportDiscount teleportDiscount;
     private WarpUnlockManager warpUnlockManager;
+    private TpaModeManager tpaModeManager;
     private VotifierServer votifierServer;
     private DailyRewardStorage dailyRewardStorage;
     private DailyRewardManager dailyRewardManager;
@@ -156,6 +157,7 @@ public class EcoTpPlugin extends JavaPlugin {
         this.teleportStyleManager = new TeleportStyleManager(this);
         this.teleportDiscount = new TeleportDiscount(this);
         this.warpUnlockManager = new WarpUnlockManager(this);
+        this.tpaModeManager = new TpaModeManager(this);
         this.votifierServer = new VotifierServer(this);
         this.dailyRewardStorage = useMysql
                 ? new MySqlDailyRewardStorage(this, mySqlConnectionProvider)
@@ -231,6 +233,9 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("votetop").setExecutor(new VoteTopCommand(this));
         getCommand("votegoal").setExecutor(new VoteGoalCommand(this));
         getCommand("tpeffect").setExecutor(new com.yamakotaro.ecotp.commands.TpEffectCommand(this));
+        com.yamakotaro.ecotp.commands.TpaModeCommand tpaModeCommand = new com.yamakotaro.ecotp.commands.TpaModeCommand(this);
+        getCommand("tpamode").setExecutor(tpaModeCommand);
+        getCommand("tpamode").setTabCompleter(tpaModeCommand);
         getCommand("afk").setExecutor(new AfkCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
@@ -391,6 +396,10 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public TeleportDiscount getTeleportDiscount() {
         return teleportDiscount;
+    }
+
+    public TpaModeManager getTpaModeManager() {
+        return tpaModeManager;
     }
 
     public WarpUnlockManager getWarpUnlockManager() {

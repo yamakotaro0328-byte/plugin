@@ -17,9 +17,10 @@ import java.util.Map;
 public class SettingsHolder implements EcoTpMenu {
 
     private static final int SIZE = 27;
-    public static final int SLOT_ROMAJI = 11;
-    public static final int SLOT_AFK = 15;
-    public static final int SLOT_STYLE = 13;
+    public static final int SLOT_ROMAJI = 10;
+    public static final int SLOT_STYLE = 12;
+    public static final int SLOT_TPA_MODE = 14;
+    public static final int SLOT_AFK = 16;
     public static final int SLOT_BACK = 22;
 
     private final Inventory inventory;
@@ -44,6 +45,17 @@ public class SettingsHolder implements EcoTpMenu {
             tiles.put(SLOT_STYLE, MenuItems.item(style.getIcon(), messages.get("menu.setting-style"),
                     messages.getList("menu.lore.setting-style",
                             "style", messages.get("teleport-styles.names." + style.key())), true));
+        }
+        if (viewer.hasPermission("ecotp.tpa")) {
+            var mode = plugin.getTpaModeManager().getMode(viewer.getUniqueId());
+            Material icon = switch (mode) {
+                case ACCEPT -> Material.LIME_DYE;
+                case DENY -> Material.RED_DYE;
+                default -> Material.ENDER_PEARL;
+            };
+            tiles.put(SLOT_TPA_MODE, MenuItems.item(icon, messages.get("menu.setting-tpa-mode"),
+                    messages.getList("menu.lore.setting-tpa-mode",
+                            "mode", messages.get("tpamode.names." + mode.key())), mode != com.yamakotaro.ecotp.TpaModeManager.Mode.ASK));
         }
         tiles.put(SLOT_BACK, MenuItems.item(Material.ARROW, messages.get("menu.back"), null));
         MenuFx.open(plugin, viewer, this, inventory, tiles, false);

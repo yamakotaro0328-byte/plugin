@@ -236,6 +236,17 @@ warp-unlock:
   insufficient-funds: "&cワープ「{name}」を使うには、まず解放料金 &f{price} &cが必要です。"
   unlocked: "&a&lワープ「{name}」を解放しました！ &7({price})"
 
+tpamode:
+  names:
+    ask: "&e毎回聞く"
+    accept: "&a常に許可"
+    deny: "&c常に拒否"
+  current: "&7tpa・tphereを受けた時: {mode}"
+  usage: "&7使い方: /tpamode <ask(毎回聞く)|accept(常に許可)|deny(常に拒否)>"
+  changed: "&atpa・tphereを受けた時の動きを「{mode}&a」にしました。"
+  target-denies: "&c{player}さんはテレポートリクエストを受け付けていません。"
+  auto-accepted: "&a{player}さんからのテレポートリクエストを自動で承諾しました。&7(/tpamode で変更)"
+
 daily:
   storage-error: "&c今は報酬のデータに接続できません。少し待ってからもう一度お試しください。"
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
@@ -267,6 +278,7 @@ menu-item:
 
 menu:
   title: "EcoTPメニュー"
+  setting-tpa-mode: "&ftpa・tphereを受けた時"
   style-title: "テレポート演出"
   setting-style: "&dテレポート演出"
   request-changed: "&eそのリクエストはもう有効ではありません(別のリクエストが届いています)。もう一度確認してください。"
@@ -336,6 +348,10 @@ menu:
   chat-input-cancelled: "&eキャンセルしました。"
   chat-input-timeout: "&c入力がタイムアウトしました。"
   lore:
+    setting-tpa-mode:
+      - "&7今の設定: {mode}"
+      - "&7常に許可でも、移動する側には料金の確認が出ます。"
+      - "&eクリックで切り替え"
     style-selected:
       - "&a✔ 使用中"
     style-owned:

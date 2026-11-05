@@ -236,6 +236,17 @@ warp-unlock:
   insufficient-funds: "&cYou need to unlock the warp \"{name}\" first, which costs &f{price}&c."
   unlocked: "&a&lUnlocked the warp \"{name}\"! &7({price})"
 
+tpamode:
+  names:
+    ask: "&eAlways ask"
+    accept: "&aAlways accept"
+    deny: "&cAlways deny"
+  current: "&7Incoming tpa/tphere requests: {mode}"
+  usage: "&7Usage: /tpamode <ask|accept|deny>"
+  changed: "&aIncoming tpa/tphere requests are now set to {mode}&a."
+  target-denies: "&c{player} is not accepting teleport requests."
+  auto-accepted: "&aAutomatically accepted the teleport request from {player}. &7(change with /tpamode)"
+
 daily:
   storage-error: "&cCouldn't reach the reward database right now. Please try again in a moment."
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
@@ -267,6 +278,7 @@ menu-item:
 
 menu:
   title: "EcoTP Menu"
+  setting-tpa-mode: "&fIncoming tpa/tphere"
   style-title: "Teleport Effects"
   setting-style: "&dTeleport effect"
   request-changed: "&eThat request is no longer the one waiting for you. Check the new one and try again."
@@ -336,6 +348,10 @@ menu:
   chat-input-cancelled: "&eCancelled."
   chat-input-timeout: "&cInput timed out."
   lore:
+    setting-tpa-mode:
+      - "&7Now: {mode}"
+      - "&7Even when accepting automatically, whoever moves still confirms the fee."
+      - "&eClick to switch"
     style-selected:
       - "&a✔ In use"
     style-owned:
