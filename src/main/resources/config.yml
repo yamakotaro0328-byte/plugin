@@ -170,6 +170,46 @@ teleport-discount:
   per-vote: 0.5
   max-percent: 30.0
 
+# Chat quiz: every interval-minutes (when at least min-players are online) a question
+# appears in chat - a sum (math), a code to type fast (typing) or a shuffled word to
+# unscramble (scramble). The first player to type the answer in chat wins the reward.
+# Admins can run /quiz start [type] and /quiz stop; everyone can see /quiz top.
+# (日本語) チャットクイズ: interval-minutes分ごと(min-players人以上オンラインの時)に、
+# 計算(math)・早打ち(typing)・並べ替え(scramble)の問題がチャットに出る。最初にチャットで
+# 正解を打った人が賞金をもらえる。管理者は /quiz start [種類]・/quiz stop、全員 /quiz top。
+# 答えの全角/半角・カタカナ/ひらがなは区別しない。
+chat-quiz:
+  enabled: true
+  interval-minutes: 15
+  min-players: 2
+  answer-seconds: 60
+  types: [math, typing, scramble]
+  rewards:
+    math: 300.0
+    typing: 200.0
+    scramble: 400.0
+  words:
+    - "ダイヤモンド"
+    - "クリーパー"
+    - "エンダーマン"
+    - "ネザライト"
+    - "レッドストーン"
+    - "スケルトン"
+    - "エリトラ"
+    - "トライデント"
+    - "ビーコン"
+    - "ウィザー"
+    - "エメラルド"
+    - "ブレイズロッド"
+    - "シュルカーボックス"
+    - "ピストン"
+    - "エンチャント"
+    - "ラピスラズリ"
+    - "ウォーデン"
+    - "サトウキビ"
+    - "かまど"
+    - "たいまつ"
+
 afk:
   auto-seconds: 300
   kick-seconds: 0

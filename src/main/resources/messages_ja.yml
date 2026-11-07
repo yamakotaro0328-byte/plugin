@@ -247,6 +247,23 @@ tpamode:
   target-denies: "&c{player}さんはテレポートリクエストを受け付けていません。"
   auto-accepted: "&a{player}さんからのテレポートリクエストを自動で承諾しました。&7(/tpamode で変更)"
 
+quiz:
+  question-math: "&d&l[クイズ] &fこの計算の答えは？ &e&l{question} &7({seconds}秒以内にチャットで！賞金 {reward})"
+  question-typing: "&d&l[クイズ] &f早打ち！これをそのままチャットに打って: &e&l{question} &7(賞金 {reward})"
+  question-scramble: "&d&l[クイズ] &f並べ替えて元の言葉を当てて！ &e&l{question} &7(賞金 {reward})"
+  winner: "&d&l[クイズ] &e{player} &fさんが &e{time}秒 &fで正解！ 答え: &a{answer} &7(賞金 {reward} / 通算{wins}回)"
+  timeout: "&d&l[クイズ] &7時間切れ！ 答えは &a{answer} &7でした。"
+  cancelled: "&d&l[クイズ] &7クイズは中止されました。答えは &a{answer} &7でした。"
+  status-running: "&dクイズを出題中です！チャットで答えてください。"
+  status-next: "&7次のクイズまで あと約{minutes}分"
+  status-wins: "&7あなたの通算正解数: &f{wins}回"
+  usage: "&7/quiz top でランキング"
+  top-header: "&d&l=== クイズ正解ランキング ==="
+  top-entry: "&e#{rank} &f{player} &7- {wins}回"
+  top-empty: "&7まだ誰も正解していません。"
+  already-running: "&cもうクイズを出題中です(/quiz stop で中止)。"
+  none-running: "&c出題中のクイズはありません。"
+
 daily:
   storage-error: "&c今は報酬のデータに接続できません。少し待ってからもう一度お試しください。"
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"

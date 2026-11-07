@@ -247,6 +247,23 @@ tpamode:
   target-denies: "&c{player} is not accepting teleport requests."
   auto-accepted: "&aAutomatically accepted the teleport request from {player}. &7(change with /tpamode)"
 
+quiz:
+  question-math: "&d&l[Quiz] &fWhat's the answer? &e&l{question} &7(answer in chat within {seconds}s! Reward {reward})"
+  question-typing: "&d&l[Quiz] &fSpeed typing! Type this in chat: &e&l{question} &7(reward {reward})"
+  question-scramble: "&d&l[Quiz] &fUnscramble the word! &e&l{question} &7(reward {reward})"
+  winner: "&d&l[Quiz] &e{player} &fgot it in &e{time}s&f! Answer: &a{answer} &7(reward {reward} / {wins} wins total)"
+  timeout: "&d&l[Quiz] &7Time's up! The answer was &a{answer}&7."
+  cancelled: "&d&l[Quiz] &7The quiz was cancelled. The answer was &a{answer}&7."
+  status-running: "&dA quiz is running right now - answer in chat!"
+  status-next: "&7Next quiz in about {minutes} min"
+  status-wins: "&7Your total correct answers: &f{wins}"
+  usage: "&7/quiz top for the leaderboard"
+  top-header: "&d&l=== Quiz Leaderboard ==="
+  top-entry: "&e#{rank} &f{player} &7- {wins}"
+  top-empty: "&7Nobody has answered a quiz yet."
+  already-running: "&cA quiz is already running (/quiz stop to cancel)."
+  none-running: "&cNo quiz is running."
+
 daily:
   storage-error: "&cCouldn't reach the reward database right now. Please try again in a moment."
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."

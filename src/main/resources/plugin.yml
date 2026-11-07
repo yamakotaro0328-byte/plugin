@@ -146,6 +146,9 @@ commands:
   tpeffect:
     description: Choose or buy a teleport effect
     usage: /tpeffect
+  quiz:
+    description: Chat quiz status, leaderboard, and admin start/stop
+    usage: /quiz [top|start [math|typing|scramble]|stop]
   tpamode:
     description: Always ask / always accept / always deny incoming tpa and tphere requests
     usage: /tpamode [ask|accept|deny]

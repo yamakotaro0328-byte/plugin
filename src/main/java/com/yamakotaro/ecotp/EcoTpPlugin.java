@@ -83,6 +83,7 @@ public class EcoTpPlugin extends JavaPlugin {
     private TeleportDiscount teleportDiscount;
     private WarpUnlockManager warpUnlockManager;
     private TpaModeManager tpaModeManager;
+    private ChatQuizManager chatQuizManager;
     private VotifierServer votifierServer;
     private DailyRewardStorage dailyRewardStorage;
     private DailyRewardManager dailyRewardManager;
@@ -158,6 +159,7 @@ public class EcoTpPlugin extends JavaPlugin {
         this.teleportDiscount = new TeleportDiscount(this);
         this.warpUnlockManager = new WarpUnlockManager(this);
         this.tpaModeManager = new TpaModeManager(this);
+        this.chatQuizManager = new ChatQuizManager(this);
         this.votifierServer = new VotifierServer(this);
         this.dailyRewardStorage = useMysql
                 ? new MySqlDailyRewardStorage(this, mySqlConnectionProvider)
@@ -236,6 +238,10 @@ public class EcoTpPlugin extends JavaPlugin {
         com.yamakotaro.ecotp.commands.TpaModeCommand tpaModeCommand = new com.yamakotaro.ecotp.commands.TpaModeCommand(this);
         getCommand("tpamode").setExecutor(tpaModeCommand);
         getCommand("tpamode").setTabCompleter(tpaModeCommand);
+        com.yamakotaro.ecotp.commands.QuizCommand quizCommand = new com.yamakotaro.ecotp.commands.QuizCommand(this);
+        getCommand("quiz").setExecutor(quizCommand);
+        getCommand("quiz").setTabCompleter(quizCommand);
+        getServer().getPluginManager().registerEvents(chatQuizManager, this);
         getCommand("afk").setExecutor(new AfkCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
@@ -396,6 +402,10 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public TeleportDiscount getTeleportDiscount() {
         return teleportDiscount;
+    }
+
+    public ChatQuizManager getChatQuizManager() {
+        return chatQuizManager;
     }
 
     public TpaModeManager getTpaModeManager() {
