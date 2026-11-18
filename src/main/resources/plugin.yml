@@ -146,6 +146,9 @@ commands:
   tpeffect:
     description: Choose or buy a teleport effect
     usage: /tpeffect
+  fever:
+    description: Fever time status (admins can start/stop it)
+    usage: /fever [start [minutes] [multiplier]|stop]
   quiz:
     description: Chat quiz status, leaderboard, and admin start/stop
     usage: /quiz [top|start [math|typing|scramble]|stop]

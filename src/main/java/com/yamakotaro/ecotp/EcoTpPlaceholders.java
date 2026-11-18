@@ -51,6 +51,7 @@ public class EcoTpPlaceholders extends PlaceholderExpansion {
             case "daily_streak" -> String.valueOf(plugin.getDailyRewardManager().getCachedStreak(player.getUniqueId()));
             case "vote_goal" -> plugin.getVoteGoalManager().getProgress() + "/" + plugin.getVoteGoalManager().getTarget();
             case "quiz_wins" -> String.valueOf(plugin.getChatQuizManager().getWins(player.getUniqueId()));
+            case "fever" -> plugin.getFeverManager().isActive() ? "×" + String.valueOf(plugin.getFeverManager().multiplier()).replace(".0", "") : "";
             case "votes" -> String.valueOf(plugin.getVoteRewardManager().getVoteCount(player.getName()));
             case "afk" -> plugin.getAfkManager().isAfk(player.getUniqueId()) ? plugin.getMessages().get("afk.tag") : "";
             default -> null;

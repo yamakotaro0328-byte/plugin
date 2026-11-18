@@ -60,7 +60,7 @@ public class VoteGoalManager {
     }
 
     private void reachGoal(int target) {
-        double reward = plugin.getConfig().getDouble("vote-goal.reward", 1000.0);
+        double reward = plugin.getFeverManager().apply(plugin.getConfig().getDouble("vote-goal.reward", 1000.0));
         Bukkit.broadcastMessage(plugin.getMessages().get("vote-goal.reached",
                 "target", String.valueOf(target), "reward", ChatUtil.formatMoney(reward)));
         Economy economy = plugin.getEconomyHolder().get();

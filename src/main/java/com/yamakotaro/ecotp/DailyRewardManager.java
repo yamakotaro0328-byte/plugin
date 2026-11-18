@@ -103,8 +103,8 @@ public class DailyRewardManager implements Listener {
 
         int newStreak = (lastClaim > 0 && elapsed <= streakWindowMillis) ? previousStreak + 1 : 1;
 
-        double normal = amountForStreak(newStreak);
-        double special = calendarBonus(newStreak);
+        double normal = plugin.getFeverManager().apply(amountForStreak(newStreak));
+        double special = plugin.getFeverManager().apply(calendarBonus(newStreak));
         double amount = normal + special;
 
         // 先に記録する: 記録に失敗したまま払うと、何度でも受け取れてしまう。

@@ -34,7 +34,7 @@ public class BossRewardListener implements Listener {
             return;
         }
         String type = entity.getType().name();
-        double reward = plugin.getConfig().getDouble("boss-rewards.mobs." + type, 0.0);
+        double reward = plugin.getFeverManager().apply(plugin.getConfig().getDouble("boss-rewards.mobs." + type, 0.0));
         Economy economy = plugin.getEconomyHolder().get();
         if (reward <= 0 || economy == null || !economy.depositPlayer(killer, reward).transactionSuccess()) {
             return;

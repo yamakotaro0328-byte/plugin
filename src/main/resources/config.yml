@@ -210,6 +210,26 @@ chat-quiz:
     - "かまど"
     - "たいまつ"
 
+# Fever time: while active, login bonus, vote, vote-goal, boss bounty and chat quiz
+# rewards are multiplied, and everyone sees a countdown boss bar. It starts:
+#   - on schedule (entries like "SAT 20:00-22:00", "* 21:00-21:30" for every day; times in timezone)
+#   - at random: once an hour, random-chance-percent chance of a random-minutes "surprise fever"
+#   - by an admin: /fever start [minutes] [multiplier], /fever stop
+# (日本語) フィーバータイム: 発生中はログインボーナス・投票・サーバー目標・ボス討伐・クイズの
+# 報酬が multiplier 倍になり、全員の画面上部に残り時間のボスバーが出る。始まるのは:
+#   - schedule の時間帯 ("SAT 20:00-22:00" のように曜日 時刻-時刻。"*" は毎日。timezone の時刻)
+#   - 突然フィーバー: 1時間に1回、random-chance-percent% の確率で random-minutes 分間
+#   - 管理者の /fever start [分] [倍率]・/fever stop
+fever:
+  enabled: true
+  multiplier: 2.0
+  timezone: "Asia/Tokyo"
+  schedule:
+    - "SAT 20:00-22:00"
+    - "SUN 20:00-22:00"
+  random-chance-percent: 10.0
+  random-minutes: 10
+
 afk:
   auto-seconds: 300
   kick-seconds: 0

@@ -88,7 +88,7 @@ public class VoteRewardManager {
         String key = username.toLowerCase();
         int count = voteCounts.merge(key, 1, Integer::sum);
         double bonus = milestoneBonus(count);
-        double amount = rewardAmount() + bonus;
+        double amount = plugin.getFeverManager().apply(rewardAmount() + bonus);
 
         Player online = Bukkit.getPlayerExact(username);
         displayNames.put(key, online != null ? online.getName() : username);

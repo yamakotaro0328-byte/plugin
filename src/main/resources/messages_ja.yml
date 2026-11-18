@@ -264,6 +264,23 @@ quiz:
   already-running: "&cもうクイズを出題中です(/quiz stop で中止)。"
   none-running: "&c出題中のクイズはありません。"
 
+fever:
+  started-scheduled: "&c&l🔥 フィーバータイム開始！ &e&l報酬×{multiplier} &7({minutes}分間) ログインボーナス・投票・ボス・クイズがお得！"
+  started-random: "&c&l🔥 突然フィーバー発生！！ &e&l報酬×{multiplier} &7(あと{minutes}分) 今がチャンス！"
+  started-manual: "&c&l🔥 フィーバータイム開始！ &e&l報酬×{multiplier} &7({minutes}分間)"
+  ended: "&7フィーバータイムが終わりました。ありがとうございました！"
+  stopped: "&7フィーバータイムは中止されました。"
+  title: "&c&l🔥 FEVER 🔥"
+  subtitle: "&e報酬が ×{multiplier}！"
+  bar: "&c&l🔥 フィーバータイム &e&l報酬×{multiplier} &f残り {time}"
+  join-notice: "&c&l🔥 今はフィーバータイム中！ &e報酬×{multiplier} &7(あと約{minutes}分)"
+  status-active: "&c🔥 フィーバータイム中！ &e報酬×{multiplier} &7残り {time}"
+  status-inactive: "&7今はフィーバータイムではありません。"
+  status-schedule: "&7定期フィーバー: &f{schedule}"
+  usage: "&c使い方: /fever start [分] [倍率(1より大きく10以下)] | /fever stop"
+  already-active: "&cもうフィーバータイム中です(/fever stop で中止)。"
+  not-active: "&c今はフィーバータイムではありません。"
+
 daily:
   storage-error: "&c今は報酬のデータに接続できません。少し待ってからもう一度お試しください。"
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"

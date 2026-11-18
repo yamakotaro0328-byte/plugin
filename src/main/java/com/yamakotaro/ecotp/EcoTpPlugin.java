@@ -84,6 +84,7 @@ public class EcoTpPlugin extends JavaPlugin {
     private WarpUnlockManager warpUnlockManager;
     private TpaModeManager tpaModeManager;
     private ChatQuizManager chatQuizManager;
+    private FeverManager feverManager;
     private VotifierServer votifierServer;
     private DailyRewardStorage dailyRewardStorage;
     private DailyRewardManager dailyRewardManager;
@@ -160,6 +161,7 @@ public class EcoTpPlugin extends JavaPlugin {
         this.warpUnlockManager = new WarpUnlockManager(this);
         this.tpaModeManager = new TpaModeManager(this);
         this.chatQuizManager = new ChatQuizManager(this);
+        this.feverManager = new FeverManager(this);
         this.votifierServer = new VotifierServer(this);
         this.dailyRewardStorage = useMysql
                 ? new MySqlDailyRewardStorage(this, mySqlConnectionProvider)
@@ -242,6 +244,10 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("quiz").setExecutor(quizCommand);
         getCommand("quiz").setTabCompleter(quizCommand);
         getServer().getPluginManager().registerEvents(chatQuizManager, this);
+        getServer().getPluginManager().registerEvents(feverManager, this);
+        com.yamakotaro.ecotp.commands.FeverCommand feverCommand = new com.yamakotaro.ecotp.commands.FeverCommand(this);
+        getCommand("fever").setExecutor(feverCommand);
+        getCommand("fever").setTabCompleter(feverCommand);
         getCommand("afk").setExecutor(new AfkCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerCleanupListener(this), this);
@@ -316,6 +322,9 @@ public class EcoTpPlugin extends JavaPlugin {
         }
         if (mySqlConnectionProvider != null) {
             mySqlConnectionProvider.close();
+        }
+        if (feverManager != null) {
+            feverManager.shutdown();
         }
         if (votifierServer != null) {
             votifierServer.stop();
@@ -402,6 +411,10 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public TeleportDiscount getTeleportDiscount() {
         return teleportDiscount;
+    }
+
+    public FeverManager getFeverManager() {
+        return feverManager;
     }
 
     public ChatQuizManager getChatQuizManager() {

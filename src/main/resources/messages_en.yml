@@ -264,6 +264,23 @@ quiz:
   already-running: "&cA quiz is already running (/quiz stop to cancel)."
   none-running: "&cNo quiz is running."
 
+fever:
+  started-scheduled: "&c&l🔥 FEVER TIME! &e&lRewards x{multiplier} &7({minutes} min) - login bonus, votes, bosses and quizzes!"
+  started-random: "&c&l🔥 SURPRISE FEVER!! &e&lRewards x{multiplier} &7({minutes} min left) - go go go!"
+  started-manual: "&c&l🔥 FEVER TIME! &e&lRewards x{multiplier} &7({minutes} min)"
+  ended: "&7Fever time is over. Thanks for playing!"
+  stopped: "&7Fever time was stopped."
+  title: "&c&l🔥 FEVER 🔥"
+  subtitle: "&eRewards x{multiplier}!"
+  bar: "&c&l🔥 FEVER TIME &e&lRewards x{multiplier} &f{time} left"
+  join-notice: "&c&l🔥 Fever time is on! &eRewards x{multiplier} &7(about {minutes} min left)"
+  status-active: "&c🔥 Fever time! &eRewards x{multiplier} &7{time} left"
+  status-inactive: "&7Fever time is not active right now."
+  status-schedule: "&7Scheduled fever: &f{schedule}"
+  usage: "&cUsage: /fever start [minutes] [multiplier (above 1, up to 10)] | /fever stop"
+  already-active: "&cFever time is already active (/fever stop to end it)."
+  not-active: "&cFever time is not active."
+
 daily:
   storage-error: "&cCouldn't reach the reward database right now. Please try again in a moment."
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."

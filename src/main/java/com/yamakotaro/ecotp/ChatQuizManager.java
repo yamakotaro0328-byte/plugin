@@ -191,7 +191,7 @@ public class ChatQuizManager implements Listener {
                 shown = scramble(answer);
             }
         }
-        double reward = plugin.getConfig().getDouble("chat-quiz.rewards." + type.key(), 300.0);
+        double reward = plugin.getFeverManager().apply(plugin.getConfig().getDouble("chat-quiz.rewards." + type.key(), 300.0));
         return new Question(type, shown, answer, reward, System.currentTimeMillis(), new AtomicBoolean());
     }
 
