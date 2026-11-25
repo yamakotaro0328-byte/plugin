@@ -91,6 +91,47 @@ public class GuiListener implements Listener {
             return;
         }
 
+        if (holder instanceof EventShopHolder shop) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) {
+                return;
+            }
+            int slot = event.getSlot();
+            if (slot == EventShopHolder.SLOT_BACK) {
+                backToMainMenu(player);
+            } else if (slot == EventShopHolder.SLOT_HAT) {
+                if (event.getCurrentItem() != null && !event.getCurrentItem().getType().name().endsWith("STAINED_GLASS_PANE")) {
+                    shop.toggleHat();
+                }
+            } else if (slot == EventShopHolder.SLOT_TITLES) {
+                player.openInventory(new TitlesHolder(plugin, player).getInventory());
+            } else {
+                shop.buy(slot);
+            }
+            return;
+        }
+
+        if (holder instanceof TitlesHolder titles) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() != event.getInventory()) {
+                return;
+            }
+            int slot = event.getSlot();
+            if (slot == TitlesHolder.SLOT_BACK) {
+                backToMainMenu(player);
+                return;
+            }
+            String title = slot == TitlesHolder.SLOT_NONE ? "" : titles.titleAt(slot);
+            if (title == null) {
+                return;
+            }
+            plugin.getTitleManager().select(player, title);
+            player.sendMessage(title.isEmpty() ? plugin.msg("event.titles-removed")
+                    : plugin.msg("event.titles-changed", "title", ChatUtil.color(title)));
+            player.openInventory(new TitlesHolder(plugin, player).getInventory());
+            return;
+        }
+
         if (holder instanceof TeleportStyleHolder styleHolder) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getInventory()) {
@@ -360,6 +401,7 @@ public class GuiListener implements Listener {
                     runAndClose(player, "votegoal");
                 }
             }
+            case MainMenuHolder.SLOT_EVENT -> player.performCommand("event");
             case MainMenuHolder.SLOT_SETTINGS -> player.openInventory(new SettingsHolder(plugin, player).getInventory());
             case MainMenuHolder.SLOT_CLOSE -> player.closeInventory();
             default -> {

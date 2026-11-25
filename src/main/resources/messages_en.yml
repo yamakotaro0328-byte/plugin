@@ -281,6 +281,50 @@ fever:
   already-active: "&cFever time is already active (/fever stop to end it)."
   not-active: "&cFever time is not active."
 
+event:
+  started: "&e&l🎉 The {event} &e&levent has started! &7/event for the prize shop"
+  ended: "&7The seasonal event is over. See you next year!"
+  join-notice: "&eThe {event} &eevent is on! &7/event for the prize shop and hat"
+  none-active: "&7No seasonal event is running right now."
+  coin-lore: "&7Spend it in the seasonal prize shop (/event)"
+  shop-title: "{event} Prize Shop"
+  your-coins: "&eYour coins: &f{coins}"
+  your-coins-lore:
+    - "&7Defeat mobs wearing the event hat to get coins"
+  shop-price: "&7Price: &e{price} coins"
+  shop-owned: "&a✔ Owned"
+  shop-click: "&eClick to trade"
+  shop-not-enough: "&cNot enough coins"
+  shop-title-item: "&fTitle: {title}"
+  shop-money: "&6Money {amount}"
+  bought: "&aTraded for {item}&a! &7({price} coins)"
+  not-enough-coins: "&cNot enough coins ({price} needed)."
+  hat-button: "&dEvent hat"
+  hat-button-lore:
+    - "&7Show the hat on your head to other players (cosmetic)"
+    - "&7Now: {state}"
+    - "&eClick to toggle"
+  hat-on: "&aYou're wearing the event hat! &7(other players can see it)"
+  hat-off: "&7You took off the event hat."
+  no-hat: "&cThis event has no hat."
+  titles-button: "&bChoose a title"
+  titles-button-lore:
+    - "&7Show one of your titles before your name"
+  titles-title: "Titles"
+  titles-selected:
+    - "&a✔ In use"
+  titles-click:
+    - "&eClick to use"
+  titles-empty: "&7You don't have any titles yet"
+  titles-none: "&7Remove title"
+  titles-changed: "&aYour title is now {title}&a."
+  titles-removed: "&7Title removed."
+  gift-title: "&d&l🎁 {event}"
+  gift-subtitle: "&eA gift of {amount}!"
+  gift: "&d🎁 You received {amount} &dfrom the {event} &dgift!"
+  coins-usage: "&cUsage: /event coins <player> <amount>"
+  coins-given: "&aGave {player} {amount} coins."
+
 daily:
   storage-error: "&cCouldn't reach the reward database right now. Please try again in a moment."
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
@@ -312,6 +356,7 @@ menu-item:
 
 menu:
   title: "EcoTP Menu"
+  event: "{event} &eevent"
   setting-tpa-mode: "&fIncoming tpa/tphere"
   style-title: "Teleport Effects"
   setting-style: "&dTeleport effect"
@@ -382,6 +427,10 @@ menu:
   chat-input-cancelled: "&eCancelled."
   chat-input-timeout: "&cInput timed out."
   lore:
+    event:
+      - "&7Prize shop, hat and titles"
+      - "&7Your coins: &f{coins}"
+      - "&eClick to open"
     setting-tpa-mode:
       - "&7Now: {mode}"
       - "&7Even when accepting automatically, whoever moves still confirms the fee."

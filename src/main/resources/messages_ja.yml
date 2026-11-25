@@ -281,6 +281,50 @@ fever:
   already-active: "&cもうフィーバータイム中です(/fever stop で中止)。"
   not-active: "&c今はフィーバータイムではありません。"
 
+event:
+  started: "&e&l🎉 {event} &e&lイベントが始まりました！ &7/event で景品交換所"
+  ended: "&7季節イベントが終わりました。また来年！"
+  join-notice: "&e今は {event} &eイベント中！ &7/event で景品交換所・帽子"
+  none-active: "&7今は開催中の季節イベントがありません。"
+  coin-lore: "&7季節イベントの景品交換所(/event)で使えます"
+  shop-title: "{event} 景品交換所"
+  your-coins: "&e手持ちのコイン: &f{coins}枚"
+  your-coins-lore:
+    - "&7帽子をかぶったMobを倒すと手に入ります"
+  shop-price: "&7値段: &eコイン{price}枚"
+  shop-owned: "&a✔ 持っています"
+  shop-click: "&eクリックで交換"
+  shop-not-enough: "&cコインが足りません"
+  shop-title-item: "&f称号: {title}"
+  shop-money: "&6お金 {amount}"
+  bought: "&a{item} &aと交換しました！ &7(コイン{price}枚)"
+  not-enough-coins: "&cコインが足りません(コイン{price}枚必要)。"
+  hat-button: "&dイベントの帽子"
+  hat-button-lore:
+    - "&7他の人から見た自分の頭に帽子を表示 (見た目だけ)"
+    - "&7今: {state}"
+    - "&eクリックで切り替え"
+  hat-on: "&aイベントの帽子をかぶりました！ &7(他の人から見えます)"
+  hat-off: "&7イベントの帽子を外しました。"
+  no-hat: "&cこのイベントには帽子がありません。"
+  titles-button: "&b称号を選ぶ"
+  titles-button-lore:
+    - "&7手に入れた称号を名前の前に付けます"
+  titles-title: "称号"
+  titles-selected:
+    - "&a✔ 使用中"
+  titles-click:
+    - "&eクリックで使う"
+  titles-empty: "&7まだ称号を持っていません"
+  titles-none: "&7称号を外す"
+  titles-changed: "&a称号を {title} &aにしました。"
+  titles-removed: "&7称号を外しました。"
+  gift-title: "&d&l🎁 {event}"
+  gift-subtitle: "&e{amount} &fのプレゼント！"
+  gift: "&d🎁 {event} &dのプレゼントで &e{amount} &dをもらいました！"
+  coins-usage: "&c使い方: /event coins <プレイヤー名> <枚数>"
+  coins-given: "&a{player} にコインを {amount} 枚渡しました。"
+
 daily:
   storage-error: "&c今は報酬のデータに接続できません。少し待ってからもう一度お試しください。"
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
@@ -312,6 +356,7 @@ menu-item:
 
 menu:
   title: "EcoTPメニュー"
+  event: "{event} &eイベント"
   setting-tpa-mode: "&ftpa・tphereを受けた時"
   style-title: "テレポート演出"
   setting-style: "&dテレポート演出"
@@ -382,6 +427,10 @@ menu:
   chat-input-cancelled: "&eキャンセルしました。"
   chat-input-timeout: "&c入力がタイムアウトしました。"
   lore:
+    event:
+      - "&7景品交換所・帽子・称号"
+      - "&7手持ちのコイン: &f{coins}枚"
+      - "&eクリックで開く"
     setting-tpa-mode:
       - "&7今の設定: {mode}"
       - "&7常に許可でも、移動する側には料金の確認が出ます。"

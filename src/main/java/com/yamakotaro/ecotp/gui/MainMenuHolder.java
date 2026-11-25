@@ -52,6 +52,7 @@ public class MainMenuHolder implements EcoTpMenu {
     public static final int SLOT_VOTE = 30;
     public static final int SLOT_VOTE_GOAL = 31;
     public static final int SLOT_BOSS = 32;
+    public static final int SLOT_EVENT = 33;
     // その他の段
     private static final int SLOT_CAT_OTHER = 37;
     public static final int SLOT_SETTINGS = 38;
@@ -118,6 +119,18 @@ public class MainMenuHolder implements EcoTpMenu {
         }
         if (plugin.getConfig().getBoolean("boss-rewards.enabled", true)) {
             tiles.put(SLOT_BOSS, bossItem(plugin));
+        }
+
+        var seasonal = plugin.getSeasonalEventManager().getActive();
+        if (seasonal != null) {
+            ItemStack icon = seasonal.hat() != null ? seasonal.hat().clone() : plugin.getSeasonalEventManager().createCoins(seasonal, 1);
+            ItemMeta meta = icon.getItemMeta();
+            meta.setDisplayName(messages.get("menu.event", "event", seasonal.name()));
+            meta.setLore(messages.getList("menu.lore.event",
+                    "coins", String.valueOf(plugin.getSeasonalEventManager().countCoins(viewer, seasonal))));
+            meta.setEnchantmentGlintOverride(true);
+            icon.setItemMeta(meta);
+            tiles.put(SLOT_EVENT, icon);
         }
 
         // その他

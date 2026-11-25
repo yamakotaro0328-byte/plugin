@@ -43,7 +43,8 @@ public class ChatFormatListener implements Listener {
             return;
         }
         String template = plugin.getConfig().getString("chat-format.format", "{prefix}&f{player}&7: &f{message}");
-        String prefix = vaultPrefix(event.getPlayer());
+        String title = plugin.getTitleManager().getSelected(event.getPlayer().getUniqueId());
+        String prefix = (title.isEmpty() ? "" : title + "&r ") + vaultPrefix(event.getPlayer());
         event.renderer(ChatRenderer.viewerUnaware((source, sourceDisplayName, message) ->
                 buildComponent(template, prefix, source.getName(), message)));
     }
