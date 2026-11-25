@@ -295,7 +295,6 @@ event:
   shop-owned: "&a✔ 持っています"
   shop-click: "&eクリックで交換"
   shop-not-enough: "&cコインが足りません"
-  shop-title-item: "&f称号: {title}"
   shop-money: "&6お金 {amount}"
   bought: "&a{item} &aと交換しました！ &7(コイン{price}枚)"
   not-enough-coins: "&cコインが足りません(コイン{price}枚必要)。"
@@ -307,18 +306,6 @@ event:
   hat-on: "&aイベントの帽子をかぶりました！ &7(他の人から見えます)"
   hat-off: "&7イベントの帽子を外しました。"
   no-hat: "&cこのイベントには帽子がありません。"
-  titles-button: "&b称号を選ぶ"
-  titles-button-lore:
-    - "&7手に入れた称号を名前の前に付けます"
-  titles-title: "称号"
-  titles-selected:
-    - "&a✔ 使用中"
-  titles-click:
-    - "&eクリックで使う"
-  titles-empty: "&7まだ称号を持っていません"
-  titles-none: "&7称号を外す"
-  titles-changed: "&a称号を {title} &aにしました。"
-  titles-removed: "&7称号を外しました。"
   gift-title: "&d&l🎁 {event}"
   gift-subtitle: "&e{amount} &fのプレゼント！"
   gift: "&d🎁 {event} &dのプレゼントで &e{amount} &dをもらいました！"
@@ -428,7 +415,7 @@ menu:
   chat-input-timeout: "&c入力がタイムアウトしました。"
   lore:
     event:
-      - "&7景品交換所・帽子・称号"
+      - "&7景品交換所・帽子"
       - "&7手持ちのコイン: &f{coins}枚"
       - "&eクリックで開く"
     setting-tpa-mode:

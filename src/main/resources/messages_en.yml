@@ -295,7 +295,6 @@ event:
   shop-owned: "&a✔ Owned"
   shop-click: "&eClick to trade"
   shop-not-enough: "&cNot enough coins"
-  shop-title-item: "&fTitle: {title}"
   shop-money: "&6Money {amount}"
   bought: "&aTraded for {item}&a! &7({price} coins)"
   not-enough-coins: "&cNot enough coins ({price} needed)."
@@ -307,18 +306,6 @@ event:
   hat-on: "&aYou're wearing the event hat! &7(other players can see it)"
   hat-off: "&7You took off the event hat."
   no-hat: "&cThis event has no hat."
-  titles-button: "&bChoose a title"
-  titles-button-lore:
-    - "&7Show one of your titles before your name"
-  titles-title: "Titles"
-  titles-selected:
-    - "&a✔ In use"
-  titles-click:
-    - "&eClick to use"
-  titles-empty: "&7You don't have any titles yet"
-  titles-none: "&7Remove title"
-  titles-changed: "&aYour title is now {title}&a."
-  titles-removed: "&7Title removed."
   gift-title: "&d&l🎁 {event}"
   gift-subtitle: "&eA gift of {amount}!"
   gift: "&d🎁 You received {amount} &dfrom the {event} &dgift!"
@@ -428,7 +415,7 @@ menu:
   chat-input-timeout: "&cInput timed out."
   lore:
     event:
-      - "&7Prize shop, hat and titles"
+      - "&7Prize shop and hat"
       - "&7Your coins: &f{coins}"
       - "&eClick to open"
     setting-tpa-mode:

@@ -234,19 +234,18 @@ fever:
 # year), the event is active:
 #   - dress-chance % of naturally spawned "mobs" wear the event "hat" and drop event coins
 #     (coin-drop-chance %, coins-per-drop) when a player kills them
-#   - /event opens the prize shop: trade coins for items (item/amount), titles (title)
-#     or money (money); optional "name" renames the prize
+#   - /event opens the prize shop: trade coins for items (item/amount) or money (money); optional "name" renames the prize
 #   - /event hat shows the hat on your head to other players (cosmetic only)
 #   - on gift-days, each player gets a random gift (gift-min..gift-max) once that day
-# Add your own events the same way. Titles are chosen with /titles.
+# Add your own events the same way.
 # (日本語) 季節イベント。今日(timezoneの日付)が start〜end (MM-DD、年をまたいでもよい) の間は開催中:
 #   - 自然に湧いた mobs の dress-chance% が hat をかぶり、プレイヤーが倒すとイベントコインを落とす
 #     (coin-drop-chance%、coins-per-drop 枚)
-#   - /event で景品交換所: コインをアイテム(item/amount)・称号(title)・お金(money)と交換。
+#   - /event で景品交換所: コインをアイテム(item/amount)・お金(money)と交換。
 #     name を書くと景品の名前を変えられる
 #   - /event hat で、他の人から見た自分の頭に帽子を表示 (見た目だけ)
 #   - gift-days の日は、1人1回ランダムな額のプレゼント (gift-min〜gift-max)
-# 同じ書き方で自由にイベントを追加できます。称号は /titles で選びます。
+# 同じ書き方で自由にイベントを追加できます。
 seasonal-events:
   enabled: true
   timezone: "Asia/Tokyo"
@@ -271,9 +270,8 @@ seasonal-events:
         - {item: CAKE, amount: 1, price: 5}
         - {item: TOTEM_OF_UNDYING, amount: 1, price: 40}
         - {money: 3000.0, price: 10}
-        - {title: "&6🎃パンプキン", price: 20}
-        - {title: "&5👻おばけ", price: 30}
-        - {title: "&8&l🦇ヴァンパイア", price: 60}
+        - {item: GOLDEN_APPLE, amount: 4, price: 15}
+        - {item: ENCHANTED_GOLDEN_APPLE, amount: 1, price: 60}
     christmas:
       name: "&c🎄 クリスマス"
       start: "12-18"
@@ -295,9 +293,8 @@ seasonal-events:
         - {item: SPRUCE_SAPLING, amount: 8, price: 3}
         - {item: FIREWORK_ROCKET, amount: 32, price: 8}
         - {money: 5000.0, price: 15}
-        - {title: "&c🎅サンタ", price: 20}
-        - {title: "&b⛄スノーマン", price: 30}
-        - {title: "&e&l⭐聖夜の星", price: 60}
+        - {item: DIAMOND, amount: 4, price: 20}
+        - {item: ELYTRA, amount: 1, price: 80}
     newyear:
       name: "&d🎍 お正月"
       start: "12-31"

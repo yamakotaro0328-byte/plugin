@@ -149,9 +149,6 @@ commands:
   event:
     description: Seasonal event prize shop (/event hat toggles the event hat)
     usage: /event [hat]
-  titles:
-    description: Choose one of your titles
-    usage: /titles
   fever:
     description: Fever time status (admins can start/stop it)
     usage: /fever [start [minutes] [multiplier]|stop]

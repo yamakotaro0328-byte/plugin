@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 季節イベントの景品交換所。上の段に景品 (アイテム・称号・お金)、下の段に手持ちのコイン・
- * 帽子の切り替え・称号メニュー・戻るを置く。景品はクリックでコインと交換する。
+ * 季節イベントの景品交換所。上の段に景品 (アイテム・お金)、下の段に手持ちのコイン・
+ * 帽子の切り替え・戻るを置く。景品はクリックでコインと交換する。
  */
 public class EventShopHolder implements EcoTpMenu {
 
@@ -28,7 +28,6 @@ public class EventShopHolder implements EcoTpMenu {
     public static final int SLOT_BACK = 45;
     private static final int SLOT_COINS = 49;
     public static final int SLOT_HAT = 47;
-    public static final int SLOT_TITLES = 51;
 
     private final EcoTpPlugin plugin;
     private final Player viewer;
@@ -46,8 +45,6 @@ public class EventShopHolder implements EcoTpMenu {
         }
         Map<Integer, ItemStack> tiles = new HashMap<>(render());
         tiles.put(SLOT_BACK, MenuItems.item(Material.ARROW, plugin.getMessages().get("menu.back"), null));
-        tiles.put(SLOT_TITLES, MenuItems.item(Material.NAME_TAG, plugin.getMessages().get("event.titles-button"),
-                plugin.getMessages().getList("event.titles-button-lore")));
         MenuItems.playOpenSound(viewer);
         MenuFx.open(plugin, viewer, this, inventory, tiles, true);
     }
@@ -86,12 +83,7 @@ public class EventShopHolder implements EcoTpMenu {
         int price = number(entry.get("price"), 1);
         List<String> lore = new ArrayList<>();
         ItemStack icon;
-        if (entry.get("title") != null) {
-            String title = entry.get("title").toString();
-            boolean owned = plugin.getTitleManager().owns(viewer.getUniqueId(), title);
-            icon = MenuItems.item(Material.NAME_TAG, messages.get("event.shop-title-item", "title", ChatUtil.color(title)), null, owned);
-            lore.add(messages.get(owned ? "event.shop-owned" : "event.shop-price", "price", String.valueOf(price)));
-        } else if (entry.get("money") != null) {
+        if (entry.get("money") != null) {
             double money = number(entry.get("money"), 0);
             icon = MenuItems.item(Material.GOLD_INGOT, messages.get("event.shop-money", "amount", ChatUtil.formatMoney(money)), null);
             lore.add(messages.get("event.shop-price", "price", String.valueOf(price)));
@@ -122,10 +114,6 @@ public class EventShopHolder implements EcoTpMenu {
         Map<?, ?> entry = event.shop().get(slot);
         int price = number(entry.get("price"), 1);
         SeasonalEventManager manager = plugin.getSeasonalEventManager();
-        String title = entry.get("title") == null ? null : entry.get("title").toString();
-        if (title != null && plugin.getTitleManager().owns(viewer.getUniqueId(), title)) {
-            return; // もう持っている称号
-        }
         Economy economy = plugin.getEconomyHolder().get();
         if (entry.get("money") != null && economy == null) {
             viewer.sendMessage(plugin.msg("general.no-economy"));
@@ -137,10 +125,7 @@ public class EventShopHolder implements EcoTpMenu {
             return;
         }
         String got;
-        if (title != null) {
-            plugin.getTitleManager().give(viewer.getUniqueId(), title);
-            got = ChatUtil.color(title);
-        } else if (entry.get("money") != null) {
+        if (entry.get("money") != null) {
             double money = number(entry.get("money"), 0);
             economy.depositPlayer(viewer, money);
             got = ChatUtil.formatMoney(money);

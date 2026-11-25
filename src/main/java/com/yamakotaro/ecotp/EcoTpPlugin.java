@@ -85,7 +85,6 @@ public class EcoTpPlugin extends JavaPlugin {
     private TpaModeManager tpaModeManager;
     private ChatQuizManager chatQuizManager;
     private FeverManager feverManager;
-    private TitleManager titleManager;
     private SeasonalEventManager seasonalEventManager;
     private VotifierServer votifierServer;
     private DailyRewardStorage dailyRewardStorage;
@@ -164,7 +163,6 @@ public class EcoTpPlugin extends JavaPlugin {
         this.tpaModeManager = new TpaModeManager(this);
         this.chatQuizManager = new ChatQuizManager(this);
         this.feverManager = new FeverManager(this);
-        this.titleManager = new TitleManager(this);
         this.seasonalEventManager = new SeasonalEventManager(this);
         this.votifierServer = new VotifierServer(this);
         this.dailyRewardStorage = useMysql
@@ -249,12 +247,11 @@ public class EcoTpPlugin extends JavaPlugin {
         getCommand("quiz").setTabCompleter(quizCommand);
         getServer().getPluginManager().registerEvents(chatQuizManager, this);
         getServer().getPluginManager().registerEvents(feverManager, this);
-        getServer().getPluginManager().registerEvents(titleManager, this);
         getServer().getPluginManager().registerEvents(seasonalEventManager, this);
         com.yamakotaro.ecotp.commands.EventCommand eventCommand = new com.yamakotaro.ecotp.commands.EventCommand(this);
         getCommand("event").setExecutor(eventCommand);
         getCommand("event").setTabCompleter(eventCommand);
-        getCommand("titles").setExecutor(new com.yamakotaro.ecotp.commands.TitlesCommand(this));
+
         com.yamakotaro.ecotp.commands.FeverCommand feverCommand = new com.yamakotaro.ecotp.commands.FeverCommand(this);
         getCommand("fever").setExecutor(feverCommand);
         getCommand("fever").setTabCompleter(feverCommand);
@@ -421,10 +418,6 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public TeleportDiscount getTeleportDiscount() {
         return teleportDiscount;
-    }
-
-    public TitleManager getTitleManager() {
-        return titleManager;
     }
 
     public SeasonalEventManager getSeasonalEventManager() {
