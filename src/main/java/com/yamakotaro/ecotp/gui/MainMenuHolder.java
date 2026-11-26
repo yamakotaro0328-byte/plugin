@@ -53,6 +53,7 @@ public class MainMenuHolder implements EcoTpMenu {
     public static final int SLOT_VOTE_GOAL = 31;
     public static final int SLOT_BOSS = 32;
     public static final int SLOT_EVENT = 33;
+    public static final int SLOT_QUEST = 34;
     // その他の段
     private static final int SLOT_CAT_OTHER = 37;
     public static final int SLOT_SETTINGS = 38;
@@ -121,6 +122,13 @@ public class MainMenuHolder implements EcoTpMenu {
             tiles.put(SLOT_BOSS, bossItem(plugin));
         }
 
+        if (plugin.getDailyQuestManager().isEnabled()) {
+            var quests = plugin.getDailyQuestManager().getQuests(uuid);
+            long done = quests.stream().filter(com.yamakotaro.ecotp.DailyQuestManager.QuestProgress::done).count();
+            tiles.put(SLOT_QUEST, MenuItems.item(Material.WRITABLE_BOOK, messages.get("menu.quest"),
+                    messages.getList("menu.lore.quest", "done", String.valueOf(done), "total", String.valueOf(quests.size())),
+                    done < quests.size()));
+        }
         var seasonal = plugin.getSeasonalEventManager().getActive();
         if (seasonal != null) {
             ItemStack icon = seasonal.hat() != null ? seasonal.hat().clone() : plugin.getSeasonalEventManager().createCoins(seasonal, 1);

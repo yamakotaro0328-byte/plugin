@@ -312,6 +312,28 @@ event:
   coins-usage: "&cUsage: /event coins <player> <amount>"
   coins-given: "&aGave {player} {amount} coins."
 
+quest:
+  title: "Daily Quests"
+  progress: "&e{quest} &f{progress}/{amount}"
+  completed: "&a&l✔ Quest complete! &f{quest} &7(reward &e{reward}&7)"
+  all-done-broadcast: "&6&l[Quests] &e{player} &6finished all of today's daily quests! Bonus &e{bonus}"
+  all-done-title: "&6&l🏆 All quests done!"
+  all-done-subtitle: "&eBonus {bonus}"
+  lore:
+    - "{bar}"
+    - "&7Progress: &f{progress}/{amount}"
+    - "&7Reward: &e{reward}"
+  lore-done:
+    - "{bar}"
+    - "&aCompleted! &7(reward {reward})"
+  bonus: "&6&lAll-complete bonus"
+  bonus-lore:
+    - "&7Finish all of today's quests for &e{bonus}"
+    - "&7Done: &f{done}/{total}"
+    - "&8New quests every day at midnight"
+  bonus-lore-done:
+    - "&aClaimed! See you tomorrow!"
+
 daily:
   storage-error: "&cCouldn't reach the reward database right now. Please try again in a moment."
   already-claimed: "&cYou've already claimed today's reward. Come back in {time}."
@@ -343,6 +365,7 @@ menu-item:
 
 menu:
   title: "EcoTP Menu"
+  quest: "&b&lDaily Quests"
   event: "{event} &eevent"
   setting-tpa-mode: "&fIncoming tpa/tphere"
   style-title: "Teleport Effects"
@@ -414,6 +437,10 @@ menu:
   chat-input-cancelled: "&eCancelled."
   chat-input-timeout: "&cInput timed out."
   lore:
+    quest:
+      - "&7Three new challenges every day!"
+      - "&7Done: &f{done}/{total}"
+      - "&eClick to open"
     event:
       - "&7Prize shop and hat"
       - "&7Your coins: &f{coins}"

@@ -146,6 +146,9 @@ commands:
   tpeffect:
     description: Choose or buy a teleport effect
     usage: /tpeffect
+  quest:
+    description: Show today's daily quests
+    usage: /quest
   event:
     description: Seasonal event prize shop (/event hat toggles the event hat)
     usage: /event [hat]

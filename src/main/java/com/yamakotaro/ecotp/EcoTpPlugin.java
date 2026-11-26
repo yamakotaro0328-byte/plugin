@@ -86,6 +86,7 @@ public class EcoTpPlugin extends JavaPlugin {
     private ChatQuizManager chatQuizManager;
     private FeverManager feverManager;
     private SeasonalEventManager seasonalEventManager;
+    private DailyQuestManager dailyQuestManager;
     private VotifierServer votifierServer;
     private DailyRewardStorage dailyRewardStorage;
     private DailyRewardManager dailyRewardManager;
@@ -164,6 +165,7 @@ public class EcoTpPlugin extends JavaPlugin {
         this.chatQuizManager = new ChatQuizManager(this);
         this.feverManager = new FeverManager(this);
         this.seasonalEventManager = new SeasonalEventManager(this);
+        this.dailyQuestManager = new DailyQuestManager(this);
         this.votifierServer = new VotifierServer(this);
         this.dailyRewardStorage = useMysql
                 ? new MySqlDailyRewardStorage(this, mySqlConnectionProvider)
@@ -248,6 +250,8 @@ public class EcoTpPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(chatQuizManager, this);
         getServer().getPluginManager().registerEvents(feverManager, this);
         getServer().getPluginManager().registerEvents(seasonalEventManager, this);
+        getServer().getPluginManager().registerEvents(dailyQuestManager, this);
+        getCommand("quest").setExecutor(new com.yamakotaro.ecotp.commands.QuestCommand(this));
         com.yamakotaro.ecotp.commands.EventCommand eventCommand = new com.yamakotaro.ecotp.commands.EventCommand(this);
         getCommand("event").setExecutor(eventCommand);
         getCommand("event").setTabCompleter(eventCommand);
@@ -332,6 +336,9 @@ public class EcoTpPlugin extends JavaPlugin {
         }
         if (feverManager != null) {
             feverManager.shutdown();
+        }
+        if (dailyQuestManager != null) {
+            dailyQuestManager.shutdown();
         }
         if (votifierServer != null) {
             votifierServer.stop();
@@ -418,6 +425,10 @@ public class EcoTpPlugin extends JavaPlugin {
 
     public TeleportDiscount getTeleportDiscount() {
         return teleportDiscount;
+    }
+
+    public DailyQuestManager getDailyQuestManager() {
+        return dailyQuestManager;
     }
 
     public SeasonalEventManager getSeasonalEventManager() {

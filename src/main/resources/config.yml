@@ -305,6 +305,37 @@ seasonal-events:
       gift-max: 10000.0
       shop: []
 
+# Daily quests: every day (date in timezone) each player gets per-day random quests from
+# the pool. Finishing one pays its reward on the spot; finishing all pays
+# all-complete-bonus. Types: break (mine blocks), kill (mobs; no targets = any hostile
+# mob), fish (catch fish), harvest (fully grown crops; no targets = any crop).
+# targets are block/entity/item names. Blocks someone placed and mobs from spawners,
+# spawn eggs or breeding don't count. Fever time multiplies the rewards.
+# (日本語) デイリークエスト: 毎日(timezoneの日付)、プレイヤーごとに pool から per-day 個の
+# お題がランダムに出る。1つ達成でその reward、全部達成で all-complete-bonus。
+# 種類: break(ブロックを掘る)・kill(Mobを倒す。targets無しなら敵対Mobなら何でも)・
+# fish(魚を釣る)・harvest(育った作物を収穫。targets無しなら作物なら何でも)。
+# 置いたブロックや、スポナー・スポーンエッグ・繁殖で出たMobは数えない。フィーバー中は報酬が倍。
+daily-quests:
+  enabled: true
+  timezone: "Asia/Tokyo"
+  per-day: 3
+  all-complete-bonus: 1000.0
+  pool:
+    - {id: stone, type: break, targets: [STONE, DEEPSLATE, ANDESITE, DIORITE, GRANITE, TUFF], amount: 200, reward: 300.0, icon: STONE_PICKAXE, name: "&7石を{amount}個掘る"}
+    - {id: logs, type: break, targets: [OAK_LOG, SPRUCE_LOG, BIRCH_LOG, JUNGLE_LOG, ACACIA_LOG, DARK_OAK_LOG, MANGROVE_LOG, CHERRY_LOG, PALE_OAK_LOG], amount: 64, reward: 300.0, icon: IRON_AXE, name: "&6原木を{amount}個集める"}
+    - {id: coal, type: break, targets: [COAL_ORE, DEEPSLATE_COAL_ORE], amount: 16, reward: 300.0, icon: COAL, name: "&8石炭鉱石を{amount}個掘る"}
+    - {id: iron, type: break, targets: [IRON_ORE, DEEPSLATE_IRON_ORE], amount: 12, reward: 500.0, icon: RAW_IRON, name: "&f鉄鉱石を{amount}個掘る"}
+    - {id: diamond, type: break, targets: [DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE], amount: 3, reward: 1000.0, icon: DIAMOND, name: "&bダイヤ鉱石を{amount}個掘る"}
+    - {id: sand, type: break, targets: [SAND, RED_SAND], amount: 64, reward: 200.0, icon: SAND, name: "&e砂を{amount}個掘る"}
+    - {id: hostile, type: kill, amount: 30, reward: 400.0, icon: IRON_SWORD, name: "&c敵対Mobを{amount}体倒す"}
+    - {id: zombie, type: kill, targets: [ZOMBIE, HUSK, DROWNED, ZOMBIE_VILLAGER], amount: 15, reward: 300.0, icon: ROTTEN_FLESH, name: "&2ゾンビを{amount}体倒す"}
+    - {id: skeleton, type: kill, targets: [SKELETON, STRAY, BOGGED], amount: 10, reward: 300.0, icon: BONE, name: "&fスケルトンを{amount}体倒す"}
+    - {id: creeper, type: kill, targets: [CREEPER], amount: 5, reward: 400.0, icon: GUNPOWDER, name: "&aクリーパーを{amount}体倒す"}
+    - {id: fish, type: fish, amount: 10, reward: 400.0, icon: FISHING_ROD, name: "&3魚を{amount}匹釣る"}
+    - {id: wheat, type: harvest, targets: [WHEAT], amount: 64, reward: 300.0, icon: WHEAT, name: "&e小麦を{amount}個収穫する"}
+    - {id: crops, type: harvest, amount: 100, reward: 400.0, icon: CARROT, name: "&6作物を{amount}個収穫する"}
+
 afk:
   auto-seconds: 300
   kick-seconds: 0

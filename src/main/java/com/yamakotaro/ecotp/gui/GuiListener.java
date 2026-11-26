@@ -91,6 +91,14 @@ public class GuiListener implements Listener {
             return;
         }
 
+        if (holder instanceof QuestHolder) {
+            event.setCancelled(true);
+            if (event.getClickedInventory() == event.getInventory() && event.getSlot() == QuestHolder.SLOT_BACK) {
+                backToMainMenu(player);
+            }
+            return;
+        }
+
         if (holder instanceof EventShopHolder shop) {
             event.setCancelled(true);
             if (event.getClickedInventory() != event.getInventory()) {
@@ -379,6 +387,7 @@ public class GuiListener implements Listener {
                 }
             }
             case MainMenuHolder.SLOT_EVENT -> player.performCommand("event");
+            case MainMenuHolder.SLOT_QUEST -> player.performCommand("quest");
             case MainMenuHolder.SLOT_SETTINGS -> player.openInventory(new SettingsHolder(plugin, player).getInventory());
             case MainMenuHolder.SLOT_CLOSE -> player.closeInventory();
             default -> {

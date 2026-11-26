@@ -312,6 +312,28 @@ event:
   coins-usage: "&c使い方: /event coins <プレイヤー名> <枚数>"
   coins-given: "&a{player} にコインを {amount} 枚渡しました。"
 
+quest:
+  title: "デイリークエスト"
+  progress: "&e{quest} &f{progress}/{amount}"
+  completed: "&a&l✔ クエスト達成！ &f{quest} &7(報酬 &e{reward}&7)"
+  all-done-broadcast: "&6&l[クエスト] &e{player} &6さんが今日のデイリークエストを全部達成！ボーナス &e{bonus}"
+  all-done-title: "&6&l🏆 クエスト全部達成！"
+  all-done-subtitle: "&eボーナス {bonus}"
+  lore:
+    - "{bar}"
+    - "&7進み具合: &f{progress}/{amount}"
+    - "&7報酬: &e{reward}"
+  lore-done:
+    - "{bar}"
+    - "&a達成済み！ &7(報酬 {reward})"
+  bonus: "&6&l全部達成ボーナス"
+  bonus-lore:
+    - "&7今日のクエストを全部達成すると &e{bonus}"
+    - "&7達成: &f{done}/{total}"
+    - "&8毎日0時に新しいクエストになります"
+  bonus-lore-done:
+    - "&a受け取り済み！ また明日！"
+
 daily:
   storage-error: "&c今は報酬のデータに接続できません。少し待ってからもう一度お試しください。"
   already-claimed: "&c今日のボーナスはすでに受け取っています。{time}後にまた来てください。"
@@ -343,6 +365,7 @@ menu-item:
 
 menu:
   title: "EcoTPメニュー"
+  quest: "&b&lデイリークエスト"
   event: "{event} &eイベント"
   setting-tpa-mode: "&ftpa・tphereを受けた時"
   style-title: "テレポート演出"
@@ -414,6 +437,10 @@ menu:
   chat-input-cancelled: "&eキャンセルしました。"
   chat-input-timeout: "&c入力がタイムアウトしました。"
   lore:
+    quest:
+      - "&7毎日3つのお題に挑戦！"
+      - "&7達成: &f{done}/{total}"
+      - "&eクリックで開く"
     event:
       - "&7景品交換所・帽子"
       - "&7手持ちのコイン: &f{coins}枚"
